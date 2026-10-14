@@ -67,6 +67,7 @@ module.exports = [
 
   { id: 'settings', dur: 16, chapter: 'Einstellungen', layout: { control: [1180, 40, 1.22], dash: [60, 180, 1.15] },
     scroll: [[0, 0], [5, 700], [10, 1500]], noMark: true,
+    controlJs: "document.querySelector('[data-k=visible]').checked = true",
     kicker: 'Einstellungen', title: 'Alles einstellbar', sub: 'Overlays an/aus, Größe, Hintergrund, Spalten, Dashboard-Seiten links/rechts',
     speech: 'In den Einstellungen schaltest du jedes Overlay ein oder aus, änderst Größe und Hintergrund, wählst die Spalten der Standings und legst fest, welche Dashboard-Seite links oder rechts erscheint.' },
 

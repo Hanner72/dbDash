@@ -81,6 +81,7 @@ function moveDir(from, to) {
   fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(out, 'LICENSE.txt'));
   execSync(`node "${path.join(__dirname, 'notices.js')}" "${path.join(out, 'DRITTANBIETER-LIZENZEN.txt')}"`, { stdio: 'inherit' });
   fs.cpSync(path.join(ROOT, 'grafiken'), path.join(out, 'Grafiken'), { recursive: true });
+  fs.cpSync(path.join(ROOT, 'docs'), path.join(out, 'docs'), { recursive: true }); // Bilder der LIESMICH.md
   for (const f of fs.readdirSync(path.join(out, 'locales'))) {
     if (!['de.pak', 'en-US.pak', 'en-GB.pak'].includes(f)) fs.rmSync(path.join(out, 'locales', f));
   }

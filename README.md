@@ -1,132 +1,229 @@
+<div align="center">
+
+<img src="web/assets/icon.png" width="110" alt="dbDash-Logo">
+
 # dbDash – dannerbam Dash
 
-Ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose Overlays für **iRacing** – frei nutzbar und unverändert weitergebbar (Lizenz: CC BY-NC-ND 4.0, siehe unten).
+**Kostenlose Overlays für iRacing – entwickelt von einem Simracer für Simracer.**
 
-- **Relative** – Fahrer direkt vor und hinter dir mit Zeitabstand, Lizenz und iRating.
-  Orange = eine Runde vor dir (überrundet dich), Blau = eine Runde hinter dir (du überrundest).
-- **Standings** – Wertung nach Klassen mit SOF. Spalten einzeln ein-/ausschaltbar: **Plätze +/−** (seit dem Start
-  gewonnen ▲ / verloren ▼), **Startplatz**, **Landesflagge** (iRacing-Flair), **Box** (wer gerade in der Box ist, sonst Anzahl Stopps),
-  Startnummer, Lizenz, iRating,
-  **iRating +/−** (Prognose, falls das Rennen mit dem aktuellen Stand endet), **Incidents**, letzte/beste Runde, Abstand.
-  Lila = schnellste Runde der Klasse.
-- **Inputs** – Gas/Bremse-Verlauf, Pedalbalken, Gang, Tempo, Lenkrad.
-- **Delta** – Delta zur besten Runde mit Balken, Rundenzeit-Prognose, beste und letzte Runde.
-- **Dashboard** – großes Fahrer-Display: Schaltblitze, Gang, Tempo, Gas-/Bremsbalken, Delta, Position mit Plätzen +/−,
-  Restzeit, Runde, Uhr, Flaggen-Feld (Blau, Gelb, Weiß, Karo …) mit Pitlimiter-Hinweis, TC / TC 2 / ABS / Bremsbalance / Motor-Map
-  und Sprit (Liter, Ø pro Runde, Reichweite, Nachtank-Menge bis ins Ziel).
-  Zwei umschaltbare Fenster (links/rechts) mit diesen Anzeigen: Reifen (Temperatur, Druck, Verschleiß), Motor (Wasser, Öl,
-  Drücke, Batterie), Sprit-Strategie, **Relative – Gesamt**, **Relative – Klasse** (je 3 Autos vor/hinter dir),
-  **Abstände – Gesamt**, **Abstände – Klasse** (Zeitabstand zum Vorder- und Hintermann nach Position – „−“ = vor dir, „+“ = hinter dir –, mit Trend pro Runde
-  ▲/▼ – grün = gut für dich, rot = schlecht – sowie deren letzte und beste Runde),
-  Rundenzeiten (**Prognose**, letzte, beste) und **Schaden** (Auto-Grafik: Karosserie in der Farbe der Schadensstufe, Motor-Warnungen, Reifenverschleiß; dazu Pflicht- und optionale Reparaturzeit).
-  Für jede Anzeige wählst du in den Einstellungen **Links, Rechts oder Aus**.
-  Umschalten per Taste oder Lenkradknopf.
-- **Radar (Ghost)** – Draufsicht mit den Autos vor, hinter und neben dir, gezeichnet als GT3-Blueprint (dein Auto grün,
-  Klassenfarbe auf dem Dach). Reichweite 1–80 m, gemessen als Lücke
-  Stoßstange zu Stoßstange. Rot = neben dir, Orange = Lücke unter 7 m. Seiten-Warnung links/rechts, Lücke zum nächsten
-  Auto davor/dahinter. Erscheint nur, solange ein Auto innerhalb der Reichweite ist, und verschwindet sofort wieder;
-  in der Qualifikation bleibt das Radar aus.
+Relative · Standings · Dashboard · Radar · Inputs · Delta – schonend für deine FPS und auch als OBS-Browserquelle.
 
-Alle Overlays werden automatisch ausgeblendet, solange der Motor nicht läuft (abschaltbar).
+[![Lizenz: CC BY-NC-ND 4.0](https://img.shields.io/badge/Lizenz-CC%20BY--NC--ND%204.0-c6ff3d?style=flat-square)](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de)
+![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-ffb347?style=flat-square)
+![iRacing](https://img.shields.io/badge/f%C3%BCr-iRacing-3a3f48?style=flat-square)
+![Preis](https://img.shields.io/badge/Preis-kostenlos-3ddc84?style=flat-square)
 
-Hinweise: Die iRating-Prognose verwendet die von der Community ermittelte iRacing-Formel und ist eine Schätzung
-(berechnet pro Klasse, nur in Rennsessions). Deine eigenen Incidents werden immer live angezeigt.
-Die Incidents anderer Fahrer hält iRacing während der Session geheim – dbDash zählt deshalb ihre Ausritte neben die
-Strecke (je 1x) und zeigt diese Schätzung *kursiv und abgeblendet*. Kontakte (2x/4x) sind darin nicht enthalten.
+[**⬇ Download**](../../releases/latest) · [Funktionen](#funktionen) · [Installation](#installation) · [Bedienung](#bedienung) · [Stream Deck](#stream-deck--simhub) · [OBS](#obs--streaming)
 
-Radar: iRacing liefert keine seitliche Position der anderen Autos, nur den Abstand auf der Strecke und die
-Spotter-Meldung „Auto links/rechts“. Das Radar zeigt deshalb Autos davor/dahinter mittig und Autos neben dir
-auf der Seite, die der Spotter meldet. Dashboard: Werte, die ein Auto nicht hat (z. B. TC) oder die iRacing nicht
-live liefert, werden als „–“ angezeigt. Reifenwerte aktualisiert iRacing je nach Auto teils nur beim Boxenstopp.
+<!-- Vorstellungsvideo: Link einfügen, sobald es auf YouTube ist, z. B.
+[![Vorstellungsvideo ansehen](docs/img/hero.jpg)](https://www.youtube.com/watch?v=XXXXXXXX) -->
 
-## Starten
+</div>
 
-1. ZIP entpacken (z. B. nach `C:\Programme\dbDash` oder auf den Desktop).
-2. **`dbDash.exe`** starten. Beim ersten Start läuft der **Demo-Modus** mit einem simulierten Rennen,
-   damit du alles sofort siehst.
+![dbDash – alle Overlays im Überblick](docs/img/hero.jpg)
+
+## Warum dbDash?
+
+- 🆓 **Kostenlos** – kein Abo, keine Werbung, kein Konto.
+- 🚀 **Schont deine FPS** – zeichnet nur, was sich wirklich ändert, und lässt iRacing bei der Rechenzeit immer den Vortritt
+  (im Test ca. **1 % CPU** mit allen sechs Overlays).
+- 🎛️ **Bedienung vom Lenkrad aus** – Dashboard-Seiten per Lenkradknopf, Button-Box, Taste oder Stream Deck umschalten.
+- 📺 **Für Streamer** – jedes Overlay gibt es auch als OBS-Browserquelle.
+- 🧪 **Sofort ausprobieren** – der Demo-Modus zeigt ein simuliertes Mehrklassen-Rennen, ganz ohne iRacing.
+
+## Funktionen
+
+### Dashboard
+
+Das große Fahrer-Display: Schaltblitze, Gang, Tempo, Gas- und Bremsbalken, Delta zur Bestzeit, Position mit gewonnenen
+oder verlorenen Plätzen, Restzeit, Runde, Uhr, Flaggen (Blau, Gelb, Weiß, Karo …) mit Pitlimiter-Warnung,
+TC / TC 2 / ABS / Bremsbalance / Motor-Map und Sprit mit Nachtank-Menge bis ins Ziel.
+
+![Dashboard](docs/img/dashboard.png)
+
+Links und rechts sitzen zwei Fenster mit **umschaltbaren Seiten** – für jede Seite wählst du **Links, Rechts oder Aus**:
+
+| Seite | Zeigt |
+| --- | --- |
+| **Reifen** | Temperatur innen / Mitte / außen, Druck, Verschleiß |
+| **Motor** | Wasser, Öl, Öl- und Benzindruck, Batterie, Drehzahl |
+| **Sprit-Strategie** | Ø-Verbrauch, Reichweite, Runden bis ins Ziel, Nachtank-Menge, nötige Stopps |
+| **Relative – Gesamt / Klasse** | je 3 Autos vor und hinter dir |
+| **Abstände – Gesamt / Klasse** | Vorder- und Hintermann mit Trend pro Runde (▲/▼, grün = gut für dich) sowie deren Rundenzeiten |
+| **Rundenzeiten** | Prognose für die laufende Runde, letzte und beste Runde |
+| **Schaden** | GT3 als technische Zeichnung: grün = alles gut, orange = leichter Schaden, rot = Pflicht-Reparatur; Motor-Warnungen und Reifenverschleiß |
+
+<table>
+  <tr>
+    <td><img src="docs/img/dashboard-abstaende-schaden.png" alt="Dashboard mit Abständen und Schaden"></td>
+    <td><img src="docs/img/dashboard-strategie-relative.png" alt="Dashboard mit Sprit-Strategie und Relative"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Abstände mit Trend · Schaden als Blueprint</sub></td>
+    <td align="center"><sub>Sprit-Strategie · Relative</sub></td>
+  </tr>
+</table>
+
+### Relative
+
+Die Fahrer direkt vor und hinter dir auf der Strecke mit Zeitabstand, Lizenz und iRating.
+**„−“ = vor dir, „+“ = hinter dir.** Orange = eine Runde vor dir (überrundet dich), Blau = eine Runde hinter dir.
+
+<img src="docs/img/relative.png" width="520" alt="Relative">
+
+### Standings
+
+Wertung nach Klassen mit SOF. Spalten einzeln ein- und ausschaltbar: **Plätze +/−** seit dem Start, **Startplatz**,
+**Landesflagge**, **Box** (wer gerade in der Box ist, sonst Anzahl Stopps), Startnummer, Lizenz, iRating,
+**iRating-Prognose** (falls das Rennen mit dem aktuellen Stand endet), **Incidents**, letzte / beste Runde, Abstand.
+Lila = schnellste Runde der Klasse.
+
+![Standings](docs/img/standings.png)
+
+### Radar & Inputs / Delta
+
+<table>
+  <tr>
+    <td width="34%" valign="top"><img src="docs/img/radar.png" alt="Radar"></td>
+    <td valign="top">
+
+**Radar (Ghost)** – Draufsicht mit den Autos vor, hinter und neben dir, gezeichnet als GT3-Blueprint
+(dein Auto grün, Klassenfarbe auf dem Dach). Rot = neben dir, Orange = Lücke unter 7 m.
+
+- Reichweite **1–80 m**, gemessen als Lücke Stoßstange zu Stoßstange
+- erscheint nur, solange ein Auto in Reichweite ist, und **verschwindet sofort** wieder
+- in der **Qualifikation** bleibt das Radar aus
+
+<img src="docs/img/inputs-delta.png" alt="Inputs und Delta">
+
+**Inputs** – Gas/Bremse-Verlauf, Pedalbalken, Gang, Tempo, Lenkrad.
+**Delta** – Delta zur besten Runde mit Balken, Rundenzeit-Prognose, beste und letzte Runde.
+
+</td>
+  </tr>
+</table>
+
+Alle Overlays blenden sich automatisch aus, solange der Motor nicht läuft (abschaltbar).
+
+## Installation
+
+1. [**Neueste Version herunterladen**](../../releases/latest) und die ZIP entpacken
+   (z. B. nach `C:\Programme\dbDash` oder auf den Desktop).
+2. **`dbDash.exe`** starten. Beim ersten Start läuft der **Demo-Modus** mit einem simulierten Rennen, damit du alles
+   sofort siehst.
 3. Für echte Daten: im Einstellungsfenster **Demo-Modus ausschalten** und iRacing starten.
 
-Windows-SmartScreen kann beim ersten Start warnen, weil die Datei nicht signiert ist:
-„Weitere Informationen“ → „Trotzdem ausführen“.
+> [!IMPORTANT]
+> iRacing unter *Options → Graphics* auf **Borderless Window** stellen. Im exklusiven Vollbild kann Windows keine
+> Fenster über dem Spiel anzeigen.
 
-**Wichtig:** iRacing unter *Options → Graphics* auf **Borderless Window** stellen.
-Im exklusiven Vollbild kann Windows keine Fenster über dem Spiel anzeigen.
+> [!NOTE]
+> Windows-SmartScreen kann beim ersten Start warnen, weil die Datei nicht signiert ist:
+> „Weitere Informationen“ → „Trotzdem ausführen“.
 
 ## Bedienung
 
 | Aktion | Wie |
 | --- | --- |
+| Einstellungen öffnen | Klick auf das dbDash-Symbol im Infobereich der Taskleiste |
 | Overlays verschieben | `Alt+Shift+E` (oder Schalter im Einstellungsfenster), Overlay mit der Maus ziehen, nochmal `Alt+Shift+E` |
 | Alle ein-/ausblenden | `Alt+Shift+H` |
-| Dashboard links/rechts umschalten | `Alt+Shift+←` / `Alt+Shift+→` (zurückblättern frei belegbar) |
-
-Alle Tasten lassen sich im Einstellungsfenster unter **Tasten & Lenkradknöpfe** neu belegen: „Zuweisen“ klicken und
-eine Taste oder einen Knopf am Lenkrad / an der Button-Box drücken. Pro Aktion geht je eine Taste und ein Lenkradknopf.
-Lenkradknöpfe funktionieren auch, während iRacing im Vordergrund ist (Windows-Joystick-Schnittstelle: bis 16 Geräte,
-je 32 Knöpfe + Coolie-Hat). Achtung: Eine hier belegte Tastatur-Taste bekommt iRacing nicht mehr – Lenkradknöpfe schon.
-| Einstellungen | Klick auf das dbDash-Symbol im Infobereich der Taskleiste |
+| Dashboard links / rechts umschalten | `Alt+Shift+←` / `Alt+Shift+→` (zurückblättern frei belegbar) |
 | Beenden | Rechtsklick auf das Symbol → Beenden |
 
-Größe und Hintergrund-Deckkraft lassen sich pro Overlay einstellen. Positionen werden gespeichert
-(`%APPDATA%\dbDash\settings.json`).
+<img src="docs/img/einstellungen.png" width="360" align="right" alt="Einstellungsfenster">
 
-## Stream Deck
+Im **Einstellungsfenster** schaltest du jedes Overlay ein oder aus und stellst **Größe** und **Hintergrund-Deckkraft**
+ein. Dazu wählst du die Spalten der Standings, die Dashboard-Seiten (links / rechts / aus), die Radar-Reichweite und die
+Einheit (km/h oder mph). Positionen und Einstellungen werden gespeichert (`%APPDATA%\dbDash\settings.json`).
 
-- **Ohne Plugin:** Stream-Deck-Aktion „Tastenkürzel“ mit einer Taste **F13–F24** belegen und diese im Einstellungsfenster
-  unter „Tasten & Lenkradknöpfe“ zuweisen. F13–F24 gibt es auf keiner Tastatur, iRacing kommt also nicht durcheinander.
-- **Mit Plugin „Web Requests“ (BarRaider):** eine Adresse aufrufen lassen, z. B.
-  `http://127.0.0.1:8182/api/action/dashLeft` oder direkt eine Anzeige öffnen: `http://127.0.0.1:8182/api/page/gapClass`.
+**Tasten & Lenkradknöpfe:** Alle Aktionen lassen sich neu belegen: „Zuweisen“ klicken und eine Taste oder einen Knopf
+am Lenkrad / an der Button-Box drücken. Pro Aktion geht je eine Taste und ein Lenkradknopf. Lenkradknöpfe funktionieren
+auch, während iRacing im Vordergrund ist (bis 16 Geräte, je 32 Knöpfe + Coolie-Hat).
+
+> [!TIP]
+> Eine hier belegte **Tastatur**-Taste bekommt iRacing nicht mehr – Lenkradknöpfe schon. Für Stream Deck und SimHub
+> deshalb am besten **F13–F24** verwenden (gibt es auf keiner Tastatur).
+
+**Overlays mit der Grafikkarte zeichnen:** Ist der Schalter aus, zeichnet der Prozessor die Overlays. Was in iRacing mehr
+FPS bringt, hängt vom PC ab – einfach beides ausprobieren (wirkt nach einem Neustart von dbDash).
+
+<br clear="right">
+
+## Stream Deck & SimHub
+
+<img src="grafiken/dbDash-Links-umschalten-144.png" width="72" alt="Links umschalten"> <img src="grafiken/dbDash-Rechts-umschalten-144.png" width="72" alt="Rechts umschalten">
+
+Passende Tastenbilder zum Umschalten des Dashboards liegen im Ordner `Grafiken` (PNG in 72, 144, 256, 512 px und SVG).
+
+- **Stream Deck ohne Plugin:** Aktion „Tastenkürzel“ mit einer Taste **F13–F24** belegen und diese in dbDash unter
+  „Tasten & Lenkradknöpfe“ zuweisen.
+- **Stream Deck mit Plugin „Web Requests“ (BarRaider):** eine Adresse aufrufen lassen, z. B.
+  `http://127.0.0.1:8182/api/action/dashLeft` oder direkt eine Seite öffnen: `http://127.0.0.1:8182/api/page/gapClass`.
   Alle Adressen stehen zum Kopieren im Einstellungsfenster, die Liste gibt es auch unter `http://127.0.0.1:8182/api/list`.
-
-## SimHub
-
-Im Ordner `Grafiken` liegen zwei Symbole zum Umschalten des Dashboards (links / rechts) als PNG (72, 144, 256, 512 px)
-und SVG. In SimHub eine Schaltfläche in einem Dashboard (Dash Studio) mit dem Bild versehen und eine Taste von
-**F13–F24** senden lassen; diese Taste in dbDash unter „Tasten & Lenkradknöpfe“ zuweisen. Die 144-px-Variante passt
-auch direkt aufs Stream Deck.
+- **SimHub:** in einem Dashboard (Dash Studio) eine Schaltfläche mit dem Bild versehen und eine Taste von **F13–F24**
+  senden lassen; diese Taste in dbDash zuweisen.
 
 ## OBS / Streaming
 
-Jedes Overlay ist auch eine Webseite, solange dbDash läuft:
+Jedes Overlay ist auch eine Webseite, solange dbDash läuft. In OBS: *Quelle hinzufügen → Browser*, Adresse einfügen und
+die Größe setzen:
 
-- `http://127.0.0.1:8182/relative.html`
-- `http://127.0.0.1:8182/standings.html`
-- `http://127.0.0.1:8182/inputs.html`
-- `http://127.0.0.1:8182/delta.html`
-- `http://127.0.0.1:8182/dash.html`
-- `http://127.0.0.1:8182/radar.html`
+| Overlay | Adresse | Größe (ca.) |
+| --- | --- | --- |
+| Relative | `http://127.0.0.1:8182/relative.html` | 430 × 300 |
+| Standings | `http://127.0.0.1:8182/standings.html` | 640 × 460 |
+| Inputs | `http://127.0.0.1:8182/inputs.html` | 600 × 110 |
+| Delta | `http://127.0.0.1:8182/delta.html` | 380 × 130 |
+| Dashboard | `http://127.0.0.1:8182/dash.html` | 860 × 500 |
+| Radar | `http://127.0.0.1:8182/radar.html` | 220 × 300 |
 
-In OBS: *Quelle hinzufügen → Browser*, Adresse einfügen, Breite/Höhe z. B. 430×300, 640×460, 600×110, 380×130, 860×500, 220×300.
+Die Größen hängen von Zeilen- und Spaltenzahl ab – bei Bedarf anpassen.
+
+## Gut zu wissen
+
+dbDash zeigt nur, was iRacing über seine offizielle Schnittstelle (iRacing SDK) liefert:
+
+- **Incidents der Gegner** hält iRacing während der Session geheim. dbDash zählt deshalb ihre Ausritte neben die Strecke
+  (je 1x) und zeigt diese Schätzung *kursiv und abgeblendet*. Kontakte (2x / 4x) sind darin nicht enthalten.
+  Deine eigenen Incidents sind immer exakt.
+- **Schaden:** iRacing meldet nicht, *welches* Teil beschädigt ist – nur die Reparaturzeiten. Die Auto-Grafik zeigt
+  deshalb die Schadensstufe am ganzen Auto.
+- **Radar:** iRacing liefert keine seitliche Position, nur den Abstand auf der Strecke und die Spotter-Meldung
+  „Auto links / rechts“. Autos davor / dahinter stehen deshalb mittig, Autos neben dir auf der gemeldeten Seite.
+- **iRating-Prognose:** nutzt die von der Community ermittelte Formel und ist eine Schätzung (pro Klasse, nur im Rennen).
+- Werte, die ein Auto nicht hat (z. B. TC), erscheinen als „–“. Reifenwerte aktualisiert iRacing je nach Auto teils nur
+  beim Boxenstopp.
 
 ## Anpassen
 
-Die Overlays sind normale HTML-/CSS-/JavaScript-Dateien im Ordner `resources\web` und dürfen für den eigenen
-Gebrauch angepasst werden (veränderte Versionen bitte nicht weitergeben – siehe Lizenz).
-Änderungen sind nach dem Neuladen sofort sichtbar (dbDash neu starten). Daten kommen per WebSocket
-(`ws://127.0.0.1:8182/ws`) als JSON – siehe `common.js` (`PW.onState(...)`).
+Die Overlays sind normale HTML-, CSS- und JavaScript-Dateien im Ordner `resources\web` und dürfen für den eigenen
+Gebrauch angepasst werden (veränderte Versionen bitte nicht weitergeben – siehe Lizenz). Änderungen sind nach einem
+Neustart von dbDash sichtbar. Die Daten kommen per WebSocket (`ws://127.0.0.1:8182/ws`) als JSON – siehe `common.js`
+(`PW.onState(...)`).
 
-## Technik
+## Selbst bauen
 
-- Electron (Chromium + Node.js), iRacing-Telemetrie direkt aus dem Shared Memory des offiziellen iRacing-SDK
-  (`Local\IRSDKMemMapFileName`) über koffi/Win32-API.
-- Quellcode: `src/main.js` (Fenster, Webserver), `src/irsdk.js` (SDK-Reader), `src/state.js` (Relative/Standings-Berechnung),
-  `src/fuel.js` (Sprit-Rechner), `src/race.js` (Startplätze, Boxenstopps), `src/joystick.js` (Lenkradknöpfe), `src/demo.js` (Simulation).
-
-## Selbst bauen (nur für den eigenen Gebrauch)
-
-Voraussetzung: **Node.js 22 oder neuer** (LTS von https://nodejs.org). Dann im Quellcode-Ordner in der Eingabeaufforderung:
+Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.org)). Dann im Quellcode-Ordner:
 
 | Befehl | Was passiert |
 | --- | --- |
 | `npm install` | lädt alle Bausteine (einmalig, ca. 200 MB) |
-| `npm test` | prüft iRacing-Leser, Lenkradknöpfe und Abstands-Berechnung |
-| `npm start` | startet dbDash direkt aus dem Quellcode (zum Ausprobieren von Änderungen) |
+| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents und Radar |
+| `npm start` | startet dbDash direkt aus dem Quellcode |
 | `npm run build` | baut das fertige Programm: `dist\dbDash\dbDash.exe` plus ZIP zum Weitergeben |
-| `npm run video` | nimmt das Vorstellungsvideo auf (Drehbuch `video/scenes.js`, Ergebnis in `video/out/`; braucht ffmpeg) |
+| `npm run screenshots` | erzeugt die Bilder dieser Seite neu (`docs/img/`) |
+| `npm run video` | nimmt das Vorstellungsvideo auf (`video/out/`, braucht [ffmpeg](https://ffmpeg.org)) |
+| `npm run icons` | erzeugt Programmsymbol und Stream-Deck-Grafiken aus den SVG-Vorlagen |
+
+**Technik:** Electron (Chromium + Node.js). Die Telemetrie kommt direkt aus dem Shared Memory des offiziellen iRacing-SDK
+(`Local\IRSDKMemMapFileName`) über koffi und die Win32-API. Quellcode in `src/`: `main.js` (Fenster, Webserver),
+`irsdk.js` (SDK-Leser), `state.js` (Berechnungen), `fuel.js` (Sprit), `race.js` (Startplätze, Boxenstopps, Incidents),
+`joystick.js` (Lenkradknöpfe), `demo.js` (Simulation).
 
 ## Lizenz
 
-Copyright (c) 2026 Johann Danner. dbDash steht unter der Lizenz
+Copyright © 2026 Johann Danner. dbDash steht unter der Lizenz
 **[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de)**
 (Namensnennung – Nicht kommerziell – Keine Bearbeitungen):
 
@@ -135,7 +232,8 @@ Copyright (c) 2026 Johann Danner. dbDash steht unter der Lizenz
 - ❌ Veränderte Versionen weitergeben oder veröffentlichen.
 - ❌ Verkaufen oder kommerziell verwerten.
 
-Details: `LICENSE.txt`. Mitgelieferte Fremdkomponenten (Electron, Chromium, koffi, ws, js-yaml, Länderflaggen von
-[flag-icons](https://github.com/lipis/flag-icons)) stehen unter ihren eigenen Lizenzen – siehe `DRITTANBIETER-LIZENZEN.txt`.
+Details: [`LICENSE`](LICENSE). Mitgelieferte Fremdkomponenten (Electron, Chromium, koffi, ws, js-yaml, Länderflaggen von
+[flag-icons](https://github.com/lipis/flag-icons)) stehen unter ihren eigenen Lizenzen – siehe `DRITTANBIETER-LIZENZEN.txt`
+im fertigen Programm.
 
-dbDash ist ein unabhängiges Projekt und nicht mit iRacing.com Motorsport Simulations oder RaceLabs verbunden.
+<sub>dbDash ist ein unabhängiges Projekt und nicht mit iRacing.com Motorsport Simulations oder RaceLabs verbunden.</sub>

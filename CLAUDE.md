@@ -11,9 +11,12 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
-  (APPDATA im Temp-Ordner, Demo an), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
+  (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
   (MP4 1080p30 ohne Ton, `sprechtext.md`, `youtube-beschreibung.txt`). ffmpeg über PATH, `FFMPEG=` oder `ffmpeg-static`.
   `VIDEO_PREVIEW=1` = nur ein Standbild pro Szene. Port 8182 muss frei sein. Neue Funktion → Szene ergänzen.
+- `npm run screenshots` – README-Bilder nach `docs/img/` (Liste `video/screenshots.js`, gleiche Bühne wie das Video).
+  README ist für GitHub gestaltet (Bilder, Abzeichen, Download-Link `../../releases/latest`); `docs/` wird beim Build
+  neben `LIESMICH.md` kopiert. Neue Funktion → Bild ergänzen und `npm run screenshots`.
 - `npm run icons` – Programmsymbol (`build/icon.svg` → `build/icon.ico`, `web/assets/icon.png`) und Stream-Deck-Grafiken
   (`grafiken/*.svg` → PNGs) neu erzeugen. Läuft in Electron; in VS Code ggf. `ELECTRON_RUN_AS_NODE` leeren.
 - Version in `package.json` erhöhen, bevor gebaut und weitergegeben wird.
@@ -72,7 +75,8 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Testen ohne iRacing
 - Demo-Modus (Standard beim ersten Start). Testhilfen per Umgebungsvariable:
   `DBDASH_SHOT=<ordner>` (Screenshots aller Fenster, dann Ende), `DBDASH_SHOT_DELAY=<ms>`,
-  `DBDASH_SCROLL=<overlay-id>` (Einstellungsfenster dorthin scrollen), `DBDASH_DEMO_ENGINE_OFF=1`.
+  `DBDASH_SCROLL=<overlay-id>` (Einstellungsfenster dorthin scrollen), `DBDASH_DEMO_ENGINE_OFF=1`,
+  `DBDASH_USERDATA=<ordner>` (eigener Einstellungsordner – echte Einstellungen bleiben unberührt).
 - Echte iRacing-Daten, Lenkräder und Stream Deck konnten bisher nur simuliert getestet werden – Rückmeldungen
   des Autors aus echten Rennen haben Vorrang.
 

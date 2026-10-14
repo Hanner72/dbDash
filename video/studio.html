@@ -29,6 +29,9 @@
   @keyframes drive { to { background-position: 50% 400px; } }
   .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(61,220,132,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(61,220,132,.05) 1px, transparent 1px); background-size: 40px 40px; }
   .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgba(0,0,0,.75) 100%); }
+  /* ruhiger Hintergrund für README-Bilder */
+  body.plain #bg { background: radial-gradient(ellipse at 50% 40%, #151b25, #090c11 75%); }
+  body.plain #bg > :not(.grid) { display: none; }
   #bg.dim::after { content: ''; position: absolute; inset: 0; background: rgba(4,6,9,.55); transition: opacity 1s; }
 
   /* Overlays */
@@ -112,11 +115,15 @@
     stage.appendChild(box);
   }
 
+  // Rahmen an die echte Größe eines Overlays anpassen (von record.js gemessen)
+  window.fit = (id, w, h) => { const f = document.querySelector('#ov-' + id + ' iframe'); if (f) { f.width = w; f.height = h; } };
+
   // Szene anzeigen (von record.js aufgerufen)
   window.show = (sc) => {
     document.getElementById('intro').classList.toggle('on', !!sc.intro);
     document.getElementById('outro').classList.toggle('on', !!sc.outro);
     document.getElementById('deck').classList.toggle('on', !!sc.deck);
+    document.body.classList.toggle('plain', !!sc.plain);
     document.getElementById('obs').classList.toggle('on', !!sc.obs);
     document.getElementById('mark').style.opacity = sc.intro || sc.outro || sc.noMark ? 0 : .85;
     document.getElementById('bg').classList.toggle('dim', !!sc.layout && Object.keys(sc.layout).length === 1);

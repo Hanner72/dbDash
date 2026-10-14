@@ -8,7 +8,8 @@
     "build": "node build/build.js",
     "icons": "electron build/icons.js",
     "test": "node test/irsdk-test.js && node test/joystick-test.js && node test/gaps-test.js && node test/incidents-test.js && node test/radar-test.js",
-    "video": "electron video/record.js"
+    "video": "electron video/record.js",
+    "screenshots": "electron video/record.js --docs"
   },
   "keywords": [],
   "author": "Johann Danner",

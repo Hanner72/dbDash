@@ -2,6 +2,7 @@
 // Startet dbDash im Demo-Modus mit eigenen Einstellungen (die echten bleiben unberührt), spielt das Drehbuch
 // aus scenes.js auf der Bühne studio.html ab und schreibt nach video/out/:
 //   dbDash-Vorstellung.mp4 (1920×1080, 30 fps, ohne Ton), sprechtext.md, youtube-beschreibung.txt
+// Mit --docs (npm run screenshots) stattdessen die README-Bilder nach docs/img/ (Liste: screenshots.js).
 // Benötigt ffmpeg: im PATH, über die Umgebungsvariable FFMPEG oder das npm-Paket ffmpeg-static.
 'use strict';
 
@@ -18,6 +19,7 @@ const ROOT = path.join(__dirname, '..');
 const OUT = path.join(__dirname, 'out');
 const PORT = 8182;
 const FPS = 30;
+const DOCS = !!process.env.DOCS_SHOTS || process.argv.includes('--docs'); // README-Bilder statt Video
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function findFfmpeg() {
@@ -33,22 +35,28 @@ const get = (url) => new Promise((ok) => http.get(url, (r) => { r.resume(); r.on
 const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 async function main() {
-  const ffmpeg = findFfmpeg();
+  const ffmpeg = DOCS ? null : findFfmpeg();
   if (await get(`http://127.0.0.1:${PORT}/`)) throw new Error(`Port ${PORT} ist belegt – bitte dbDash/TriDash vorher beenden.`);
   fs.mkdirSync(OUT, { recursive: true });
 
   // 1. dbDash mit eigener Einstellungs-Kopie starten (Demo an, keine Overlay-Fenster auf dem Bildschirm)
-  const appData = path.join(os.tmpdir(), 'dbdash-video-appdata');
-  fs.rmSync(appData, { recursive: true, force: true });
-  fs.mkdirSync(path.join(appData, 'dbDash'), { recursive: true });
-  fs.writeFileSync(path.join(appData, 'dbDash', 'settings.json'), JSON.stringify({ demo: true, visible: false, port: PORT }));
-  const env = { ...process.env, APPDATA: appData };
+  const userData = path.join(os.tmpdir(), 'dbdash-video-userdata');
+  fs.rmSync(userData, { recursive: true, force: true });
+  fs.mkdirSync(userData, { recursive: true });
+  fs.writeFileSync(path.join(userData, 'settings.json'), JSON.stringify({ demo: true, visible: false, port: PORT }));
+  const env = { ...process.env, DBDASH_USERDATA: userData };
   delete env.ELECTRON_RUN_AS_NODE;
   const dbdash = spawn(process.execPath, [ROOT], { env, stdio: 'ignore' });
   for (let i = 0; i < 60 && !(await get(`http://127.0.0.1:${PORT}/`)); i++) await sleep(250);
+  // Sicherheitsprüfung: läuft dbDash wirklich mit der Kopie? (sonst würden die echten Einstellungen verändert)
+  const used = () => fs.readdirSync(userData).length > 1; // Electron legt dort Cache-Ordner an
+  for (let i = 0; i < 40 && !used(); i++) await sleep(250);
+  if (!used()) { dbdash.kill(); throw new Error('dbDash nutzt nicht den Video-Einstellungsordner – Abbruch, um deine Einstellungen zu schützen.'); }
   const ws = new WebSocket(`ws://127.0.0.1:${PORT}/ws?id=video`);
   await new Promise((ok, fail) => { ws.on('open', ok); ws.on('error', fail); });
   const send = (m) => ws.send(JSON.stringify(m));
+  let live = null; // aktueller Zustand (für „warten, bis ein Auto neben dir ist“)
+  ws.on('message', (m) => { try { const d = JSON.parse(m); if (d.type === 'state') live = d.state; } catch { /* egal */ } });
 
   // 2. Bühne unsichtbar rendern
   const win = new BrowserWindow({ width: 1920, height: 1080, show: false, useContentSize: true,
@@ -58,6 +66,53 @@ async function main() {
   win.webContents.on('paint', (e, dirty, image) => { frame = image; });
   await win.loadFile(path.join(__dirname, 'studio.html'));
   await sleep(5000); // Overlays verbinden sich und füllen sich mit Daten
+  // Rahmen der Overlays an ihre tatsächliche Größe anpassen (Zeilenzahl usw. hängt von den Einstellungen ab)
+  const fitFrames = async () => {
+    for (const f of win.webContents.mainFrame.framesInSubtree) {
+      const m = /\/(\w+)\.html\?id=/.exec(f.url);
+      if (!m || m[1] === 'control') continue;
+      const s = await f.executeJavaScript(`(() => { const r = document.getElementById('root'); return r ? [r.offsetWidth, r.offsetHeight] : null; })()`).catch(() => null);
+      if (s && s[0] > 0) await win.webContents.executeJavaScript(`fit('${m[1]}', ${s[0]}, ${s[1]})`);
+    }
+  };
+  await fitFrames();
+  const inControl = (js) => { const f = win.webContents.mainFrame.framesInSubtree.find((x) => /control.html/.test(x.url)); return f ? f.executeJavaScript(js) : null; };
+
+  // README-Bilder (--docs): Ausschnitte der Overlays in hoher Auflösung nach docs/img/
+  if (DOCS) {
+    const dir = path.join(ROOT, 'docs', 'img'); fs.mkdirSync(dir, { recursive: true });
+    for (const sh of require('./screenshots')) {
+      for (const [k, v] of Object.entries(sh.set || {})) send({ cmd: 'set', path: k, value: v });
+      for (const p of Object.values(sh.page || {})) await get(`http://127.0.0.1:${PORT}/api/page/${p}`);
+      await win.webContents.executeJavaScript(`show(${JSON.stringify({ ...sh, noMark: !!sh.crop })})`);
+      await sleep(2500);
+      await fitFrames();
+      if (sh.controlJs) await inControl(sh.controlJs);
+      await sleep(400);
+      if (sh.waitRadar) { // bis zu 60 s warten, bis ein Auto neben dir ist
+        for (let i = 0; i < 240; i++) {
+          const r = live && live.radar;
+          if (r && (r.side >= 2 || (r.cars || []).some((c) => Math.abs(c.dist) < 5))) break;
+          await sleep(250);
+        }
+        await sleep(300);
+      }
+      let rect;
+      if (sh.crop) {
+        rect = await win.webContents.executeJavaScript(`(() => {
+          const rs = ${JSON.stringify(sh.crop)}.map((id) => document.querySelector('#ov-' + id + ' iframe').getBoundingClientRect());
+          const x = Math.min(...rs.map((r) => r.left)) - 24, y = Math.min(...rs.map((r) => r.top)) - 24;
+          return { x: Math.max(0, Math.round(x)), y: Math.max(0, Math.round(y)),
+            width: Math.round(Math.max(...rs.map((r) => r.right)) - x + 24), height: Math.round(Math.max(...rs.map((r) => r.bottom)) - y + 24) };
+        })()`);
+      }
+      const img = await win.webContents.capturePage(rect);
+      fs.writeFileSync(path.join(dir, sh.file), sh.file.endsWith('.jpg') ? img.toJPEG(90) : img.toPNG());
+      console.log('✔', sh.file, img.getSize().width + '×' + img.getSize().height);
+    }
+    ws.close(); dbdash.kill();
+    return;
+  }
 
   // Vorschau (VIDEO_PREVIEW=1): pro Szene nur ein Standbild nach out/vorschau/
   if (process.env.VIDEO_PREVIEW) {
@@ -95,6 +150,7 @@ async function main() {
     for (const [k, v] of Object.entries(sc.set || {})) send({ cmd: 'set', path: k, value: v });
     for (const p of Object.values(sc.page || {})) await get(`http://127.0.0.1:${PORT}/api/page/${p}`);
     await win.webContents.executeJavaScript(`show(${JSON.stringify(sc)})`);
+    if (sc.controlJs) inControl(sc.controlJs);
     const timers = [];
     if (sc.every) timers.push(setInterval(() => send({ cmd: 'action', action: sc.every[1] }), sc.every[0] * 1000));
     for (const [sec, y] of sc.scroll || []) {

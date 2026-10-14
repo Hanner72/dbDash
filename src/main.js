@@ -18,6 +18,10 @@ const VERSION = require('../package.json').version;
 // Im fertigen Programm liegen die Overlays offen im Ordner resources/web (frei anpassbar)
 const WEB = app.isPackaged ? path.join(process.resourcesPath, 'web') : path.join(__dirname, '..', 'web');
 
+// Testhilfe: eigener Einstellungsordner (z. B. für Video/Screenshots), damit die echten Einstellungen unberührt bleiben.
+// Hinweis: Electron ermittelt den Ordner über Windows selbst – die Variable APPDATA umzubiegen wirkt NICHT.
+if (process.env.DBDASH_USERDATA) app.setPath('userData', process.env.DBDASH_USERDATA);
+
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 
 // Overlays ohne Grafikkarte zeichnen (Einstellung „gpu“ aus): muss vor dem Start feststehen, wirkt nach Neustart
