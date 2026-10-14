@@ -4,7 +4,9 @@
 // neuen Dateien über die alten (robocopy) und startet dbDash neu. Einstellungen liegen in %APPDATA% und bleiben erhalten.
 'use strict';
 
-const fs = require('fs');
+// Wichtig: In Electron behandelt das normale fs-Modul *.asar-Dateien wie Ordner – ein entpacktes Update (mit
+// resources/app.asar) ließe sich damit nicht löschen (ENOTEMPTY). Deshalb das unveränderte Dateisystem verwenden.
+const fs = (() => { try { return require('original-fs'); } catch { return require('fs'); } })();
 const os = require('os');
 const path = require('path');
 const { spawn, execFileSync } = require('child_process');
@@ -24,7 +26,8 @@ class Updater {
   // version: aktuelle Version; installDir: Ordner mit dbDash.exe; onChange: wird bei jeder Statusänderung aufgerufen
   constructor({ version, installDir, onChange }) {
     this.version = version;
-    this.installDir = installDir;
+    // vollständiger Pfad (keine 8.3-Kurznamen wie DANNER~1), damit der Prozess-Vergleich im Update-Skript passt
+    try { this.installDir = fs.realpathSync.native(installDir); } catch { this.installDir = installDir; }
     this.onChange = onChange || (() => {});
     this.info = { status: 'idle', current: version }; // idle | checking | none | available | downloading | installing | error
     this.release = null;
@@ -58,9 +61,10 @@ class Updater {
   // Lädt, entpackt und startet die Installation. quit() beendet danach dbDash.
   async install(quit) {
     if (this.info.status !== 'available' || !this.release) return;
-    const work = path.join(os.tmpdir(), 'dbdash-update');
+    // jeder Versuch in einem eigenen Ordner; Reste früherer Updates nur nebenbei wegräumen (darf nie scheitern)
+    this.cleanup();
+    const work = path.join(os.tmpdir(), `dbdash-update-${Date.now()}`);
     try {
-      fs.rmSync(work, { recursive: true, force: true });
       fs.mkdirSync(work, { recursive: true });
       // 1. herunterladen (mit Fortschritt)
       this.set({ status: 'downloading', progress: 0, errorCode: null });
@@ -93,8 +97,8 @@ class Updater {
       fs.writeFileSync(script, [
         '@echo off', 'chcp 65001 >nul', 'title dbDash wird aktualisiert',
         'echo dbDash wird aktualisiert – bitte warten ...',
-        ':warten',
-        'tasklist /FI "IMAGENAME eq dbDash.exe" 2>nul | find /I "dbDash.exe" >nul && (timeout /t 1 /nobreak >nul & goto warten)',
+        // warten, bis das dbDash aus *diesem* Programmordner beendet ist (andere Installationen stören nicht; max. 60 s)
+        `powershell -NoProfile -Command "$d='${this.installDir.replace(/'/g, "''")}\\*'; for ($i=0; $i -lt 120 -and (Get-Process dbDash -ErrorAction SilentlyContinue | Where-Object { $_.Path -like $d }); $i++) { Start-Sleep -Milliseconds 500 }"`,
         `robocopy "${src}" "${this.installDir}" /E /R:10 /W:1 /NFL /NDL /NJH /NJS /NP > "${log}"`,
         'if %ERRORLEVEL% GEQ 8 (echo. & echo Das Update konnte nicht kopiert werden. Details: ' + log + ' & pause & exit /b 1)',
         `start "" "${path.join(this.installDir, 'dbDash.exe')}"`,
@@ -112,6 +116,16 @@ class Updater {
     } catch (e) {
       this.fail('install', e);
     }
+  }
+
+  // alte Update-Ordner im Temp löschen, so gut es geht (gesperrte Dateien einfach liegen lassen)
+  cleanup() {
+    try {
+      for (const d of fs.readdirSync(os.tmpdir())) {
+        if (!/^dbdash-update(-\d+)?$/.test(d)) continue;
+        try { fs.rmSync(path.join(os.tmpdir(), d), { recursive: true, force: true, maxRetries: 3, retryDelay: 200 }); } catch { /* später erneut */ }
+      }
+    } catch { /* egal */ }
   }
 
   writable() {

@@ -53,8 +53,11 @@ function moveDir(from, to) {
   const { packager } = require('@electron/packager');
   try { fs.rmSync(DIST, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 }); }
   catch (e) { throw new Error(`Der Ordner „dist“ ist gesperrt. Bitte dbDash beenden und Explorer-Fenster im Ordner „dist“ schließen. (${e.code})`); }
-  const [out] = await packager({
+  // Direkt in dist bauen (tmpdir: false): das Verschieben aus dem Temp-Ordner scheitert oft am Virenscanner (EPERM).
+  // Zur Sicherheit bis zu 3 Versuche.
+  const opts = {
     dir: ROOT,
+    tmpdir: false,
     name: 'dbDash',
     executableName: 'dbDash',
     platform: 'win32',
@@ -66,8 +69,16 @@ function moveDir(from, to) {
     extraResource: [path.join(ROOT, 'build/koffi'), path.join(ROOT, 'web')],
     ignore: [/^\/dist/, /^\/grafiken/, /^\/node_modules\/flag-icons/, /^\/parts/, /\.zip$/, /^\/LICENSE$/, /^\/test/, /^\/README/,
       /^\/build/, /^\/web/, /^\/video/, /^\/node_modules\/@koromix/, /^\/node_modules\/koffi\/(vendor|doc|lib|build)/,
-      /^\/node_modules\/koffi\/src\/koffi\/(?!index\.cjs|src)/],
-  });
+      /^\/node_modules\/koffi\/src\/koffi\/(?!index\.cjs|src)/, /^\/docs/],
+  };
+  let out;
+  for (let i = 1; ; i++) {
+    try { [out] = await packager(opts); break; } catch (e) {
+      if (i >= 3 || !['EPERM', 'EBUSY', 'EACCES'].includes(e.code)) throw e;
+      console.log(`  gesperrt (${e.code}) – neuer Versuch ${i + 1}/3 …`);
+      sleep(3000);
+    }
+  }
 
   // 4. Symbol und Versionsinfos in die .exe schreiben
   step('Programmsymbol setzen');

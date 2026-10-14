@@ -1,6 +1,6 @@
 {
   "name": "dbdash",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "description": "dbDash (dannerbam Dash) – Dashboard für Simracer mit kostenlosen iRacing-Overlays: Relative, Standings, Inputs, Delta, Dashboard, Radar",
   "main": "src/main.js",
   "scripts": {

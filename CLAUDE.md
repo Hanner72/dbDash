@@ -53,6 +53,10 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
   `tar.exe` entpackt → `update.cmd` wartet bis kein dbDash.exe mehr läuft → robocopy über den Programmordner → Neustart.
   Nicht beschreibbarer Ordner → Skript mit Admin-Rechten (UAC). Testhilfe `DBDASH_UPDATE_API=<url>` (auch aus dem Quellcode).
   Release-ZIP muss oben den Ordner `dbDash` mit `dbDash.exe` enthalten (macht build.js so).
+  **Fallstrick:** In Electron behandelt `fs` *.asar-Dateien wie Ordner und hält sie danach offen → entpackte Updates
+  ließen sich nicht löschen (ENOTEMPTY/EBUSY, Fehler in 2.3.0/2.4.0). Deshalb `original-fs`, je Versuch eigener Ordner
+  `%TEMP%dbdash-update-<zeit>`, alte Ordner nur nebenbei aufräumen. Das Skript wartet nur auf dbDash aus dem eigenen
+  Programmordner (max. 60 s). Test: zwei Updates hintereinander (siehe Versionsverlauf 2.4.1).
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
   Reichweite (`radarRange`, 1–80 m) = Lücke Stoßstange zu Stoßstange (feste Länge 4,7 m, iRacing liefert keine);
   Radar erscheint nur bei Lücke ≤ Reichweite oder Spotter-Meldung, ohne Verzögerung aus; in Qualifikation aus.
@@ -64,7 +68,8 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
   und schiebt Overlays zurück auf den Bildschirm, wenn sie herausragen.
 - Einstellungen: `%APPDATA%\dbDash\settings.json`; alte TriDash- bzw. PitWall-Einstellungen werden einmalig übernommen.
 - Globale Tastenkürzel blockieren die Taste für iRacing → für Stream Deck/SimHub F13–F24 empfehlen.
-- Windows-Build: Virenscanner sperrt frische Dateien kurz → `build.js` versucht mehrmals / kopiert statt umbenennen.
+- Windows-Build: Virenscanner sperrt frische Dateien kurz → `build.js` baut direkt in `dist` (`tmpdir: false`), versucht
+  mehrmals und kopiert statt umbenennen.
 - WebSocket nimmt nur Verbindungen ohne Origin oder von 127.0.0.1/localhost an; `/api/*` weist Browser-Aufrufe
   fremder Seiten ab (Sec-Fetch-Site/Origin).
 
@@ -108,6 +113,7 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
+2.4.1 – Updater-Fehler behoben (zweites Update scheiterte an app.asar-Resten), Build ohne Temp-Verschieben (tmpdir: false).
 2.4.0 – Zweisprachig (Deutsch / Englisch, automatisch nach Windows-Sprache, live umschaltbar), README.en.md.
 2.3.0 – Standings: Spalten Automarke und Reifen, Spalten frei sortierbar; automatische Updates über GitHub.
 2.2.0 – Incidents der Gegner, Dashboard überarbeitet, Radar (1–80 m, Blueprint), Leistung (CPU 9,6 % → 1 %),
