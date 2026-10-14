@@ -65,7 +65,7 @@ function moveDir(from, to) {
     prune: true,
     extraResource: [path.join(ROOT, 'build/koffi'), path.join(ROOT, 'web')],
     ignore: [/^\/dist/, /^\/grafiken/, /^\/node_modules\/flag-icons/, /^\/parts/, /\.zip$/, /^\/LICENSE$/, /^\/test/, /^\/README/,
-      /^\/build/, /^\/web/, /^\/node_modules\/@koromix/, /^\/node_modules\/koffi\/(vendor|doc|lib|build)/,
+      /^\/build/, /^\/web/, /^\/video/, /^\/node_modules\/@koromix/, /^\/node_modules\/koffi\/(vendor|doc|lib|build)/,
       /^\/node_modules\/koffi\/src\/koffi\/(?!index\.cjs|src)/],
   });
 

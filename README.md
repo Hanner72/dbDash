@@ -122,6 +122,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von https://nodejs.org). Dann im Q
 | `npm test` | prüft iRacing-Leser, Lenkradknöpfe und Abstands-Berechnung |
 | `npm start` | startet dbDash direkt aus dem Quellcode (zum Ausprobieren von Änderungen) |
 | `npm run build` | baut das fertige Programm: `dist\dbDash\dbDash.exe` plus ZIP zum Weitergeben |
+| `npm run video` | nimmt das Vorstellungsvideo auf (Drehbuch `video/scenes.js`, Ergebnis in `video/out/`; braucht ffmpeg) |
 
 ## Lizenz
 

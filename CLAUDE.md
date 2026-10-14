@@ -10,6 +10,10 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
 - `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
+- `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
+  (APPDATA im Temp-Ordner, Demo an), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
+  (MP4 1080p30 ohne Ton, `sprechtext.md`, `youtube-beschreibung.txt`). ffmpeg über PATH, `FFMPEG=` oder `ffmpeg-static`.
+  `VIDEO_PREVIEW=1` = nur ein Standbild pro Szene. Port 8182 muss frei sein. Neue Funktion → Szene ergänzen.
 - `npm run icons` – Programmsymbol (`build/icon.svg` → `build/icon.ico`, `web/assets/icon.png`) und Stream-Deck-Grafiken
   (`grafiken/*.svg` → PNGs) neu erzeugen. Läuft in Electron; in VS Code ggf. `ELECTRON_RUN_AS_NODE` leeren.
 - Version in `package.json` erhöhen, bevor gebaut und weitergegeben wird.
