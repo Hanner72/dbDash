@@ -29,6 +29,13 @@
   @keyframes drive { to { background-position: 50% 400px; } }
   .grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(61,220,132,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(61,220,132,.05) 1px, transparent 1px); background-size: 40px 40px; }
   .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgba(0,0,0,.75) 100%); }
+  /* Foto-Hintergrund (video/hintergrund.jpg) statt gezeichneter Straße – mit langsamem Zoom, damit es lebt */
+  #photo { position: absolute; inset: -2%; background: url('hintergrund.jpg') center / cover no-repeat; display: none;
+    animation: kenburns 24s ease-in-out infinite alternate; }
+  @keyframes kenburns { from { transform: scale(1) translate(0, 0); } to { transform: scale(1.07) translate(-1%, -1%); } }
+  body.photo #photo { display: block; }
+  body.photo #bg > .grid, body.photo .sky, body.photo .hills, body.photo .road, body.photo .dash-line { display: none; }
+
   /* ruhiger Hintergrund für README-Bilder */
   body.plain #bg { background: radial-gradient(ellipse at 50% 40%, #151b25, #090c11 75%); }
   body.plain #bg > :not(.grid) { display: none; }
@@ -81,7 +88,7 @@
 </style>
 </head>
 <body>
-<div id="bg"><div class="sky"></div><div class="hills"></div><div class="road"></div><div class="dash-line"></div><div class="grid"></div><div class="vignette"></div></div>
+<div id="bg"><div id="photo"></div><div class="sky"></div><div class="hills"></div><div class="road"></div><div class="dash-line"></div><div class="grid"></div><div class="vignette"></div></div>
 
 <div id="stage"></div>
 
@@ -107,11 +114,12 @@
 
   // Overlays als eingebettete Seiten aus dem laufenden dbDash (Breite × Höhe der Seite)
   const OVERLAYS = { standings: [830, 540], relative: [430, 260], inputs: [600, 110], delta: [380, 125], dash: [860, 495], radar: [220, 302], control: [560, 830] };
+  const PORT = new URLSearchParams(location.search).get('port') || 8182; // dbDash der Aufnahme
   const stage = document.getElementById('stage');
   for (const [id, [w, h]] of Object.entries(OVERLAYS)) {
     const box = document.createElement('div');
     box.className = 'ov' + (id === 'control' ? '' : ' shadow'); box.id = 'ov-' + id;
-    box.innerHTML = `<iframe src="http://127.0.0.1:8182/${id}.html?id=${id}" width="${w}" height="${h}" scrolling="${id === 'control' ? 'yes' : 'no'}"></iframe>`;
+    box.innerHTML = `<iframe src="http://127.0.0.1:${PORT}/${id}.html?id=${id}" width="${w}" height="${h}" scrolling="${id === 'control' ? 'yes' : 'no'}"></iframe>`;
     stage.appendChild(box);
   }
 
@@ -124,6 +132,7 @@
     document.getElementById('outro').classList.toggle('on', !!sc.outro);
     document.getElementById('deck').classList.toggle('on', !!sc.deck);
     document.body.classList.toggle('plain', !!sc.plain);
+    document.body.classList.toggle('photo', !!sc.photo && !sc.plain);
     document.getElementById('obs').classList.toggle('on', !!sc.obs);
     document.getElementById('mark').style.opacity = sc.intro || sc.outro || sc.noMark ? 0 : .85;
     document.getElementById('bg').classList.toggle('dim', !!sc.layout && Object.keys(sc.layout).length === 1);

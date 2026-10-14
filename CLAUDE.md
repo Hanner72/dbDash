@@ -13,7 +13,9 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
   (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
   (MP4 1080p30 ohne Ton, `sprechtext.md`, `youtube-beschreibung.txt`). ffmpeg über PATH, `FFMPEG=` oder `ffmpeg-static`.
-  `VIDEO_PREVIEW=1` = nur ein Standbild pro Szene. Port 8182 muss frei sein. Neue Funktion → Szene ergänzen.
+  `VIDEO_PREVIEW=1` = nur ein Standbild pro Szene. Aufnahme nutzt Port 8185 (laufendes dbDash stört nicht).
+  Hintergrund: `video/hintergrund.jpg` (Foto, 1920×1080) – fehlt die Datei, wird die gezeichnete Straße genutzt;
+  README-Titelbild `hero.jpg` ebenfalls mit Foto (`photo: true` in screenshots.js). Neue Funktion → Szene ergänzen.
 - `npm run screenshots` – README-Bilder nach `docs/img/` (Liste `video/screenshots.js`, gleiche Bühne wie das Video).
   README ist für GitHub gestaltet (Bilder, Abzeichen, Download-Link `../../releases/latest`); `docs/` wird beim Build
   neben `LIESMICH.md` kopiert. Neue Funktion → Bild ergänzen und `npm run screenshots`.

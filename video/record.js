@@ -17,8 +17,10 @@ const SCENES = require('./scenes');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(__dirname, 'out');
-const PORT = 8182;
+const PORT = 8185; // eigener Port – ein laufendes dbDash (8182) darf weiterlaufen
 const FPS = 30;
+// Foto-Hintergrund verwenden, wenn video/hintergrund.jpg vorhanden ist (sonst gezeichnete Straße)
+const PHOTO = fs.existsSync(path.join(__dirname, 'hintergrund.jpg'));
 const DOCS = !!process.env.DOCS_SHOTS || process.argv.includes('--docs'); // README-Bilder statt Video
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -36,7 +38,7 @@ const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart
 
 async function main() {
   const ffmpeg = DOCS ? null : findFfmpeg();
-  if (await get(`http://127.0.0.1:${PORT}/`)) throw new Error(`Port ${PORT} ist belegt – bitte dbDash/TriDash vorher beenden.`);
+  if (await get(`http://127.0.0.1:${PORT}/`)) throw new Error(`Port ${PORT} ist belegt – läuft schon eine Aufnahme?`);
   fs.mkdirSync(OUT, { recursive: true });
 
   // 1. dbDash mit eigener Einstellungs-Kopie starten (Demo an, keine Overlay-Fenster auf dem Bildschirm)
@@ -64,7 +66,7 @@ async function main() {
   win.webContents.setFrameRate(FPS);
   let frame = null;
   win.webContents.on('paint', (e, dirty, image) => { frame = image; });
-  await win.loadFile(path.join(__dirname, 'studio.html'));
+  await win.loadFile(path.join(__dirname, 'studio.html'), { query: { port: String(PORT) } });
   await sleep(5000); // Overlays verbinden sich und füllen sich mit Daten
   // Rahmen der Overlays an ihre tatsächliche Größe anpassen (Zeilenzahl usw. hängt von den Einstellungen ab)
   const fitFrames = async () => {
@@ -84,7 +86,7 @@ async function main() {
     for (const sh of require('./screenshots')) {
       for (const [k, v] of Object.entries(sh.set || {})) send({ cmd: 'set', path: k, value: v });
       for (const p of Object.values(sh.page || {})) await get(`http://127.0.0.1:${PORT}/api/page/${p}`);
-      await win.webContents.executeJavaScript(`show(${JSON.stringify({ ...sh, noMark: !!sh.crop })})`);
+      await win.webContents.executeJavaScript(`show(${JSON.stringify({ ...sh, noMark: !!sh.crop, photo: PHOTO && sh.photo })})`);
       await sleep(2500);
       await fitFrames();
       if (sh.controlJs) await inControl(sh.controlJs);
@@ -120,7 +122,7 @@ async function main() {
     for (const [i, sc] of SCENES.entries()) {
       for (const [k, v] of Object.entries(sc.set || {})) send({ cmd: 'set', path: k, value: v });
       for (const p of Object.values(sc.page || {})) await get(`http://127.0.0.1:${PORT}/api/page/${p}`);
-      await win.webContents.executeJavaScript(`show(${JSON.stringify(sc)})`);
+      await win.webContents.executeJavaScript(`show(${JSON.stringify({ ...sc, photo: PHOTO })})`);
       await sleep(2500);
       fs.writeFileSync(path.join(dir, `${String(i).padStart(2, '0')}-${sc.id}.jpg`), (await win.webContents.capturePage()).toJPEG(85));
     }
@@ -149,7 +151,7 @@ async function main() {
     console.log(`${mmss(at)}  ${sc.id}`);
     for (const [k, v] of Object.entries(sc.set || {})) send({ cmd: 'set', path: k, value: v });
     for (const p of Object.values(sc.page || {})) await get(`http://127.0.0.1:${PORT}/api/page/${p}`);
-    await win.webContents.executeJavaScript(`show(${JSON.stringify(sc)})`);
+    await win.webContents.executeJavaScript(`show(${JSON.stringify({ ...sc, photo: PHOTO })})`);
     if (sc.controlJs) inControl(sc.controlJs);
     const timers = [];
     if (sc.every) timers.push(setInterval(() => send({ cmd: 'action', action: sc.every[1] }), sc.every[0] * 1000));

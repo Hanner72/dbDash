@@ -9,7 +9,8 @@ const HUD = {
 };
 
 module.exports = [
-  { file: 'hero.jpg', layout: HUD, page: { left: 'tyres', right: 'laps' } },
+  // Titelbild: Overlays über dem Cockpit-Foto (video/hintergrund.jpg)
+  { file: 'hero.jpg', layout: HUD, page: { left: 'tyres', right: 'laps' }, photo: true },
   { file: 'dashboard.png', layout: { dash: [200, 60, 1.5] }, page: { left: 'tyres', right: 'laps' }, crop: ['dash'], plain: true },
   { file: 'dashboard-abstaende-schaden.png', layout: { dash: [200, 60, 1.5] }, page: { left: 'gapAll', right: 'damage' }, crop: ['dash'], plain: true },
   { file: 'dashboard-strategie-relative.png', layout: { dash: [200, 60, 1.5] }, page: { left: 'strategy', right: 'relAll' }, crop: ['dash'], plain: true },
