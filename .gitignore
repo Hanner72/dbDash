@@ -2,4 +2,4 @@ node_modules/
 dist/
 build/koffi/
 *.zip
-video/
+video/out/

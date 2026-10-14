@@ -87,5 +87,6 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
-2.1.0 – zuletzt: Umbenennung TriDash → dbDash (mittlerer Logo-Strich hellorange), Build-Skript für Windows
-(Sperren durch Virenscanner), Abstände live statt nach iRacing-Position.
+2.2.0 – Incidents der Gegner (geschätzt), Dashboard überarbeitet (Schriften, Vorzeichen, Gas/Bremse, Schaden als
+GT3-Blueprint), Radar (1–80 m Lücke, sofort aus, Qualifikation aus, Blueprint), Leistung (CPU 9,6 % → 1 %),
+Vorstellungsvideo + README-Bilder per Skript. Davor 2.1.0: Umbenennung TriDash → dbDash.
