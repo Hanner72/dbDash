@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Radar</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #root { width: 220px; }
+  #root.panel { background: rgba(12, 14, 18, calc(var(--bg-a) * .9)); border-radius: 16px; }
+  canvas { display: block; width: 220px; height: 300px; }
+  /* Radar leer: ausblenden (außer im Verschiebe-Modus) */
+  body.radar-empty:not(.edit) #root { visibility: hidden; }
+</style>
+</head>
+<body data-overlay="radar">
+<div id="root" class="panel"><canvas id="cv" width="440" height="600"></canvas></div>
+<script src="common.js"></script>
+<script>
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const W = 220, H = 300, CX = W / 2, CY = H / 2;
+  ctx.scale(2, 2); // scharf auf hochauflösenden Bildschirmen
+  const OVERLAP = 5.5;          // m: ab hier gilt ein Auto als "neben dir"
+  const CAR_W = 20, LANE = 34;  // Darstellung in Pixeln
+  let emptySince = 0;
+
+  // iRacing CarLeftRight: 0 aus, 1 frei, 2 links, 3 rechts, 4 links+rechts, 5 zwei links, 6 zwei rechts
+  const SIDES = { 2: ['L'], 3: ['R'], 4: ['L', 'R'], 5: ['L', 'L2'], 6: ['R', 'R2'] };
+  const LANE_X = { L: -1, R: 1, L2: -1.9, R2: 1.9, C: 0 };
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
+  function drawCar(lane, dist, scale, len, fill, stroke, stripe) {
+    const x = CX + LANE_X[lane] * LANE - CAR_W / 2;
+    const y = CY - dist * scale - len / 2;
+    roundRect(x, y, CAR_W, len, 6);
+    ctx.fillStyle = fill; ctx.fill();
+    if (stroke) { ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); }
+    if (stripe) { ctx.fillStyle = stripe; roundRect(x + 4, y + 3, CAR_W - 8, 4, 2); ctx.fill(); }
+  }
+
+  function sideGlow(left) {
+    const g = ctx.createLinearGradient(left ? 0 : W, 0, left ? 46 : W - 46, 0);
+    g.addColorStop(0, 'rgba(255,70,70,.75)'); g.addColorStop(1, 'rgba(255,70,70,0)');
+    ctx.fillStyle = g; ctx.fillRect(left ? 0 : W - 46, 0, 46, H);
+  }
+
+  PW.onState((st, cfg) => {
+    const r = st.radar;
+    if (!st.connected || !r) return;
+    const range = r.range || 40;
+    const scale = (H / 2 - 18) / range;
+    const len = Math.max(30, 4.7 * scale);
+    const sides = SIDES[r.side] || [];
+
+    // Automatisch ausblenden, wenn niemand in der Nähe ist
+    const busy = r.cars.length > 0 || sides.length > 0;
+    const now = Date.now();
+    if (busy) emptySince = 0; else if (!emptySince) emptySince = now;
+    document.body.classList.toggle('radar-empty', !!(cfg && cfg.radarAutoHide !== false) && !busy && now - emptySince > 1200);
+
+    ctx.clearRect(0, 0, W, H);
+    // Abstandsringe alle 10 m
+    ctx.font = '600 9px Bahnschrift, Segoe UI, sans-serif';
+    ctx.textAlign = 'left';
+    for (let m = 10; m <= range; m += 10) {
+      for (const s of [1, -1]) {
+        const y = CY - s * m * scale;
+        ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1;
+        ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(14, y); ctx.lineTo(W - 14, y); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillText(m + 'm', 6, y - 3);
+      }
+    }
+    // Spuren
+    ctx.strokeStyle = 'rgba(255,255,255,.05)';
+    for (const x of [CX - LANE / 2, CX + LANE / 2]) { ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, H - 8); ctx.stroke(); }
+
+    if (sides.some((s) => s[0] === 'L')) sideGlow(true);
+    if (sides.some((s) => s[0] === 'R')) sideGlow(false);
+
+    // Autos neben dir den Seiten zuordnen, die iRacing meldet (nächste zuerst)
+    const cars = r.cars.slice();
+    const overlapping = cars.filter((c) => Math.abs(c.dist) < OVERLAP);
+    const placed = new Map();
+    sides.forEach((lane, i) => { if (overlapping[i]) placed.set(overlapping[i], lane); });
+    // Spotter meldet ein Auto, das wir über die Distanz nicht finden -> trotzdem anzeigen
+    sides.forEach((lane, i) => { if (!overlapping[i]) cars.push({ dist: 0, color: '#ff5a5a', ghostOnly: true, lane }); });
+
+    for (const c of cars) {
+      const lane = c.lane || placed.get(c) || 'C';
+      const ad = Math.abs(c.dist);
+      let fill, stroke = null;
+      if (lane !== 'C' || ad < OVERLAP) { fill = 'rgba(255,80,80,.9)'; stroke = '#ffb3b3'; }
+      else if (ad < 12) { fill = 'rgba(255,210,63,.85)'; }
+      else fill = `rgba(235,240,248,${(0.25 + 0.45 * (1 - ad / range)).toFixed(2)})`;
+      drawCar(lane, c.dist, scale, len, fill, stroke, c.ghostOnly ? null : c.color);
+    }
+
+    // Eigenes Auto
+    drawCar('C', 0, scale, len, 'rgba(198,255,61,.22)', '#c6ff3d', null);
+
+    // Abstand zum nächsten Auto davor / dahinter
+    const ahead = r.cars.filter((c) => c.dist >= OVERLAP).sort((a, b) => a.dist - b.dist)[0];
+    const behind = r.cars.filter((c) => c.dist <= -OVERLAP).sort((a, b) => b.dist - a.dist)[0];
+    ctx.font = '700 13px Bahnschrift, Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,.85)';
+    if (ahead) ctx.fillText(ahead.dist.toFixed(1) + ' m', CX, 14);
+    if (behind) ctx.fillText(Math.abs(behind.dist).toFixed(1) + ' m', CX, H - 6);
+  });
+</script>
+</body>
+</html>

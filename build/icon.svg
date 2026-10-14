@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- dbDash-Programmsymbol: drei schräge Striche (grün, hellorange, grün) über einem Balken.
+       Nach Änderungen:  npm run icons  (erzeugt build/icon.ico und web/assets/icon.png neu) -->
+  <rect x="40" y="40" width="944" height="944" rx="200" fill="#12151b"/>
+  <polygon points="250,760 370,760 540,264 420,264" fill="#c6ff3d"/>
+  <polygon points="440,760 560,760 730,264 610,264" fill="#ffb347"/>
+  <polygon points="630,760 750,760 920,264 800,264" fill="#c6ff3d" fill-opacity="0.37"/>
+  <rect x="200" y="800" width="624" height="40" fill="#eef1f5"/>
+</svg>

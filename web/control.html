@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dbDash – dannerbam Dash</title>
+<link rel="icon" href="assets/icon.png">
+<style>
+  :root {
+    --bg: #0f1115; --card: #171a21; --card2: #1d212a; --line: #262b36; --text: #e9edf3; --dim: #8b94a3;
+    --accent: #c6ff3d; --warn: #ffd23f; --bad: #ff5a5a;
+    --font: "Bahnschrift", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--font); }
+  header { display: flex; align-items: center; gap: 12px; padding: 18px 20px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 2; }
+  .logo { width: 34px; height: 34px; border-radius: 8px; }
+  h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  h1 small { color: var(--dim); font-weight: 400; font-size: 12px; margin-left: 6px; }
+  .pill { margin-left: auto; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; background: var(--card2); color: var(--dim); white-space: nowrap; }
+  .pill.ok { background: rgba(198,255,61,.14); color: var(--accent); }
+  .pill.demo { background: rgba(255,210,63,.14); color: var(--warn); }
+  main { padding: 16px 20px 30px; display: grid; gap: 14px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim); margin: 0 0 10px; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 7px 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .lbl { flex: 1; }
+  .row .lbl small { display: block; color: var(--dim); font-size: 12px; }
+  .ov { background: var(--card2); border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
+  .ov .top { display: flex; align-items: center; gap: 10px; }
+  .ov .top b { flex: 1; font-size: 15px; }
+  .ov .grid { display: grid; grid-template-columns: 90px 1fr 46px; gap: 6px 10px; align-items: center; margin-top: 8px; font-size: 13px; color: var(--dim); }
+  .cols { display: grid; grid-template-columns: 90px 1fr; gap: 10px; margin-top: 10px; font-size: 13px; color: var(--dim); }
+  .cols > div { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; color: var(--text); }
+  .cols label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .cols label select { margin-left: auto; padding: 2px 6px; font-size: 12px; }
+  .cols > div.single { grid-template-columns: 1fr; gap: 3px; }
+  .cols > div.single select { min-width: 92px; }
+  .cols input { accent-color: var(--accent); width: 15px; height: 15px; }
+  .ov .url { display: flex; gap: 6px; margin-top: 8px; }
+  .ov .url input { flex: 1; background: var(--bg); border: 1px solid var(--line); color: var(--dim); border-radius: 6px; padding: 5px 8px; font: 12px ui-monospace, Consolas, monospace; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  button, select { background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 7px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button:hover { border-color: #3a4150; }
+  button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 700; }
+  button.small { padding: 4px 10px; font-size: 12px; }
+  .switch { position: relative; width: 42px; height: 24px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #2c323e; border-radius: 99px; transition: .15s; cursor: pointer; }
+  .switch span::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .15s; }
+  .switch input:checked + span { background: var(--accent); }
+  .switch input:checked + span::after { transform: translateX(18px); background: #111; }
+  kbd { background: var(--card2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 11px; font-family: inherit; }
+  .hint { color: var(--dim); font-size: 13px; }
+  .hint li { margin: 3px 0; }
+  .banner { border-radius: 10px; padding: 10px 12px; font-size: 13px; background: rgba(255,210,63,.1); border: 1px solid rgba(255,210,63,.3); color: #f3e3a3; }
+  .banner.err { background: rgba(255,90,90,.1); border-color: rgba(255,90,90,.35); color: #ffc0c0; }
+  footer button { white-space: nowrap; }
+  .bind { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 9px 0; }
+  .bind + .bind { border-top: 1px solid var(--line); }
+  .bind .slots { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+  .slot { display: inline-flex; align-items: center; gap: 6px; background: var(--card2); border: 1px solid var(--line); border-radius: 6px; padding: 3px 4px 3px 8px; font-size: 12px; }
+  .slot.empty { color: var(--dim); padding-right: 8px; }
+  .slot.err { border-color: var(--bad); color: #ffb3b3; }
+  .slot button { padding: 0 6px; font-size: 12px; line-height: 18px; border: 0; background: transparent; color: var(--dim); }
+  .slot button:hover { color: var(--text); }
+  .bind.learning { background: rgba(198,255,61,.07); border-radius: 8px; padding: 9px 8px; }
+  .learnmsg { grid-column: 1 / -1; color: var(--accent); font-size: 13px; font-weight: 600; }
+  .bind .btns { display: flex; gap: 6px; }
+  .api { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+  .api span { flex: 1; color: var(--dim); }
+  .api input { flex: 1.6; background: var(--bg); border: 1px solid var(--line); color: var(--text); border-radius: 6px; padding: 4px 7px; font: 12px ui-monospace, Consolas, monospace; min-width: 0; }
+  .api-h { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); margin: 10px 0 2px; }
+  footer { display: flex; gap: 10px; justify-content: space-between; align-items: center; color: var(--dim); font-size: 12px; padding: 0 20px 20px; }
+</style>
+</head>
+<body>
+<header>
+  <img class="logo" src="assets/icon.png" alt="">
+  <h1>dbDash <small id="ver"></small></h1>
+  <span class="pill" id="status">Verbinde …</span>
+</header>
+<main>
+  <div class="banner" id="demoBanner" hidden>Demo-Modus ist aktiv – die Overlays zeigen ein simuliertes Rennen. Für echte Daten aus iRacing unten ausschalten.</div>
+  <div class="banner err" id="sdkBanner" hidden>iRacing-Daten können auf diesem System nicht gelesen werden (nur unter Windows möglich). Der Demo-Modus funktioniert trotzdem.</div>
+
+  <section>
+    <h2>Allgemein</h2>
+    <div class="row"><div class="lbl">Demo-Modus<small>Simuliertes Mehrklassen-Rennen zum Testen ohne iRacing</small></div><label class="switch"><input type="checkbox" data-k="demo"><span></span></label></div>
+    <div class="row"><div class="lbl">Overlays anzeigen<small>Alle ein-/ausblenden · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd></small></div><label class="switch"><input type="checkbox" data-k="visible"><span></span></label></div>
+    <div class="row"><div class="lbl">Nur bei laufendem Motor anzeigen<small>Overlays verschwinden, solange der Motor aus ist (Box, Garage, Menü)</small></div><label class="switch"><input type="checkbox" data-k="hideEngineOff"><span></span></label></div>
+    <div class="row"><div class="lbl">Overlays verschieben<small>Overlays mit der Maus an die gewünschte Stelle ziehen · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></small></div><label class="switch"><input type="checkbox" data-k="editMode"><span></span></label></div>
+    <div class="row"><div class="lbl">Einheit Geschwindigkeit</div>
+      <select data-k="units"><option value="kmh">km/h</option><option value="mph">mph</option></select></div>
+    <div class="row"><div class="lbl">Relative: Fahrer vor/hinter dir</div>
+      <select data-k="relativeRows" data-num><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+    <div class="row"><div class="lbl">Standings: max. Zeilen</div>
+      <select data-k="standingsRows" data-num><option>8</option><option>10</option><option>12</option><option>14</option><option>18</option><option>22</option><option>30</option></select></div>
+    <div class="row"><div class="lbl">Positionen zurücksetzen<small>Falls ein Overlay außerhalb des Bildschirms gelandet ist</small></div><button class="small" id="reset">Zurücksetzen</button></div>
+  </section>
+
+  <section>
+    <h2>Overlays</h2>
+    <div id="ovs"></div>
+  </section>
+
+  <section>
+    <h2>Tasten &amp; Lenkradknöpfe</h2>
+    <div id="binds"></div>
+    <p class="hint" id="joyInfo" style="margin:10px 0 0"></p>
+  </section>
+
+  <section>
+    <h2>Stream Deck</h2>
+    <p class="hint" style="margin:0 0 8px"><b>Weg 1 – Tastenkürzel (ohne Plugin):</b> Am Stream Deck die Aktion <b>„Tastenkürzel“ / „Hotkey“</b>
+      auf eine Taste ziehen und eine Taste von <b>F13 bis F24</b> eintragen (die gibt es auf keiner Tastatur, also kein Konflikt mit iRacing).
+      Dann oben bei der gewünschten Aktion „Zuweisen“ klicken und die Stream-Deck-Taste drücken.</p>
+    <p class="hint" style="margin:0 0 8px"><b>Weg 2 – Web-Adresse:</b> Mit dem kostenlosen Stream-Deck-Plugin <b>„Web Requests“</b> (BarRaider, im Stream-Deck-Store)
+      eine dieser Adressen aufrufen lassen (Methode GET). Damit lässt sich auch jede Anzeige direkt öffnen:</p>
+    <div id="apiList"></div>
+  </section>
+
+  <section>
+    <h2>Hinweise</h2>
+    <ul class="hint">
+      <li>Stelle iRacing unter <b>Options → Graphics</b> auf <b>„Borderless Window“ (Randloses Fenster)</b>. Im exklusiven Vollbild kann Windows keine Overlays darüber zeichnen.</li>
+      <li>Für OBS: <b>Quelle hinzufügen → Browser</b>, die Adresse des Overlays einfügen und die Größe passend setzen (Relative 430×300, Standings 640×460, Inputs 600×110, Delta 380×130, Dashboard 860×500, Radar 220×300 – je nach Zeilen/Spalten anpassen).</li>
+      <li>Das Schließen dieses Fensters beendet das Programm nicht – es läuft im Infobereich der Taskleiste weiter.</li>
+      <li>Alle Overlays sind normale HTML/CSS-Dateien im Ordner <code>resources/web</code> und lassen sich für den eigenen Gebrauch anpassen (veränderte Versionen dürfen nicht weitergegeben werden).</li>
+    </ul>
+  </section>
+</main>
+<footer>
+  <span>Kostenlos · © 2026 Johann Danner · Lizenz CC BY-NC-ND 4.0 · Nicht mit iRacing.com, RaceLabs oder SimHub verbunden</span>
+  <button id="quit">Programm beenden</button>
+</footer>
+<script>
+  let cfgMsg = {};
+  let ws, cfg, overlays = [], status = {}, built = false, ovOpts = {};
+  const $ = (s) => document.querySelector(s);
+
+  function send(m) { ws && ws.readyState === 1 && ws.send(JSON.stringify(m)); }
+  function set(path, value) { send({ cmd: 'set', path, value }); }
+
+  function connect() {
+    ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onmessage = (e) => {
+      const m = JSON.parse(e.data);
+      if (m.type === 'config') { cfgMsg = m; cfg = m.config; overlays = m.overlays; status = m.status; ovOpts = m.overlayOptions || {}; render(); }
+      if (m.type === 'state') renderStatus(m.state);
+    };
+    ws.onclose = () => { $('#status').className = 'pill'; $('#status').textContent = 'Getrennt'; setTimeout(connect, 1000); };
+  }
+
+  let lastStatus = '';
+  function renderStatus(st) {
+    let cls = 'pill', txt;
+    if (cfg && cfg.demo) { cls += ' demo'; txt = 'Demo-Modus'; }
+    else if (st.connected) { cls += ' ok'; txt = 'iRacing verbunden'; }
+    else txt = 'Warte auf iRacing …';
+    const k = cls + txt;
+    if (k !== lastStatus) { lastStatus = k; $('#status').className = cls; $('#status').textContent = txt; }
+  }
+
+  // ---------- Tasten & Lenkradknöpfe ----------
+  let actions = [], learning = null, joyState = {};
+  function renderBinds() {
+    $('#binds').innerHTML = actions.map((a) => `
+      <div class="bind${learning === a.id ? ' learning' : ''}">
+        <div>${a.label}</div>
+        <div class="btns">
+          <button class="small" data-test="${a.id}" title="Aktion jetzt auslösen">Testen</button>
+          ${learning === a.id ? `<button class="small" data-cancel>Abbrechen</button>` : `<button class="small primary" data-learn="${a.id}">Zuweisen</button>`}
+        </div>
+        ${learning === a.id ? '<div class="learnmsg">Jetzt eine Taste oder einen Lenkradknopf drücken … (Esc = abbrechen)</div>' : ''}
+        <div class="slots">
+          <span class="slot${a.key ? '' : ' empty'}${a.keyError ? ' err' : ''}" title="${a.keyError ? 'Diese Taste ist schon von einem anderen Programm belegt' : ''}">⌨ ${a.key ? esc(a.key) + (a.keyError ? ' (belegt!)' : '') : 'keine Taste'}${a.key ? `<button data-clear="${a.id}" data-slot="key" title="Entfernen">✕</button>` : ''}</span>
+          <span class="slot${a.joy ? '' : ' empty'}">🎮 ${a.joy ? esc(a.joy) : 'kein Lenkradknopf'}${a.joy ? `<button data-clear="${a.id}" data-slot="joy" title="Entfernen">✕</button>` : ''}</span>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('[data-learn]').forEach((b) => (b.onclick = () => send({ cmd: 'learn', action: b.dataset.learn })));
+    document.querySelectorAll('[data-cancel]').forEach((b) => (b.onclick = () => send({ cmd: 'cancelLearn' })));
+    document.querySelectorAll('[data-test]').forEach((b) => (b.onclick = () => send({ cmd: 'action', action: b.dataset.test })));
+    document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => send({ cmd: 'clearBinding', action: b.dataset.clear, slot: b.dataset.slot })));
+    const j = joyState;
+    $('#joyInfo').innerHTML = !j.available ? 'Lenkradknöpfe werden nur unter Windows erkannt.'
+      : j.devices.length ? 'Erkannte Geräte: ' + j.devices.map((d) => '<b>' + esc(d.name) + '</b>').join(', ') + '. Tasten werden systemweit abgefangen – iRacing bekommt eine hier belegte Taste dann nicht mehr. Lenkradknöpfe sind davon nicht betroffen.'
+      : 'Kein Lenkrad / Controller erkannt. Gerät anschließen – es erscheint nach ein paar Sekunden.';
+  }
+  let apiBuilt = false;
+  function renderApi() {
+    if (apiBuilt || !status.port) return;
+    apiBuilt = true;
+    const base = `http://127.0.0.1:${status.port}/api/`;
+    const row = (label, url) => `<div class="api"><span>${esc(label)}</span><input readonly value="${url}"><button class="small" data-copy="${url}">Kopieren</button></div>`;
+    $('#apiList').innerHTML = '<div class="api-h">Aktionen</div>' + actions.map((a) => row(a.label, base + 'action/' + a.id)).join('') +
+      '<div class="api-h">Anzeige direkt öffnen</div>' + (cfgMsg.dashPageList || []).map(([k, n]) => row(n, base + 'page/' + k)).join('');
+    document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = async () => {
+      try { await navigator.clipboard.writeText(b.dataset.copy); } catch { const i = b.previousElementSibling; i.select(); document.execCommand('copy'); }
+      b.textContent = 'Kopiert ✓'; setTimeout(() => (b.textContent = 'Kopieren'), 1500);
+    }));
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  // Taste als Electron-Tastenkürzel (z. B. "Ctrl+Shift+F9") lesen
+  const CODE_MAP = { ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Space: 'Space', Tab: 'Tab', Backspace: 'Backspace',
+    Delete: 'Delete', Insert: 'Insert', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown', Enter: 'Enter', NumpadEnter: 'Enter',
+    NumpadAdd: 'numadd', NumpadSubtract: 'numsub', NumpadMultiply: 'nummult', NumpadDivide: 'numdiv', NumpadDecimal: 'numdec',
+    Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']', Semicolon: ';', Quote: "'", Comma: ',', Period: '.', Slash: '/', Backslash: '\\', Backquote: '`' };
+  function accelFromEvent(e) {
+    let k = null, m;
+    if ((m = e.code.match(/^Key([A-Z])$/))) k = m[1];
+    else if ((m = e.code.match(/^Digit(\d)$/))) k = m[1];
+    else if ((m = e.code.match(/^F(\d{1,2})$/))) k = 'F' + m[1];
+    else if ((m = e.code.match(/^Numpad(\d)$/))) k = 'num' + m[1];
+    else k = CODE_MAP[e.code] || null;
+    if (!k) return null;
+    const mods = [];
+    if (e.ctrlKey) mods.push('Ctrl'); if (e.altKey) mods.push('Alt'); if (e.shiftKey) mods.push('Shift'); if (e.metaKey) mods.push('Super');
+    return mods.concat(k).join('+');
+  }
+  window.addEventListener('keydown', (e) => {
+    if (!learning) return;
+    e.preventDefault();
+    if (e.code === 'Escape') { send({ cmd: 'cancelLearn' }); return; }
+    const accel = accelFromEvent(e);
+    if (accel) send({ cmd: 'bindKey', action: learning, accel });
+  });
+
+  function render() {
+    actions = cfgMsg.actions || []; learning = cfgMsg.learning; joyState = cfgMsg.joystick || {};
+    renderBinds();
+    renderApi();
+    $('#ver').textContent = 'v' + status.version;
+    $('#demoBanner').hidden = !cfg.demo;
+    $('#sdkBanner').hidden = status.sdkAvailable || cfg.demo;
+    document.querySelectorAll('[data-k]').forEach((el) => {
+      const v = cfg[el.dataset.k];
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = String(v);
+    });
+    if (!built) buildOverlays();
+    for (const o of overlays) {
+      const c = cfg.overlays[o.id];
+      const box = document.getElementById('ov-' + o.id);
+      box.querySelector('.en').checked = c.enabled;
+      box.querySelector('.sc').value = Math.round(c.scale * 100);
+      box.querySelector('.scv').textContent = Math.round(c.scale * 100) + '%';
+      box.querySelector('.bg').value = Math.round(c.bg * 100);
+      box.querySelector('.bgv').textContent = Math.round(c.bg * 100) + '%';
+    }
+    document.querySelectorAll('[data-opt]').forEach((el) => {
+      const v = el.dataset.opt.split('.').reduce((o, k) => (o == null ? o : o[k]), cfg);
+      if (el.type === 'checkbox') el.checked = v !== false; else el.value = String(v);
+    });
+  }
+
+  function buildOverlays() {
+    built = true;
+    const base = `http://127.0.0.1:${status.port}/`;
+    $('#ovs').innerHTML = overlays.map((o) => `
+      <div class="ov" id="ov-${o.id}">
+        <div class="top"><b>${o.title}</b><label class="switch"><input type="checkbox" class="en"><span></span></label></div>
+        <div class="grid">
+          <span>Größe</span><input type="range" class="sc" min="50" max="200" step="5"><span class="scv"></span>
+          <span>Hintergrund</span><input type="range" class="bg" min="0" max="100" step="1"><span class="bgv"></span>
+        </div>
+        ${ovOpts[o.id] ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="${ovOpts[o.id].single ? 'single' : ''}">${ovOpts[o.id].items.map((it) => it.type === 'select'
+          ? `<label>${it.label} <select data-opt="${it.path}">${it.options.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select></label>`
+          : `<label><input type="checkbox" data-opt="${it.path}"> ${it.label}</label>`).join('')}</div></div>` : ''}
+        <div class="url"><input readonly value="${base}${o.file}"><button class="small cp">Kopieren</button><button class="small op">Öffnen</button></div>
+      </div>`).join('');
+    for (const o of overlays) {
+      const box = document.getElementById('ov-' + o.id);
+      box.querySelector('.en').onchange = (e) => set(`overlays.${o.id}.enabled`, e.target.checked);
+      box.querySelector('.sc').oninput = (e) => { box.querySelector('.scv').textContent = e.target.value + '%'; set(`overlays.${o.id}.scale`, e.target.value / 100); };
+      box.querySelector('.bg').oninput = (e) => { box.querySelector('.bgv').textContent = e.target.value + '%'; set(`overlays.${o.id}.bg`, e.target.value / 100); };
+      const url = base + o.file;
+      box.querySelector('.cp').onclick = async (e) => {
+        try { await navigator.clipboard.writeText(url); } catch { box.querySelector('.url input').select(); document.execCommand('copy'); }
+        e.target.textContent = 'Kopiert ✓'; setTimeout(() => (e.target.textContent = 'Kopieren'), 1500);
+      };
+      box.querySelector('.op').onclick = () => send({ cmd: 'openUrl', url });
+    }
+    document.querySelectorAll('[data-opt]').forEach((el) => {
+      el.onchange = () => set(el.dataset.opt, el.type === 'checkbox' ? el.checked : (isNaN(Number(el.value)) ? el.value : Number(el.value)));
+    });
+  }
+
+  document.querySelectorAll('[data-k]').forEach((el) => {
+    el.onchange = () => {
+      let v = el.type === 'checkbox' ? el.checked : el.value;
+      if ('num' in el.dataset) v = Number(v);
+      set(el.dataset.k, v);
+    };
+  });
+  $('#reset').onclick = () => send({ cmd: 'resetPositions' });
+  $('#quit').onclick = () => { if (confirm('dbDash beenden?')) send({ cmd: 'quit' }); };
+  connect();
+</script>
+</body>
+</html>

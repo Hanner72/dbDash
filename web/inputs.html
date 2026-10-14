@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Inputs</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #root { width: 600px; }
+  .main { display: flex; align-items: stretch; height: 96px; padding: 8px 10px; gap: 10px; }
+  #root { padding-top: 0; }
+  canvas.trace { width: 300px; height: 80px; border-radius: 4px; background: rgba(255,255,255,.03); }
+  .bars { display: flex; gap: 5px; align-items: flex-end; }
+  .bar { width: 12px; height: 80px; background: rgba(255,255,255,.07); border-radius: 3px; position: relative; overflow: hidden; }
+  .bar i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px; }
+  .bar.c i { background: #5ab0ff; } .bar.b i { background: var(--bad); } .bar.t i { background: var(--good); }
+  .gear { width: 86px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gear .g { font-size: 46px; font-weight: 700; line-height: 46px; }
+  .gear .s { font-size: 15px; font-weight: 600; } .gear .u { font-size: 10px; color: var(--dim); letter-spacing: .1em; }
+  .wheel { width: 80px; display: flex; align-items: center; justify-content: center; }
+  .wheel svg { width: 72px; height: 72px; }
+  .rpm { height: 3px; margin: 0 10px 6px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+  .rpm i { display: block; height: 100%; background: linear-gradient(90deg, var(--good), #ffd23f 70%, var(--bad)); }
+  .pw-mark { top: 6px; bottom: auto; }
+</style>
+</head>
+<body data-overlay="inputs">
+<div id="root" class="panel">
+  <div class="main">
+    <canvas class="trace" id="trace" width="600" height="160"></canvas>
+    <div class="bars">
+      <div class="bar c"><i id="bc"></i></div>
+      <div class="bar b"><i id="bb"></i></div>
+      <div class="bar t"><i id="bt"></i></div>
+    </div>
+    <div class="gear"><div class="g" id="gear">N</div><div class="s" id="speed">0</div><div class="u" id="unit">KM/H</div></div>
+    <div class="wheel">
+      <svg viewBox="-50 -50 100 100" id="wheel">
+        <circle r="42" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="7"/>
+        <path d="M -40 4 Q 0 14 40 4" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="7"/>
+        <rect x="-4" y="6" width="8" height="34" fill="rgba(255,255,255,.85)"/>
+        <rect x="-3" y="-49" width="6" height="12" rx="2" fill="var(--accent)"/>
+      </svg>
+    </div>
+  </div>
+  <div class="rpm"><i id="rpm"></i></div>
+</div>
+<script src="common.js"></script>
+<script>
+  const cv = document.getElementById('trace'), ctx = cv.getContext('2d');
+  const HIST = 240; // ~8 Sekunden bei 30 Hz
+  const thr = [], brk = [];
+  let maxRpm = 7800;
+  const $ = (id) => document.getElementById(id);
+
+  PW.onState((st, cfg) => {
+    if (!st.connected) return;
+    const p = st.player;
+    thr.push(p.throttle); brk.push(p.brake);
+    if (thr.length > HIST) { thr.shift(); brk.shift(); }
+
+    // Balken
+    $('bc').style.height = (p.clutch * 100) + '%';
+    $('bb').style.height = (p.brake * 100) + '%';
+    $('bt').style.height = (p.throttle * 100) + '%';
+
+    // Gang & Tempo
+    $('gear').textContent = p.gear === -1 ? 'R' : p.gear === 0 ? 'N' : p.gear;
+    const mph = cfg && cfg.units === 'mph';
+    $('speed').textContent = Math.round(p.speed * (mph ? 2.23694 : 3.6));
+    $('unit').textContent = mph ? 'MPH' : 'KM/H';
+
+    // Lenkrad (iRacing: positiv = links)
+    $('wheel').style.transform = `rotate(${(-p.steer * 180 / Math.PI).toFixed(1)}deg)`;
+
+    // Drehzahl
+    if (p.rpm > maxRpm) maxRpm = p.rpm;
+    $('rpm').style.width = Math.min(100, p.rpm / maxRpm * 100) + '%';
+
+    drawTrace();
+  });
+
+  function drawTrace() {
+    const W = cv.width, H = cv.height, pad = 8;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 2;
+    for (const y of [0.25, 0.5, 0.75]) { ctx.beginPath(); ctx.moveTo(0, pad + (H - 2 * pad) * y); ctx.lineTo(W, pad + (H - 2 * pad) * y); ctx.stroke(); }
+    const line = (arr, color) => {
+      ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath();
+      const off = HIST - arr.length;
+      arr.forEach((v, i) => {
+        const x = (off + i) / (HIST - 1) * W, y = pad + (1 - v) * (H - 2 * pad);
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      });
+      ctx.stroke();
+    };
+    line(thr, '#3ddc84');
+    line(brk, '#ff5a5a');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect x="8" y="8" width="496" height="496" rx="92" fill="#0b0d10"/>
+  <rect x="8" y="8" width="496" height="496" rx="92" fill="none" stroke="#262b35" stroke-width="6"/>
+  <svg x="196" y="58" width="120" height="76" viewBox="250 264 790 496"><polygon points="250,760 370,760 540,264 420,264" fill="#c6ff3d" fill-opacity="1"/><polygon points="440,760 560,760 730,264 610,264" fill="#ffb347"/><polygon points="630,760 750,760 920,264 800,264" fill="#c6ff3d" fill-opacity="0.37"/></svg>
+  <rect x="64" y="166" width="384" height="210" rx="34" fill="#16191f" stroke="#e9edf3" stroke-opacity=".85" stroke-width="6"/>
+  <rect x="92" y="196" width="96" height="150" rx="16" fill="none" fill-opacity="0" stroke="#5b6270" stroke-width="6"/>
+  <rect x="204" y="196" width="104" height="150" rx="14" fill="#262a31"/>
+  <text x="256" y="300" text-anchor="middle" font-family="Bahnschrift, 'DIN Alternate', 'Roboto Condensed', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="92" fill="#f3f5f8">3</text>
+  <rect x="324" y="196" width="96" height="150" rx="16" fill="#c6ff3d" fill-opacity="0.18" stroke="#c6ff3d" stroke-width="8"/>
+  <g transform="translate(372,271)" fill="none" stroke="#c6ff3d" stroke-width="10" stroke-linecap="round">
+      <path d="M -26 -6 A 27 27 0 0 1 22 -16"/><path d="M 26 6 A 27 27 0 0 1 -22 16"/></g>
+      <g transform="translate(372,271)" fill="#c6ff3d">
+      <polygon points="12,-30 34,-14 10,-6"/><polygon points="-12,30 -34,14 -10,6"/></g>
+  <text x="256" y="446" text-anchor="middle" font-family="Bahnschrift, 'DIN Alternate', 'Roboto Condensed', 'Segoe UI', Arial, sans-serif" font-weight="800" font-size="64" letter-spacing="4" fill="#f3f5f8">RECHTS</text>
+  <text x="256" y="482" text-anchor="middle" font-family="Bahnschrift, 'Segoe UI', Arial, sans-serif" font-weight="700" font-size="26" letter-spacing="6" fill="#8b94a3">UMSCHALTEN</text>
+</svg>

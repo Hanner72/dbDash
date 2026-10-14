@@ -1,0 +1,88 @@
+/* dbDash – gemeinsame Gestaltung */
+:root {
+  --bg-a: 0.82;
+  --bg: rgba(12, 14, 18, var(--bg-a));
+  --bg-row: rgba(255, 255, 255, calc(var(--bg-a) * 0.035));
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #eef1f5;
+  --dim: #8b94a3;
+  --accent: #c6ff3d;      /* dbDash-Grün */
+  --me: rgba(198, 255, 61, 0.16);
+  --ahead: #ff8a6a;       /* Fahrer eine Runde voraus */
+  --behind: #6fb6ff;      /* Fahrer eine Runde zurück */
+  --purple: #c08bff;
+  --good: #3ddc84;
+  --bad: #ff5a5a;
+  --radius: 8px;
+  --font: "Bahnschrift", "DIN Alternate", "Roboto Condensed", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: transparent; height: 100%; }
+html { overflow: hidden; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+#root {
+  display: inline-block;
+  transform-origin: 0 0;
+  position: relative;
+}
+.panel {
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+/* Kein Signal: Inhalt unsichtbar, Größe bleibt erhalten */
+body.offline:not(.edit) #root { visibility: hidden; }
+/* Motor aus: Overlay ausblenden (im Verschiebe-Modus trotzdem sichtbar) */
+body.engineoff:not(.edit) #root { visibility: hidden; }
+.waiting { display: none; }
+body.offline .waiting {
+  display: flex; position: absolute; inset: 0; align-items: center; justify-content: center;
+  background: rgba(12, 14, 18, 0.9); color: var(--dim); font-size: 13px; letter-spacing: .04em;
+  border-radius: var(--radius); z-index: 5;
+}
+
+/* Bearbeitungsmodus: Fenster lässt sich mit der Maus verschieben */
+body.edit { -webkit-app-region: drag; cursor: move; }
+body.edit #root { outline: 2px dashed var(--accent); outline-offset: -2px; border-radius: var(--radius); }
+.edit-label { display: none; }
+body.edit .edit-label {
+  display: block; position: absolute; top: 4px; right: 6px; z-index: 6;
+  background: var(--accent); color: #111; font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px; letter-spacing: .05em; text-transform: uppercase;
+}
+
+.hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; font-size: 12px; color: var(--dim);
+  border-bottom: 1px solid var(--line); letter-spacing: .03em;
+}
+.hdr .brand { color: var(--accent); font-weight: 700; letter-spacing: .12em; font-size: 11px; }
+.hdr .sp { flex: 1; }
+.hdr b { color: var(--text); font-weight: 600; }
+
+.lic {
+  display: inline-block; min-width: 38px; text-align: center; font-size: 11px; font-weight: 700;
+  padding: 1px 4px; border-radius: 3px; color: #111; line-height: 15px;
+}
+.num {
+  display: inline-block; min-width: 30px; text-align: center; font-size: 12px; font-weight: 700;
+  padding: 1px 4px; border-radius: 3px; background: rgba(255,255,255,.1); line-height: 16px;
+}
+.pit { font-size: 10px; font-weight: 700; color: #111; background: #ffd23f; border-radius: 3px; padding: 0 4px; margin-left: 6px; }
+.ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* dbDash-Logo */
+.pw-logo { height: 10px; width: auto; display: inline-block; vertical-align: -1px; }
+.brand { display: inline-flex; align-items: center; gap: 6px; }
+.pw-mark { position: absolute; right: 7px; bottom: 5px; opacity: .85; line-height: 0; pointer-events: none; z-index: 2; }
+.pw-mark .pw-logo { height: 8px; }

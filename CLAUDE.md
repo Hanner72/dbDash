@@ -1,0 +1,64 @@
+# dbDash (dannerbam Dash) – Projektkontext für Claude Code
+
+dbDash – „dannerbam Dash“, ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose iRacing-Overlays
+(ähnlich RaceLabs) als Windows-Programm. Eigenes Design, eigener Name – keine Kopie
+von RaceLabs/Lovely. Autor: Johann Danner. Kommunikation mit dem Autor auf **Deutsch**; er programmiert sonst
+hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electron-Fachjargon vorauszusetzen.
+
+## Befehle
+- `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
+- `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
+- `npm test` – Tests: SDK-Parser, Joystick, Abstände (`test/*.js`, reines Node, kein Framework)
+- `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
+- `npm run icons` – Programmsymbol (`build/icon.svg` → `build/icon.ico`, `web/assets/icon.png`) und Stream-Deck-Grafiken
+  (`grafiken/*.svg` → PNGs) neu erzeugen. Läuft in Electron; in VS Code ggf. `ELECTRON_RUN_AS_NODE` leeren.
+- Version in `package.json` erhöhen, bevor gebaut und weitergegeben wird.
+
+## Architektur
+- **Electron** (Chromium + Node). Hauptprozess `src/main.js`: Fenster, Tray, Einstellungen, HTTP-Server + WebSocket
+  auf `127.0.0.1:8182`, Tick 30 Hz, Tasten/Joystick, Stream-Deck-API (`/api/action/<id>`, `/api/page/<id>`, `/api/list`).
+- **Overlays = normale HTML/CSS/JS-Seiten** in `web/` (im fertigen Programm offen unter `resources\web`).
+  Jede Seite bindet `common.css` + `common.js` ein und bekommt den Zustand per WebSocket: `PW.onState((st, cfg) => …)`.
+  Dieselben Seiten laufen als transparente Overlay-Fenster und als OBS-Browserquelle.
+  Overlays: `relative`, `standings`, `inputs`, `delta`, `dash` (Dashboard), `radar` (Ghost); Einstellungen: `control.html`.
+- `src/irsdk.js` – liest iRacing-Shared-Memory (`Local\IRSDKMemMapFileName`) über **koffi** + kernel32.
+  Wichtig: Electron verbietet `koffi.view()` → Daten werden per `RtlMoveMemory` in eigene Buffer kopiert.
+  Session-YAML wird vor dem Parsen bereinigt (`sanitizeYaml`: Namen mit Sonderzeichen quoten).
+- `src/state.js` – baut aus Rohdaten den Zustand: Relative, Standings (pro Klasse, iRating-Prognose), Dashboard
+  (Sprit, Reifen, Schaden, Flaggen, Abstände), Radar. Gleiches Datenformat für iRacing und Demo.
+- `src/demo.js` – simuliertes Mehrklassen-Rennen (LMP2 + GT3) im iRacing-Datenformat; ein Auto „kämpft“ mit dem Spieler.
+- `src/fuel.js` (Ø-Verbrauch der letzten 5 sauberen Runden), `src/race.js` (Startplätze, Boxenstopps),
+  `src/joystick.js` (winmm `joyGetPosEx`, 16 Geräte × 32 Knöpfe + Hat, läuft im Hintergrund).
+- Länderflaggen: `web/flags/*.svg` (flag-icons, MIT) + `names.json` aus `build/flags.js` (iRacing `FlairName` → Code).
+
+## Wichtige Entscheidungen / bekannte Fallstricke
+- **Abstände Vorder-/Hintermann**: im Rennen LIVE-Reihenfolge nach Distanz (`CarIdxLap + LapDistPct`), weil iRacing
+  `CarIdxPosition` erst an der Ziellinie aktualisiert. Garage/getrennte Autos zählen nicht. Test: `test/gaps-test.js`.
+- Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
+- Schaden: nur über `PitRepairLeft` / `PitOptRepairLeft` (Reparaturzeiten), Motor-Warnungen, Reifenverschleiß.
+- Overlays werden ausgeblendet, wenn der Motor aus ist (RPM ≤ 300 oder EngineWarnings 0x08), mit 1,5 s Verzögerung.
+- Statische Dateien: `no-store`, außer `flags/` und `assets/` (sonst laden Flaggen nicht, da 30×/s neu gerendert wird).
+- Overlay-Fenster melden ihre Inhaltsgröße (`cmd: 'size'`), der Hauptprozess passt die Fenstergröße an
+  und schiebt Overlays zurück auf den Bildschirm, wenn sie herausragen.
+- Einstellungen: `%APPDATA%\dbDash\settings.json`; alte TriDash- bzw. PitWall-Einstellungen werden einmalig übernommen.
+- Globale Tastenkürzel blockieren die Taste für iRacing → für Stream Deck/SimHub F13–F24 empfehlen.
+- Windows-Build: Virenscanner sperrt frische Dateien kurz → `build.js` versucht mehrmals / kopiert statt umbenennen.
+- WebSocket nimmt nur Verbindungen ohne Origin oder von 127.0.0.1/localhost an; `/api/*` weist Browser-Aufrufe
+  fremder Seiten ab (Sec-Fetch-Site/Origin).
+
+## Testen ohne iRacing
+- Demo-Modus (Standard beim ersten Start). Testhilfen per Umgebungsvariable:
+  `DBDASH_SHOT=<ordner>` (Screenshots aller Fenster, dann Ende), `DBDASH_SHOT_DELAY=<ms>`,
+  `DBDASH_SCROLL=<overlay-id>` (Einstellungsfenster dorthin scrollen), `DBDASH_DEMO_ENGINE_OFF=1`.
+- Echte iRacing-Daten, Lenkräder und Stream Deck konnten bisher nur simuliert getestet werden – Rückmeldungen
+  des Autors aus echten Rennen haben Vorrang.
+
+## Lizenz
+CC BY-NC-ND 4.0 (© 2026 Johann Danner): benutzen und unverändert weitergeben erlaubt, keine veränderten Versionen
+weitergeben, nicht kommerziell. Fremdkomponenten behalten ihre Lizenzen (`DRITTANBIETER-LIZENZEN.txt` wird beim Build
+erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „TriDash Overlays“). Logo = drei schräge Striche:
+grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
+
+## Versionsstand
+2.1.0 – zuletzt: Umbenennung TriDash → dbDash (mittlerer Logo-Strich hellorange), Build-Skript für Windows
+(Sperren durch Virenscanner), Abstände live statt nach iRacing-Position.

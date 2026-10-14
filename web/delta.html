@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Delta</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #root { width: 380px; }
+  .top { display: flex; align-items: baseline; justify-content: space-between; padding: 8px 12px 2px; }
+  .top .lbl { font-size: 11px; color: var(--dim); letter-spacing: .1em; text-transform: uppercase; }
+  .val { font-size: 32px; font-weight: 700; line-height: 34px; color: var(--dim); }
+  .bar { position: relative; height: 10px; margin: 4px 12px 8px; background: rgba(255,255,255,.07); border-radius: 3px; }
+  .bar .fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+  .bar .mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: rgba(255,255,255,.45); }
+  .scale { display: flex; justify-content: space-between; margin: -6px 12px 6px; font-size: 10px; color: var(--dim); }
+  .times { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+  .times div { padding: 5px 12px; font-size: 11px; color: var(--dim); letter-spacing: .04em; }
+  .times div + div { border-left: 1px solid var(--line); }
+  .times b { display: block; font-size: 15px; color: var(--text); font-weight: 600; letter-spacing: 0; }
+  .times .pred b { color: var(--accent); }
+</style>
+</head>
+<body data-overlay="delta">
+<div id="root" class="panel">
+  <div class="top"><span class="lbl">Delta zur Bestzeit</span><span class="val" id="val">—</span></div>
+  <div class="bar"><div class="fill" id="fill"></div><div class="mid"></div></div>
+  <div class="scale"><span>−2.0</span><span>0</span><span>+2.0</span></div>
+  <div class="times">
+    <div class="pred">Prognose<b id="pred">—</b></div>
+    <div>Beste<b id="best">—</b></div>
+    <div>Letzte<b id="last">—</b></div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  PW.onState((st) => {
+    if (!st.connected) return;
+    const p = st.player;
+    const d = p.delta || 0;
+    if (p.deltaOk && p.bestLap) {
+      $('val').textContent = (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d).toFixed(2);
+      $('val').style.color = d <= 0 ? 'var(--good)' : 'var(--bad)';
+      const w = Math.min(1, Math.abs(d) / 2) * 50;
+      const f = $('fill');
+      f.style.background = d <= 0 ? 'var(--good)' : 'var(--bad)';
+      f.style.width = w + '%';
+      f.style.left = (d < 0 ? 50 - w : 50) + '%';
+      $('pred').textContent = PW.fmtLap(p.bestLap + d);
+    } else {
+      $('val').textContent = '—'; $('val').style.color = 'var(--dim)';
+      $('fill').style.width = '0'; $('pred').textContent = '—';
+    }
+    $('best').textContent = PW.fmtLap(p.bestLap);
+    $('last').textContent = PW.fmtLap(p.lastLap);
+  });
+</script>
+</body>
+</html>

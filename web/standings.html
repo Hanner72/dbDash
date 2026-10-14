@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Standings</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #root { width: max-content; min-width: 320px; }
+  .cls {
+    display: flex; align-items: center; gap: 10px; padding: 4px 10px; font-size: 12px; font-weight: 700;
+    letter-spacing: .06em; background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 30%, transparent), transparent 70%);
+    border-top: 1px solid var(--line); border-left: 3px solid var(--cc);
+  }
+  .cls .meta { color: var(--dim); font-weight: 500; letter-spacing: .02em; }
+  .row, .colhdr {
+    display: grid; grid-template-columns: var(--cols); align-items: center; gap: 6px; padding: 0 10px 0 0;
+  }
+  .row { height: 26px; border-top: 1px solid var(--line); font-size: 14px; }
+  .row:nth-of-type(even) { background: var(--bg-row); }
+  .pos { text-align: center; font-weight: 700; font-size: 13px; }
+  .r { text-align: right; }
+  .c { text-align: center; }
+  .flag { width: 20px; height: 15px; border-radius: 2px; display: block; margin: 0 auto; box-shadow: 0 0 0 1px rgba(255,255,255,.15); object-fit: cover; }
+  .pitb { font-size: 10px; font-weight: 800; color: #111; background: #ffd23f; border-radius: 3px; padding: 1px 5px; letter-spacing: .05em; }
+  .ir { font-size: 12px; color: var(--dim); }
+  .t { font-size: 13px; }
+  .t.f { color: var(--purple); font-weight: 600; }
+  .gap { font-weight: 600; }
+  .up { color: var(--good); font-weight: 600; font-size: 13px; }
+  .down { color: var(--bad); font-weight: 600; font-size: 13px; }
+  .inc { font-size: 13px; }
+  .inc.warn { color: #ffd23f; } .inc.high { color: var(--bad); font-weight: 600; }
+  .row.me { background: var(--me) !important; }
+  .row.me .name { color: var(--accent); font-weight: 600; }
+  .row.inpit { opacity: .6; }
+  .dots { height: 6px; border-top: 1px dashed var(--line); background: repeating-linear-gradient(90deg, transparent 0 6px, rgba(255,255,255,.05) 6px 8px); }
+  .colhdr { padding-top: 3px; padding-bottom: 3px; font-size: 10px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
+  .hdr #track { max-width: 220px; }
+</style>
+</head>
+<body data-overlay="standings">
+<div id="root" class="panel">
+  <div class="hdr"><span class="brand">STANDINGS</span><span id="sess"></span><span class="sp"></span><span id="track" class="ellipsis"></span></div>
+  <div class="colhdr" id="colhdr"></div>
+  <div id="body"></div>
+</div>
+<script src="common.js"></script>
+<script>
+  // Spalten: key, Breite, Überschrift, Inhalt
+  const COLS = [
+    { key: 'pos', w: '30px', h: 'P', cls: 'pos', fixed: true, html: (c) => c.classPos },
+    { key: 'gain', w: '34px', h: '+/−', cls: 'c', html: (c) => c.gain == null ? '' : c.gain > 0 ? `<span class="up">▲${c.gain}</span>` : c.gain < 0 ? `<span class="down">▼${-c.gain}</span>` : '<span class="ir">–</span>' },
+    { key: 'start', w: '30px', h: 'Start', cls: 'c ir', html: (c) => c.startPos || '' },
+    { key: 'number', w: '40px', h: '#', html: (c, cl) => `<span class="num" style="box-shadow: inset 0 -2px 0 ${cl.color}">${PW.esc(c.number)}</span>` },
+    { key: 'flag', w: '24px', h: '', cls: 'c', html: (c) => c.flag ? `<img class="flag" src="flags/${c.flag}.svg" title="${PW.esc(c.flagName)}" alt="">` : '' },
+    { key: 'name', w: '180px', h: 'Fahrer', cls: 'name ellipsis', fixed: true, html: (c, cl, cfg) => PW.esc(c.name) + (c.pit && !(cfg && cfg.standingsCols && cfg.standingsCols.pit !== false) ? '<span class="pit">PIT</span>' : '') },
+    { key: 'pit', w: '44px', h: 'Box', cls: 'c', html: (c) => c.pit ? '<span class="pitb">BOX</span>' : c.stops ? `<span class="ir">${c.stops}×</span>` : '' },
+    { key: 'license', w: '50px', h: 'Liz.', html: (c) => `<span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${c.sr ? Number(c.sr).toFixed(1) : ''}</span>` },
+    { key: 'iRating', w: '42px', h: 'iR', cls: 'r ir', html: (c) => PW.fmtIR(c.iRating) },
+    { key: 'irDelta', w: '42px', h: 'iR±', cls: 'r', html: (c) => c.irDelta == null ? '' : c.irDelta > 0 ? `<span class="up">+${c.irDelta}</span>` : c.irDelta < 0 ? `<span class="down">−${-c.irDelta}</span>` : '<span class="ir">0</span>' },
+    { key: 'incidents', w: '36px', h: 'Inc', cls: 'r', html: (c) => c.inc == null || c.inc < 0 ? '' : `<span class="inc${c.inc >= 12 ? ' high' : c.inc >= 6 ? ' warn' : ''}">${c.inc}x</span>` },
+    { key: 'last', w: '70px', h: 'Letzte', cls: 'r t', html: (c) => PW.fmtLap(c.last) },
+    { key: 'best', w: '70px', h: 'Beste', cls: 'r t', html: (c) => PW.fmtLap(c.best), extra: (c) => c.fastest ? ' f' : '' },
+    { key: 'gap', w: '58px', h: 'Abst.', cls: 'r gap', html: (c) => PW.esc(c.gapText || '') },
+  ];
+  const body = document.getElementById('body');
+  let active = COLS, colKey = '';
+
+  function setupCols(cfg) {
+    const on = (cfg && cfg.standingsCols) || {};
+    active = COLS.filter((c) => c.fixed || on[c.key] !== false);
+    const key = active.map((c) => c.key).join(',');
+    if (key === colKey) return;
+    colKey = key;
+    document.getElementById('root').style.setProperty('--cols', active.map((c) => c.w).join(' '));
+    document.getElementById('colhdr').innerHTML = active.map((c) => `<span class="${c.key === 'pos' ? 'pos' : (c.cls || '').split(' ').includes('r') ? 'r' : (c.cls || '').split(' ').includes('c') ? 'c' : ''}">${c.h}</span>`).join('');
+    body.dataset.empty = '';
+  }
+  PW.onConfig(setupCols);
+
+  PW.onState((st, cfg) => {
+    setupCols(cfg);
+    if (!st.connected) {
+      const n = ((cfg && cfg.standingsRows) || 14) + 2;
+      if (body.dataset.empty !== String(n)) { body.innerHTML = '<div class="row"></div>'.repeat(n); body.dataset.empty = n; }
+      return;
+    }
+    body.dataset.empty = '';
+    let html = '';
+    for (const cl of st.classes || []) {
+      html += `<div class="cls" style="--cc:${cl.color}"><span>${PW.esc(cl.name || 'Klasse')}</span><span class="meta">${cl.size} Autos · SOF ${cl.sof}</span></div>`;
+      for (const c of cl.rows) {
+        if (c.gapBefore) html += '<div class="dots"></div>';
+        html += `<div class="row${c.isPlayer ? ' me' : ''}${c.pit ? ' inpit' : ''}">` +
+          active.map((col) => `<div class="${col.cls || ''}${col.extra ? col.extra(c) : ''}">${col.html(c, cl, cfg)}</div>`).join('') +
+          '</div>';
+      }
+    }
+    body.innerHTML = html;
+    document.getElementById('sess').innerHTML = PW.sessionLine(st);
+    document.getElementById('track').textContent = st.session.track || '';
+  });
+</script>
+</body>
+</html>

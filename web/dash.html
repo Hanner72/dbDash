@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Dashboard</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  :root {
+    --ink: #f3f5f8; --frame: rgba(243,245,248,.92); --muted: #8b94a3;
+    --c-tc: #2ab7ff; --c-abs: #ffd23f; --c-bb: #ff3b3b; --c-map: #39e66a; --c-tc2: #2ab7ff;
+    --c-last: #ffd84a; --c-best: #c35cff;
+  }
+  #root.panel { width: max-content; background: rgba(6,7,9,var(--bg-a)); border-radius: 30px; border: 0; padding: 10px 12px 12px; }
+  #root.flagged { box-shadow: inset 0 0 0 3px var(--flag); }
+  .grid { display: grid; grid-template-columns: 322px 172px 322px; gap: 10px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Karten mit Titel im Rahmen */
+  .card { position: relative; border: 2px solid var(--frame); border-radius: 18px; padding: 10px 12px; }
+  .card > .legend {
+    position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 0 8px; background: rgb(6,7,9);
+    font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .dots { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.22); }
+  .dots i.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .big { font-weight: 800; letter-spacing: -.01em; line-height: 1; }
+
+  /* Schaltblitze */
+  .leds { display: flex; justify-content: center; gap: 6px; margin: 0 0 10px; height: 10px; }
+  .leds i { width: 38px; border-radius: 5px; background: rgba(255,255,255,.07); }
+  .leds i.g { background: #3ddc84; box-shadow: 0 0 8px #3ddc8499; }
+  .leds i.y { background: #ffd23f; box-shadow: 0 0 8px #ffd23f99; }
+  .leds i.r { background: #ff3b3b; box-shadow: 0 0 8px #ff3b3b99; }
+  .leds i.s { background: #4aa3ff; box-shadow: 0 0 10px #4aa3ffcc; }
+
+  /* Flaggen-Feld */
+  .flagbox { height: 78px; display: flex; align-items: center; justify-content: center; padding: 10px; }
+  .flagbar { width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 25px; font-weight: 800; letter-spacing: .06em; }
+  .flagbar.idle { color: var(--muted); font-size: 15px; gap: 10px; letter-spacing: .14em; background: rgba(255,255,255,.04); }
+  .flagbar.idle .pw-logo { height: 16px; flex: none; }
+  .flagbar.idle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flagbar.blink { animation: fl .6s steps(1) infinite; }
+  @keyframes fl { 50% { filter: brightness(.55); } }
+
+  /* Seiten links/rechts */
+  .page { height: 266px; padding: 14px 12px 18px; }
+  .pg { display: none; height: 100%; }
+  .pg.on { display: block; }
+
+  /* Reifen */
+  .tyres { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100%; position: relative; }
+  .tyres::before, .tyres::after { content: ''; position: absolute; background: rgba(255,255,255,.18); }
+  .tyres::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+  .tyres::after { top: 50%; left: 0; right: 0; height: 1px; }
+  .ty { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 7px; }
+  .ty.bot { flex-direction: column-reverse; }
+  .ty .t { font-size: 36px; }
+  .ty .row { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .ty .segs { display: flex; gap: 2px; }
+  .ty .segs i { width: 7px; height: 24px; border-radius: 2px; background: rgba(255,255,255,.1); }
+  .ty .row span { min-width: 36px; text-align: center; }
+  .tyname { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: #2a2d33; border-radius: 99px; padding: 3px 12px; font-size: 12px; font-weight: 800; z-index: 1; letter-spacing: .06em; }
+
+  /* Wertelisten (Motor, Strategie, Schaden) */
+  .vals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; align-content: center; height: 100%; }
+  .val .big { font-size: 28px; margin-top: 2px; }
+  .val .big small { font-size: 14px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+  .warn { color: var(--bad); } .ok { color: var(--good); } .amber { color: #ffb02e; }
+
+  /* Rundenzeiten */
+  .laps { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 6px; }
+  .lt { text-align: right; }
+  .lt .big { font-size: 46px; }
+  .lt .lbl { margin-top: 1px; }
+  .lt.pred .big { color: var(--ink); } .lt.last .big { color: var(--c-last); } .lt.best .big { color: var(--c-best); }
+
+  /* Schaden */
+  .dmg { display: flex; flex-direction: column; gap: 10px; height: 100%; justify-content: center; }
+  .dmg .state { border-radius: 10px; padding: 10px; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: .04em; }
+  .dmg .state small { display: block; font-size: 11px; letter-spacing: .1em; font-weight: 700; opacity: .8; margin-top: 2px; }
+  .st-ok { background: rgba(61,220,132,.14); color: var(--good); }
+  .st-opt { background: rgba(255,176,46,.16); color: #ffb02e; }
+  .st-req { background: rgba(255,59,59,.2); color: #ff6b6b; }
+  .dmg .rep { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; min-height: 20px; }
+  .chips span { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: var(--bad); color: #fff; letter-spacing: .04em; }
+  .wear { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+  .wear b { display: block; font-size: 16px; }
+
+  /* Fahrzeug-Kacheln */
+  .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; height: 86px; }
+  .tile { position: relative; border: 2px solid var(--tc); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .tile .legend { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: rgb(6,7,9); padding: 0 5px; font-size: 10px; font-weight: 800; color: var(--tc); white-space: nowrap; letter-spacing: .06em; }
+  .tile b { font-size: 34px; font-weight: 800; color: var(--tc); }
+  .tile.wide b { font-size: 26px; }
+
+  /* Mitte */
+  .delta { height: 40px; border-radius: 10px 10px 4px 4px; background: #8a8d93; color: #0b0c0e; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; }
+  .delta.good { background: #2fcf75; } .delta.bad { background: #ff4d4d; color: #fff; }
+  .dbar { height: 5px; background: rgba(255,255,255,.1); border-radius: 3px; position: relative; margin-top: -4px; overflow: hidden; }
+  .dbar i { position: absolute; top: 0; bottom: 0; background: #fff; }
+  .gearbox { flex: 1; background: #26292e; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 214px; }
+  .gear { font-size: 168px; font-weight: 800; line-height: .9; }
+  .gear.shift { color: #4aa3ff; }
+  .speed { font-size: 24px; font-weight: 600; margin-top: 4px; }
+  .speed small { font-size: 11px; color: var(--muted); margin-left: 4px; letter-spacing: .1em; }
+  .lim { position: absolute; left: 6px; right: 6px; top: 8px; text-align: center; font-weight: 800; font-size: 14px; letter-spacing: .1em; border-radius: 6px; padding: 4px; display: none; }
+  .lim.on { display: block; background: #2f7cff; }
+  .lim.nolim { display: block; background: var(--bad); animation: fl .4s steps(1) infinite; }
+  .rpmbar { height: 10px; background: #1b1d21; border-radius: 3px; overflow: hidden; position: relative; }
+  .rpmbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #22c55e 0 70%, #ffd23f 70% 88%, #ff3b3b 88%); background-size: 172px 100%; }
+  .rpmbar i.shift { background: #4aa3ff; }
+  .posbox { height: 44px; background: #fff; border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: #0b0c0e; }
+  .posbox .cp { background: #ffd23f; border-radius: 5px; padding: 1px 7px; font-size: 18px; font-weight: 800; }
+  .posbox .of { font-size: 26px; font-weight: 800; }
+  .posbox .gain { margin-left: auto; font-size: 14px; font-weight: 800; }
+  .posbox .gain.up { color: #16a34a; } .posbox .gain.down { color: #dc2626; }
+  .weather { display: flex; justify-content: space-between; gap: 8px; align-items: center; font-size: 13px; font-weight: 700; padding: 0 2px; }
+  .weather span { color: var(--muted); font-weight: 600; margin-right: 3px; }
+
+  /* Session oben rechts */
+  .sess { height: 78px; display: grid; grid-template-columns: 1fr 1.15fr .7fr 1fr; align-items: center; text-align: center; padding: 6px 10px; }
+  .sess .big { font-size: 26px; }
+  .sess .big small { font-size: 18px; color: var(--muted); }
+  .sess .gainS { font-size: 11px; font-weight: 800; color: var(--good); }
+  .sess .gainS.down { color: var(--bad); }
+
+  /* Sprit unten rechts */
+  .fuel { height: 86px; display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; text-align: center; padding: 8px 10px 6px; }
+  .fuel .big { font-size: 34px; }
+  .fuel .fin { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); background: rgb(6,7,9); padding: 0 8px; font-size: 11px; font-weight: 800; letter-spacing: .06em; white-space: nowrap; }
+  /* Relative im Dashboard */
+  .rel { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px; }
+  .rr { display: grid; grid-template-columns: 4px 26px 36px 1fr 46px; align-items: center; gap: 6px; height: 30px; border-radius: 6px; padding-right: 6px; font-size: 15px; font-weight: 700; }
+  .rr .cc { height: 20px; border-radius: 2px; }
+  .rr .p { text-align: center; color: var(--muted); font-size: 13px; }
+  .rr .n { text-align: center; font-size: 12px; background: rgba(255,255,255,.1); border-radius: 4px; line-height: 20px; }
+  .rr .g { text-align: right; }
+  .rr.me { background: rgba(198,255,61,.16); color: var(--accent); }
+  .rr.me .p { color: var(--accent); }
+  .rr.ahead { color: #ff8a6a; } .rr.behind { color: #6fb6ff; }
+  .rr.inpit { opacity: .5; }
+  .rr .pit { margin-left: 6px; }
+  .rel .none { text-align: center; color: var(--muted); font-size: 13px; }
+  /* Abstände Vorder-/Hintermann */
+  .gaps { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
+  .gp { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto; column-gap: 8px; }
+  .gp .who { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; min-width: 0; }
+  .gp .who .lbl { flex: none; }
+  .gp .who .n { font-size: 11px; background: rgba(255,255,255,.1); border-radius: 4px; padding: 0 5px; line-height: 17px; flex: none; }
+  .gp .who .cc { width: 4px; height: 15px; border-radius: 2px; flex: none; }
+  .gp .gv { grid-row: 1 / 4; grid-column: 2; align-self: center; text-align: right; font-size: 40px; font-weight: 800; line-height: 1; }
+  .gp .gv small { display: block; font-size: 13px; font-weight: 700; margin-top: 3px; }
+  .gp .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .gp .sub b { color: var(--ink); font-weight: 700; }
+  .gmid { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 800; font-size: 13px; letter-spacing: .06em; }
+  .gmid::before, .gmid::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.18); }
+  .gnone { color: var(--muted); font-size: 13px; text-align: center; padding: 14px 0; }
+  .off { display: none !important; }
+</style>
+</head>
+<body data-overlay="dash">
+<div id="root" class="panel">
+  <div class="leds" id="leds"></div>
+  <div class="grid">
+    <!-- links -->
+    <div class="col">
+      <div class="card flagbox"><div class="flagbar idle" id="flagbar"><span data-logo></span><span id="idleTxt">DBDASH</span></div></div>
+      <div class="card page" id="left">
+        <div class="legend" id="leftTitle">Reifen</div>
+        <div class="pg" data-page="tyres">
+          <div class="tyres">
+            <div class="ty" id="tLF"></div><div class="ty" id="tRF"></div>
+            <div class="ty bot" id="tLR"></div><div class="ty bot" id="tRR"></div>
+            <div class="tyname">°C · bar</div>
+          </div>
+        </div>
+        <div class="pg" data-page="engine">
+          <div class="vals">
+            <div class="val"><div class="lbl">Wasser</div><div class="big" id="water">–</div></div>
+            <div class="val"><div class="lbl">Öl</div><div class="big" id="oil">–</div></div>
+            <div class="val"><div class="lbl">Öldruck</div><div class="big" id="oilp">–</div></div>
+            <div class="val"><div class="lbl">Benzindruck</div><div class="big" id="fuelp">–</div></div>
+            <div class="val"><div class="lbl">Batterie</div><div class="big" id="volt">–</div></div>
+            <div class="val"><div class="lbl">Drehzahl</div><div class="big" id="rpmv">–</div></div>
+          </div>
+        </div>
+        <div class="pg" data-page="strategy">
+          <div class="vals">
+            <div class="val"><div class="lbl">Ø Verbrauch</div><div class="big" id="sPer">–</div></div>
+            <div class="val"><div class="lbl">Reicht für</div><div class="big" id="sLaps">–</div></div>
+            <div class="val"><div class="lbl">Runden bis Ziel</div><div class="big" id="sToGo">–</div></div>
+            <div class="val"><div class="lbl">Bis Ziel</div><div class="big" id="sFin">–</div></div>
+            <div class="val"><div class="lbl">Tankinhalt max.</div><div class="big" id="sMax">–</div></div>
+            <div class="val"><div class="lbl">Stopps nötig</div><div class="big" id="sStops">–</div></div>
+          </div>
+        </div>
+        <div class="dots" id="leftDots"></div>
+      </div>
+      <div class="tiles">
+        <div class="tile" style="--tc:var(--c-tc)"><span class="legend">TC</span><b id="tc">–</b></div>
+        <div class="tile" style="--tc:var(--c-tc2)"><span class="legend">TC 2</span><b id="tc2">–</b></div>
+        <div class="tile" style="--tc:var(--c-abs)"><span class="legend">ABS</span><b id="abs">–</b></div>
+        <div class="tile wide" style="--tc:var(--c-bb)"><span class="legend">BB</span><b id="bb">–</b></div>
+        <div class="tile" style="--tc:var(--c-map)"><span class="legend" id="mapL">MAP</span><b id="map">–</b></div>
+      </div>
+    </div>
+
+    <!-- Mitte -->
+    <div class="col" style="gap:8px">
+      <div><div class="delta" id="delta">0.000</div><div class="dbar"><i id="dbar"></i></div></div>
+      <div class="gearbox">
+        <div class="lim" id="lim">PIT LIMITER</div>
+        <div class="gear big" id="gear">N</div>
+        <div class="speed"><span id="speed">0</span><small id="unit">KM/H</small></div>
+      </div>
+      <div class="rpmbar"><i id="rpmbar"></i></div>
+      <div class="posbox"><span class="cp" id="cpos">P–</span><span class="of" id="ofN"></span><span class="gain" id="gainC"></span></div>
+      <div class="weather"><div><span>LUFT</span><b id="air">–</b></div><div><span>STRECKE</span><b id="track">–</b></div></div>
+    </div>
+
+    <!-- rechts -->
+    <div class="col">
+      <div class="card sess">
+        <div><div class="big" id="sessT">–</div><div class="lbl">Rest</div></div>
+        <div><div class="big" id="posT">–</div><div class="lbl"><span class="gainS" id="gainS"></span> Pos</div></div>
+        <div><div class="big" id="lapT">–</div><div class="lbl">Runde</div></div>
+        <div><div class="big" id="clock">–</div><div class="lbl">Uhr</div></div>
+      </div>
+      <div class="card page" id="right">
+        <div class="legend" id="rightTitle">Rundenzeiten</div>
+        <div class="pg" data-page="laps">
+          <div class="laps">
+            <div class="lt pred"><div class="big" id="pred">–</div><div class="lbl">Prognose</div></div>
+            <div class="lt last"><div class="big" id="last">–</div><div class="lbl">Letzte Runde</div></div>
+            <div class="lt best"><div class="big" id="best">–</div><div class="lbl">Beste Runde</div></div>
+          </div>
+        </div>
+        <div class="pg" data-page="damage">
+          <div class="dmg">
+            <div class="state" id="dmgState">–</div>
+            <div class="rep">
+              <div class="val"><div class="lbl">Pflicht-Reparatur</div><div class="big" id="rep">–</div></div>
+              <div class="val"><div class="lbl">Optionale Reparatur</div><div class="big" id="opt">–</div></div>
+            </div>
+            <div class="chips" id="warns"></div>
+            <div><div class="lbl" style="text-align:center;margin-bottom:4px">Reifenverschleiß (letzter Stopp)</div>
+              <div class="wear" id="wear"></div></div>
+          </div>
+        </div>
+        <div class="pg" data-page="relAll"><div class="rel" id="relAll"></div></div>
+        <div class="pg" data-page="relClass"><div class="rel" id="relClass"></div></div>
+        <div class="pg" data-page="gapAll"><div class="gaps" id="gapAll"></div></div>
+        <div class="pg" data-page="gapClass"><div class="gaps" id="gapClass"></div></div>
+        <div class="dots" id="rightDots"></div>
+      </div>
+      <div class="card fuel">
+        <div class="legend">Sprit</div>
+        <div><div class="big" id="fL">–</div><div class="lbl">Liter</div></div>
+        <div><div class="big" id="fAvg">–</div><div class="lbl">Ø / Runde</div></div>
+        <div><div class="big" id="fLaps">–</div><div class="lbl">Runden</div></div>
+        <div class="fin" id="fFin"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="common.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const LEDS = 12;
+  $('leds').innerHTML = '<i></i>'.repeat(LEDS);
+  const leds = [...$('leds').children];
+  const WHEELS = ['LF', 'RF', 'LR', 'RR'];
+  for (const w of WHEELS) $('t' + w).innerHTML = `<div class="t big">–</div><div class="row"><span class="p">–</span><div class="segs"><i></i><i></i><i></i></div><span class="w">–</span></div>`;
+  $('wear').innerHTML = WHEELS.map((w) => `<div><b id="w${w}">–</b><span class="lbl">${w}</span></div>`).join('');
+
+  const PAGE_TITLES = { tyres: 'Reifen', engine: 'Motor', strategy: 'Sprit-Strategie', relAll: 'Relative – Gesamt', relClass: 'Relative – Klasse',
+    gapAll: 'Abstände – Gesamt', gapClass: 'Abstände – Klasse', laps: 'Rundenzeiten', damage: 'Schaden' };
+  const ORDER = ['tyres', 'engine', 'strategy', 'relAll', 'relClass', 'gapAll', 'gapClass', 'laps', 'damage'];
+  const DEFAULT_SIDES = { tyres: 'left', engine: 'left', strategy: 'left', relAll: 'right', relClass: 'left', gapAll: 'left', gapClass: 'right', laps: 'right', damage: 'right' };
+  const pageEls = Object.fromEntries([...document.querySelectorAll('.pg')].map((el) => [el.dataset.page, el]));
+
+  // Jede Anzeige kann links, rechts oder aus sein; aktive Seite wird per Taste/Lenkradknopf umgeschaltet
+  function applyPages(cfg) {
+    const m = (cfg && cfg.dashModules) || {};
+    const sides = (cfg && cfg.dashPages) || DEFAULT_SIDES;
+    const p = (cfg && cfg.dashPage) || {};
+    for (const side of ['left', 'right']) {
+      const list = ORDER.filter((k) => sides[k] === side);
+      const cur = list.includes(p[side]) ? p[side] : list[0];
+      const box = $(side), dots = $(side + 'Dots');
+      for (const k of list) if (pageEls[k].parentNode !== box) box.insertBefore(pageEls[k], dots); // Anzeige ins richtige Fenster verschieben
+      for (const k of list) pageEls[k].classList.toggle('on', k === cur);
+      $(side + 'Title').innerHTML = cur ? PW.LOGO + PAGE_TITLES[cur] : PW.LOGO;
+      dots.innerHTML = list.length > 1 ? list.map((k) => `<i class="${k === cur ? 'on' : ''}"></i>`).join('') : '';
+    }
+    for (const k of ORDER) if (sides[k] !== 'left' && sides[k] !== 'right') pageEls[k].classList.remove('on');
+    $('leds').classList.toggle('off', m.shift === false);
+  }
+  PW.onConfig(applyPages);
+
+  const f1 = (v, u = '') => v == null ? '–' : v.toFixed(1) + u;
+  const sm = (v, u) => v == null ? '–' : `${v}<small>${u}</small>`;
+  function tempColor(t) {
+    if (t == null) return 'rgba(255,255,255,.1)';
+    if (t < 60) return '#4a8cff'; if (t < 75) return '#4ac6d6'; if (t < 95) return '#7CFC00'; if (t < 105) return '#ffd23f'; return '#ff4d4d';
+  }
+  function fmtClock(sec) { if (!(sec >= 0)) return '–'; sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h ? `${h}:${String(m).padStart(2, '0')}` : `${m}:${String(sec % 60).padStart(2, '0')}`; }
+  const FLAG_COLORS = { yellow: ['#ffd23f', '#111'], blue: ['#2f8bff', '#fff'], white: ['#ffffff', '#111'], red: ['#ff3b3b', '#fff'], black: ['#000', '#fff'], green: ['#22c55e', '#062'], debris: ['#ffd23f', '#c00'], meatball: ['#111', '#ff8c1a'], checkered: ['#fff', '#111'] };
+  let greenSince = 0;
+
+  // Verlauf der Abstände, um den Trend pro Runde zu berechnen
+  const gapHist = new Map();
+  function trend(key, idx, gap, lapT) {
+    const now = Date.now() / 1000;
+    let h = gapHist.get(key);
+    if (!h || h.idx !== idx) { h = { idx, samples: [] }; gapHist.set(key, h); } // anderer Gegner -> neu beginnen
+    h.samples.push([now, gap]);
+    const span = lapT || 90;
+    while (h.samples.length > 2 && now - h.samples[0][0] > span) h.samples.shift();
+    const [t0, g0] = h.samples[0];
+    if (now - t0 < 8) return null; // noch zu wenig Verlauf
+    return (gap - g0) / (now - t0) * span; // Änderung pro Runde
+  }
+  function gapBlock(c, side, myLast, page) {
+    const title = side === 'ahead' ? 'VOR DIR' : 'HINTER DIR';
+    if (!c) return `<div class="gnone">${side === 'ahead' ? 'Niemand vor dir – du führst!' : 'Niemand hinter dir'}</div>`;
+    let val = '–', tr = '';
+    if (c.gap && c.gap.laps) val = (side === 'ahead' ? '+' : '−') + c.gap.laps + 'L';
+    else if (c.gap && c.gap.s != null) {
+      val = c.gap.s.toFixed(c.gap.s < 10 ? 2 : 1);
+      const t = trend(page + side, c.idx, c.gap.s, myLast || c.last);
+      if (t != null && Math.abs(t) >= 0.02) {
+        const closing = t < 0;
+        // vorne: Abstand wird kleiner = gut (grün); hinten: Abstand wird kleiner = Gefahr (rot)
+        const good = side === 'ahead' ? closing : !closing;
+        tr = `<small class="${good ? 'ok' : 'warn'}">${closing ? '▼' : '▲'} ${Math.abs(t).toFixed(2)} / Rnd</small>`;
+      }
+    }
+    const ld = c.lastDiff;
+    const ldTxt = ld == null ? '' : ` <span class="${(side === 'ahead' ? ld > 0 : ld > 0) ? 'ok' : 'warn'}">(${ld > 0 ? '+' : '−'}${Math.abs(ld).toFixed(2)})</span>`;
+    return `<div class="gp">
+      <div class="who"><span class="lbl">${title}</span><span class="cc" style="background:${c.classColor}"></span><span>P${c.pos}</span><span class="n">${PW.esc(c.number)}</span><span class="ellipsis">${PW.esc(c.name)}</span>${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
+      <div class="gv">${val}${tr}</div>
+      <div class="sub">Letzte <b>${PW.fmtLap(c.last)}</b>${ldTxt}</div>
+      <div class="sub">Beste <b>${PW.fmtLap(c.best)}</b></div>
+    </div>`;
+  }
+
+  PW.onState((st, cfg) => {
+    if (!st.connected || !st.dash) return;
+    const d = st.dash, now = Date.now();
+
+    // Schaltblitze + Drehzahlbalken
+    const sh = d.shift, shiftNow = sh.shift && d.rpm >= sh.shift;
+    const blink = sh.blink && d.rpm >= sh.blink && Math.floor(now / 90) % 2 === 0;
+    let lit = 0;
+    if (sh.first && sh.last > sh.first) lit = Math.max(0, Math.min(LEDS, Math.ceil((d.rpm - sh.first) / (sh.last - sh.first) * LEDS)));
+    leds.forEach((el, i) => { el.className = shiftNow ? (blink ? '' : 's') : i < lit ? (i < LEDS * 0.4 ? 'g' : i < LEDS * 0.75 ? 'y' : 'r') : ''; });
+    const red = sh.blink || sh.last || 8000;
+    $('rpmbar').style.width = Math.min(100, d.rpm / red * 100) + '%';
+    $('rpmbar').classList.toggle('shift', !!shiftNow);
+
+    // Mitte
+    $('gear').textContent = d.gear === -1 ? 'R' : d.gear === 0 ? 'N' : d.gear;
+    $('gear').classList.toggle('shift', !!shiftNow);
+    const mph = cfg && cfg.units === 'mph';
+    $('speed').textContent = Math.round(d.speed * (mph ? 2.23694 : 3.6));
+    $('unit').textContent = mph ? 'MPH' : 'KM/H';
+    if (d.delta != null) {
+      $('delta').textContent = (d.delta > 0 ? '+' : d.delta < 0 ? '−' : '') + Math.abs(d.delta).toFixed(3);
+      $('delta').className = 'delta ' + (d.delta <= 0 ? 'good' : 'bad');
+      const w = Math.min(1, Math.abs(d.delta) / 2) * 50;
+      $('dbar').style.cssText = `width:${w}%;left:${d.delta < 0 ? 50 - w : 50}%`;
+    } else { $('delta').textContent = '0.000'; $('delta').className = 'delta'; $('dbar').style.width = '0'; }
+    const lim = $('lim');
+    lim.className = 'lim' + (d.pitLimiter ? ' on' : d.onPitRoad ? ' nolim' : '');
+    lim.textContent = d.pitLimiter ? 'PIT LIMITER' : 'LIMITER AUS!';
+    $('cpos').textContent = 'P' + (d.classPosition || '–');
+    $('cpos').style.background = d.classColor || '#ffd23f';
+    $('ofN').textContent = d.classSize ? '/' + d.classSize : '';
+    const gain = d.gain;
+    $('gainC').textContent = gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '';
+    $('gainC').className = 'gain ' + (gain > 0 ? 'up' : 'down');
+    $('air').textContent = f1(d.airTemp, '°');
+    $('track').textContent = f1(d.trackTemp, '°');
+
+    // Session
+    const s = st.session;
+    $('sessT').textContent = s.lapsRemain > 0 ? s.lapsRemain + 'L' : fmtClock(s.timeRemain);
+    $('posT').innerHTML = d.classPosition ? `${d.classPosition}<small>/${d.classSize}</small>` : '–';
+    $('gainS').textContent = gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '';
+    $('gainS').className = 'gainS' + (gain < 0 ? ' down' : '');
+    $('lapT').textContent = d.lap || '–';
+    const t = new Date();
+    $('clock').textContent = `${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}`;
+
+    // Relative (gesamt / Klasse): oben = vor dir, unten = hinter dir, Abstand in Sekunden
+    for (const [id, list] of [['relAll', d.relAll], ['relClass', d.relClass]]) {
+      if (!pageEls[id].classList.contains('on')) continue;
+      $(id).innerHTML = list && list.length ? list.map((c) => `
+        <div class="rr${c.isPlayer ? ' me' : ''}${c.lapState === 1 ? ' ahead' : c.lapState === -1 ? ' behind' : ''}${c.pit ? ' inpit' : ''}">
+          <span class="cc" style="background:${c.classColor}"></span><span class="p">${c.classPos || ''}</span>
+          <span class="n">${PW.esc(c.number)}</span>
+          <span class="ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</span>
+          <span class="g">${c.isPlayer ? '' : Math.abs(c.gap).toFixed(1)}</span>
+        </div>`).join('') : '<div class="none">Keine Daten</div>';
+    }
+
+    // Abstände zu Vorder- und Hintermann mit Trend (wird der Abstand kleiner oder größer?)
+    for (const [id, g] of [['gapAll', d.gaps && d.gaps.all], ['gapClass', d.gaps && d.gaps.cls]]) {
+      if (!pageEls[id].classList.contains('on')) continue;
+      $(id).innerHTML = g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : '<div class="gnone">Keine Daten</div>';
+    }
+
+    // Rundenzeiten
+    $('pred').textContent = PW.fmtLap(d.predicted);
+    $('last').textContent = PW.fmtLap(d.lastLap);
+    $('best').textContent = PW.fmtLap(d.bestLap);
+
+    // Reifen
+    for (const w of WHEELS) {
+      const ty = d.tyres[w], el = $('t' + w);
+      const temps = ty.t || [null, null, null];
+      const vals = temps.filter((x) => x != null);
+      el.querySelector('.t').textContent = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) + '°' : '–';
+      el.querySelector('.p').textContent = ty.p ? (ty.p / 100).toFixed(2) : '–';
+      el.querySelectorAll('.segs i').forEach((sg, i) => (sg.style.background = tempColor(temps[i])));
+      const wr = d.damage.wear[w];
+      el.querySelector('.w').textContent = wr ? Math.round(Math.min(...wr) * 100) + '%' : '–';
+    }
+
+    // Motor
+    $('water').innerHTML = sm(d.water != null ? d.water.toFixed(1) : null, '°C');
+    $('oil').innerHTML = sm(d.oil != null ? d.oil.toFixed(1) : null, '°C');
+    $('oilp').innerHTML = sm(d.oilPress != null ? d.oilPress.toFixed(1) : null, 'bar');
+    $('fuelp').innerHTML = sm(d.fuelPress != null ? d.fuelPress.toFixed(1) : null, 'bar');
+    $('volt').innerHTML = sm(d.voltage != null ? d.voltage.toFixed(1) : null, 'V');
+    $('rpmv').innerHTML = sm(Math.round(d.rpm), 'U/min');
+
+    // Sprit + Strategie
+    const f = d.fuel;
+    if (f) {
+      $('fL').textContent = f.level.toFixed(1);
+      $('fAvg').textContent = f.perLap ? (f.estimated ? '~' : '') + f.perLap.toFixed(2) : '–';
+      $('fLaps').textContent = f.laps != null ? f.laps.toFixed(1) : '–';
+      const fin = $('fFin');
+      if (f.toFinish == null) { fin.textContent = ''; }
+      else if (f.toFinish > 0) { fin.innerHTML = `<span class="warn">NACHTANKEN +${f.toFinish.toFixed(1)} L</span>`; }
+      else fin.innerHTML = `<span class="ok">REICHT · REST ${(-f.toFinish).toFixed(1)} L</span>`;
+      $('sPer').innerHTML = sm(f.perLap ? f.perLap.toFixed(2) : null, 'L');
+      $('sLaps').innerHTML = sm(f.laps != null ? f.laps.toFixed(1) : null, 'Rnd');
+      $('sToGo').innerHTML = sm(f.toGo != null ? f.toGo.toFixed(1) : null, 'Rnd');
+      $('sFin').innerHTML = f.toFinish == null ? '–' : f.toFinish > 0 ? `<span class="warn">+${f.toFinish.toFixed(1)}<small>L</small></span>` : `<span class="ok">${f.toFinish.toFixed(1)}<small>L</small></span>`;
+      $('sMax').innerHTML = sm(f.max ? f.max.toFixed(0) : null, 'L');
+      $('sStops').textContent = f.toFinish == null ? '–' : f.toFinish <= 0 ? '0' : f.max ? Math.ceil(f.toFinish / f.max) : '≥1';
+    }
+
+    // Fahrzeug
+    $('tc').textContent = d.tc != null ? d.tc : '–';
+    $('tc2').textContent = d.tc2 != null ? d.tc2 : '–';
+    $('abs').textContent = d.abs != null ? d.abs : '–';
+    $('bb').textContent = d.bb != null ? d.bb.toFixed(1) : '–';
+    $('map').textContent = d.map ? d.map.value : '–';
+    $('mapL').textContent = d.map ? d.map.label : 'MAP';
+
+    // Schaden
+    const dm = d.damage, ds = $('dmgState');
+    if (dm.repair > 0) { ds.className = 'state st-req'; ds.innerHTML = `PFLICHT-REPARATUR<small>${dm.repair.toFixed(1)} s in der Box</small>`; }
+    else if (dm.optRepair > 0) { ds.className = 'state st-opt'; ds.innerHTML = `LEICHTER SCHADEN<small>optional ${dm.optRepair.toFixed(1)} s reparierbar</small>`; }
+    else if (dm.repair == null && dm.optRepair == null) { ds.className = 'state'; ds.innerHTML = 'KEINE DATEN'; }
+    else { ds.className = 'state st-ok'; ds.innerHTML = 'KEIN SCHADEN'; }
+    $('rep').textContent = dm.repair != null ? dm.repair.toFixed(1) + ' s' : '–';
+    $('rep').className = 'big' + (dm.repair > 0 ? ' warn' : '');
+    $('opt').textContent = dm.optRepair != null ? dm.optRepair.toFixed(1) + ' s' : '–';
+    $('opt').className = 'big' + (dm.optRepair > 0 ? ' amber' : '');
+    $('warns').innerHTML = (dm.meatball ? ['Reparaturflagge'] : []).concat(dm.warnings).map((w) => `<span>${w}</span>`).join('');
+    for (const w of WHEELS) { const wr = dm.wear[w]; $('w' + w).textContent = wr ? Math.round(Math.min(...wr) * 100) + '%' : '–'; }
+
+    // Flaggen
+    const greenOnly = d.flags.length && d.flags.every((x) => x.kind === 'green');
+    if (greenOnly) { if (!greenSince) greenSince = now; } else greenSince = 0;
+    const flag = d.flags.find((x) => x.kind !== 'green') || (greenOnly && now - greenSince < 4000 ? d.flags[0] : null);
+    const fb = $('flagbar'), root = $('root');
+    if (flag) {
+      const [bg, fg] = FLAG_COLORS[flag.kind] || ['#fff', '#111'];
+      fb.className = 'flagbar' + (['blue', 'yellow', 'black', 'meatball'].includes(flag.kind) ? ' blink' : '');
+      fb.style.background = flag.kind === 'checkered' ? 'repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/22px 22px' : bg;
+      fb.style.color = fg;
+      fb.innerHTML = flag.kind === 'checkered' ? `<span style="background:#111;color:#fff;padding:2px 10px;border-radius:5px">${flag.label}</span>` : flag.label;
+      root.style.setProperty('--flag', bg); root.classList.add('flagged');
+    } else {
+      if (!fb.classList.contains('idle')) { fb.className = 'flagbar idle'; fb.style.background = ''; fb.style.color = ''; fb.innerHTML = `${PW.LOGO}<span id="idleTxt"></span>`; }
+      $('idleTxt').textContent = (s.type || 'DBDASH').toUpperCase() + (s.track ? ' · ' + s.track.toUpperCase() : '');
+      root.classList.remove('flagged');
+    }
+  });
+</script>
+</body>
+</html>

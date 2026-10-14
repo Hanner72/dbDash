@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Relative</title>
+<link rel="stylesheet" href="common.css">
+<style>
+  #root { width: 430px; }
+  .row {
+    display: grid; grid-template-columns: 34px 40px 1fr 42px 46px 58px;
+    align-items: center; gap: 6px; height: 27px; padding: 0 10px 0 0;
+    border-top: 1px solid var(--line); font-size: 14px;
+  }
+  .row:first-child { border-top: 0; }
+  .row:nth-child(even) { background: var(--bg-row); }
+  .pos { height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; position: relative; }
+  .pos::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: var(--cc, transparent); border-radius: 0 2px 2px 0; }
+  .ir { text-align: right; font-size: 12px; color: var(--dim); }
+  .gap { text-align: right; font-weight: 600; }
+  .row.me { background: var(--me) !important; }
+  .row.me .name { color: var(--accent); font-weight: 600; }
+  .row.ahead .name, .row.ahead .gap, .row.ahead .pos { color: var(--ahead); }
+  .row.behind .name, .row.behind .gap, .row.behind .pos { color: var(--behind); }
+  .row.inpit { opacity: .55; }
+  .row.empty { opacity: 0; }
+  .ftr { display: flex; gap: 12px; padding: 5px 10px; font-size: 12px; color: var(--dim); border-top: 1px solid var(--line); }
+  .ftr b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body data-overlay="relative">
+<div id="root" class="panel">
+  <div class="hdr"><span class="brand">RELATIVE</span><span id="sess"></span><span class="sp"></span><span id="track" class="ellipsis" style="max-width:170px"></span></div>
+  <div id="rows"></div>
+  <div class="ftr"><span>Pos <b id="pos">–</b></span><span>Runde <b id="lap">–</b></span><span>Letzte <b id="last">–</b></span><span>Beste <b id="best">–</b></span></div>
+</div>
+<script src="common.js"></script>
+<script>
+  const rowsEl = document.getElementById('rows');
+  function render(st, cfg) {
+    const n = (cfg && cfg.relativeRows) || 4;
+    // ohne Verbindung leere Zeilen, damit das Overlay seine Größe behält
+    if (!st.connected) { rowsEl.innerHTML = '<div class="row empty"><div class="pos"></div></div>'.repeat(n * 2 + 1); return; }
+    const rel = st.relative || [];
+    const me = rel.findIndex((c) => c.isPlayer);
+    // feste Zeilenanzahl: n vor dir, du, n hinter dir
+    const slots = new Array(n * 2 + 1).fill(null);
+    rel.forEach((c, i) => { const k = i - me + n; if (k >= 0 && k < slots.length) slots[k] = c; });
+    let html = '';
+    for (const c of slots) {
+      if (!c) { html += '<div class="row empty"><div class="pos"></div></div>'; continue; }
+      const cls = ['row'];
+      if (c.isPlayer) cls.push('me');
+      if (c.lapState === 1) cls.push('ahead');
+      if (c.lapState === -1) cls.push('behind');
+      if (c.pit) cls.push('inpit');
+      // Oben = vor dir auf der Strecke, unten = hinter dir; Abstand in Sekunden
+      const gap = c.isPlayer ? '' : Math.abs(c.gap).toFixed(1);
+      html += `<div class="${cls.join(' ')}" style="--cc:${c.classColor}">
+        <div class="pos">${c.classPos || ''}</div>
+        <div><span class="num" style="box-shadow: inset 0 -2px 0 ${c.classColor}">${PW.esc(c.number)}</span></div>
+        <div class="name ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
+        <div><span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${PW.esc(c.sr ? Number(c.sr).toFixed(1) : '')}</span></div>
+        <div class="ir">${PW.fmtIR(c.iRating)}</div>
+        <div class="gap">${gap}</div>
+      </div>`;
+    }
+    rowsEl.innerHTML = html;
+    document.getElementById('sess').innerHTML = PW.sessionLine(st);
+    document.getElementById('track').textContent = st.session.track || '';
+    const p = st.player;
+    document.getElementById('pos').textContent = p.position ? (st.session.multiClass ? `${p.classPosition} (${p.position})` : p.position) + '/' + st.session.totalCars : '–';
+    document.getElementById('lap').textContent = p.lap || '–';
+    document.getElementById('last').textContent = PW.fmtLap(p.lastLap);
+    document.getElementById('best').textContent = PW.fmtLap(p.bestLap);
+  }
+  PW.onState(render);
+</script>
+</body>
+</html>

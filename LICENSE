@@ -1,0 +1,65 @@
+dbDash – dannerbam Dash
+Copyright (c) 2026 Johann Danner
+
+=====================================================================
+DEUTSCH
+=====================================================================
+
+dbDash ist lizenziert unter der Creative-Commons-Lizenz
+„Namensnennung – Nicht kommerziell – Keine Bearbeitungen 4.0 International“
+(CC BY-NC-ND 4.0).
+
+Das bedeutet in Kurzform:
+
+  ERLAUBT
+  - dbDash kostenlos benutzen – privat, beim Streamen und in
+    Ligen/Teams.
+  - dbDash unverändert weitergeben (z. B. hochladen, verlinken,
+    Freunden schicken), solange der Name „dbDash“, der Urheber
+    und diese Lizenz dabei bleiben.
+  - Overlays für den eigenen Gebrauch anpassen (z. B. Farben in den
+    HTML-/CSS-Dateien ändern).
+
+  NICHT ERLAUBT
+  - Veränderte Versionen weitergeben oder veröffentlichen.
+  - dbDash verkaufen oder sonst kommerziell verwerten
+    (z. B. hinter einer Bezahlschranke anbieten).
+  - Den Urheber- oder Lizenzhinweis entfernen.
+
+Verbindlich ist der vollständige Lizenztext:
+  https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode.de
+Zusammenfassung:
+  https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de
+
+Die Software wird ohne jede Gewährleistung bereitgestellt
+(siehe Abschnitt 5 der Lizenz).
+
+=====================================================================
+ENGLISH
+=====================================================================
+
+dbDash is licensed under the Creative Commons
+Attribution-NonCommercial-NoDerivatives 4.0 International License
+(CC BY-NC-ND 4.0).
+
+In short: you may use dbDash for free and share unmodified
+copies, as long as the name, the author and this license stay intact.
+You may adapt it for your own personal use, but you may not distribute
+modified versions, and you may not sell it or use it commercially.
+
+Full legal code:
+  https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
+Summary:
+  https://creativecommons.org/licenses/by-nc-nd/4.0/
+
+=====================================================================
+
+Diese Lizenz gilt für dbDash selbst (Programmcode, Overlays,
+Logo und Grafiken). Mitgelieferte Fremdkomponenten (Electron, Chromium,
+koffi, ws, js-yaml, flag-icons u. a.) stehen unter ihren eigenen
+Lizenzen – siehe DRITTANBIETER-LIZENZEN.txt und LICENSES.chromium.html.
+This license covers dbDash itself. Bundled third-party
+components remain under their own licenses (see DRITTANBIETER-LIZENZEN.txt).
+
+dbDash ist ein unabhängiges Projekt und nicht mit iRacing.com
+Motorsport Simulations, RaceLabs oder SimHub verbunden.
