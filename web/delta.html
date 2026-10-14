@@ -39,20 +39,20 @@
     const p = st.player;
     const d = p.delta || 0;
     if (p.deltaOk && p.bestLap) {
-      $('val').textContent = (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d).toFixed(2);
-      $('val').style.color = d <= 0 ? 'var(--good)' : 'var(--bad)';
+      PW.text($('val'), (d > 0 ? '+' : d < 0 ? '−' : '±') + Math.abs(d).toFixed(2));
+      PW.css($('val'), 'color', d <= 0 ? 'var(--good)' : 'var(--bad)');
       const w = Math.min(1, Math.abs(d) / 2) * 50;
       const f = $('fill');
-      f.style.background = d <= 0 ? 'var(--good)' : 'var(--bad)';
-      f.style.width = w + '%';
-      f.style.left = (d < 0 ? 50 - w : 50) + '%';
-      $('pred').textContent = PW.fmtLap(p.bestLap + d);
+      PW.css(f, 'background', d <= 0 ? 'var(--good)' : 'var(--bad)');
+      PW.css(f, 'width', w + '%');
+      PW.css(f, 'left', (d < 0 ? 50 - w : 50) + '%');
+      PW.text($('pred'), PW.fmtLap(p.bestLap + d));
     } else {
-      $('val').textContent = '—'; $('val').style.color = 'var(--dim)';
-      $('fill').style.width = '0'; $('pred').textContent = '—';
+      PW.text($('val'), '—'); PW.css($('val'), 'color', 'var(--dim)');
+      PW.css($('fill'), 'width', '0'); PW.text($('pred'), '—');
     }
-    $('best').textContent = PW.fmtLap(p.bestLap);
-    $('last').textContent = PW.fmtLap(p.lastLap);
+    PW.text($('best'), PW.fmtLap(p.bestLap));
+    PW.text($('last'), PW.fmtLap(p.lastLap));
   });
 </script>
 </body>

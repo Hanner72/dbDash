@@ -52,6 +52,19 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - WebSocket nimmt nur Verbindungen ohne Origin oder von 127.0.0.1/localhost an; `/api/*` weist Browser-Aufrufe
   fremder Seiten ab (Sec-Fetch-Site/Origin).
 
+## Leistung (iRacing darf keine FPS verlieren)
+- Jedes Overlay meldet sich per `/ws?id=<overlay>` an und bekommt nur seine Daten in eigener Rate
+  (`TOPICS` in `src/main.js`: Standings 4 Hz, Relative 10 Hz, Delta 20 Hz, Dash/Inputs/Radar 30 Hz, Einstellungen 1 Hz).
+  **Neues Overlay oder neues Feld im Zustand → `TOPICS` ergänzen**, sonst kommt es nicht an (unbekannte Seiten: alles, 10 Hz).
+- Ohne iRacing (und ohne Demo) wird nur 1x pro Sekunde nachgesehen.
+- Anzeige nur über `PW.text/html/cls/css` (common.js) ändern – schreibt nur bei echter Änderung.
+  Nicht direkt `innerHTML` usw. auf Elemente setzen, die auch über die Helfer laufen (Zwischenspeicher `_pw`).
+- Keine CSS-Dauer-Animationen (`animation: … infinite`): Blinken über die Klasse `blinkoff` im Takt (dash.html).
+- Ausgeblendete Overlays (Motor aus / kein iRacing) und das leere Radar rechnen und zeichnen nicht.
+- Alle dbDash-Prozesse laufen mit Priorität „niedriger als normal“ (`lowerPriority`, alle 10 s für neue Prozesse).
+- Einstellung `gpu` (aus = `app.disableHardwareAcceleration()`, wirkt nach Neustart) zum Vergleichen der FPS.
+- Messung im Demo-Modus mit allen 6 Overlays: CPU 9,6 % → 1 % eines Kerns (Version 2.1.0 → Leistungsüberarbeitung).
+
 ## Testen ohne iRacing
 - Demo-Modus (Standard beim ersten Start). Testhilfen per Umgebungsvariable:
   `DBDASH_SHOT=<ordner>` (Screenshots aller Fenster, dann Ende), `DBDASH_SHOT_DELAY=<ms>`,

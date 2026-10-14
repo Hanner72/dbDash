@@ -90,6 +90,7 @@
     const autoHide = !!(cfg && cfg.radarAutoHide !== false);
     shown = busy || !autoHide;
     document.body.classList.toggle('radar-empty', autoHide && !busy);
+    if (!document.body.classList.contains('edit') && (r.qualify || (autoHide && !busy))) return; // unsichtbar → nicht zeichnen
 
     ctx.clearRect(0, 0, W, H);
     // Blueprint-Raster

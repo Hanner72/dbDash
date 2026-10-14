@@ -42,8 +42,8 @@
   .flagbar.idle { color: var(--muted); font-size: 15px; gap: 10px; letter-spacing: .14em; background: rgba(255,255,255,.04); }
   .flagbar.idle .pw-logo { height: 16px; flex: none; }
   .flagbar.idle span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .flagbar.blink { animation: fl .6s steps(1) infinite; }
-  @keyframes fl { 50% { filter: brightness(.55); } }
+  /* Blinken: Klasse „blinkoff“ wird im Takt gesetzt (keine Dauer-Animation → kein ständiges Neuzeichnen) */
+  body.blinkoff .flagbar.blink, body.blinkoff .lim.nolim, body.blinkoff .dmg .car.blink .body { filter: brightness(.55); }
 
   /* Seiten links/rechts */
   .page { height: 266px; padding: 14px 12px 18px; }
@@ -92,7 +92,6 @@
   .dmg .car .eng.bad { fill: #ff3b3b; fill-opacity: .55; stroke: #ff3b3b; stroke-dasharray: none; }
   .dmg .car .engT { fill: var(--bp); font-size: 8px; letter-spacing: .08em; }
   .dmg .car .eng.bad + .engT { fill: #fff; }
-  .dmg .car.blink .body { animation: fl .6s steps(1) infinite; }
   .dmg .car text { font-family: inherit; font-weight: 800; }
   .dmg .car .tw { font-size: 13px; fill: #f3f5f8; }
   .dmg .info { display: flex; flex-direction: column; gap: 10px; justify-content: center; height: 100%; min-width: 0; }
@@ -126,7 +125,7 @@
   .speed small { font-size: 13px; color: var(--muted); margin-left: 5px; letter-spacing: .1em; font-weight: 600; }
   .lim { position: absolute; left: 6px; right: 6px; top: 8px; text-align: center; font-weight: 800; font-size: 14px; letter-spacing: .1em; border-radius: 6px; padding: 4px; display: none; }
   .lim.on { display: block; background: #2f7cff; }
-  .lim.nolim { display: block; background: var(--bad); animation: fl .4s steps(1) infinite; }
+  .lim.nolim { display: block; background: var(--bad); }
   /* Gas (grün) und Bremse (rot) */
   .pedals { display: flex; flex-direction: column; gap: 3px; }
   .pbar { height: 8px; background: #1b1d21; border-radius: 3px; overflow: hidden; position: relative; }
@@ -412,134 +411,138 @@
     </div>`;
   }
 
+  let listTick = 0;
   PW.onState((st, cfg) => {
     if (!st.connected || !st.dash) return;
     const d = st.dash, now = Date.now();
+    document.body.classList.toggle('blinkoff', Math.floor(now / 300) % 2 === 1);
 
     // Schaltblitze + Drehzahlbalken
     const sh = d.shift, shiftNow = sh.shift && d.rpm >= sh.shift;
     const blink = sh.blink && d.rpm >= sh.blink && Math.floor(now / 90) % 2 === 0;
     let lit = 0;
     if (sh.first && sh.last > sh.first) lit = Math.max(0, Math.min(LEDS, Math.ceil((d.rpm - sh.first) / (sh.last - sh.first) * LEDS)));
-    leds.forEach((el, i) => { el.className = shiftNow ? (blink ? '' : 's') : i < lit ? (i < LEDS * 0.4 ? 'g' : i < LEDS * 0.75 ? 'y' : 'r') : ''; });
+    leds.forEach((el, i) => { PW.cls(el, shiftNow ? (blink ? '' : 's') : i < lit ? (i < LEDS * 0.4 ? 'g' : i < LEDS * 0.75 ? 'y' : 'r') : ''); });
     const pl = st.player || {};
-    $('thrBar').style.width = Math.round(Math.max(0, Math.min(1, pl.throttle || 0)) * 100) + '%';
-    $('brkBar').style.width = Math.round(Math.max(0, Math.min(1, pl.brake || 0)) * 100) + '%';
+    PW.css($('thrBar'), 'width', Math.round(Math.max(0, Math.min(1, pl.throttle || 0)) * 100) + '%');
+    PW.css($('brkBar'), 'width', Math.round(Math.max(0, Math.min(1, pl.brake || 0)) * 100) + '%');
 
     // Mitte
-    $('gear').textContent = d.gear === -1 ? 'R' : d.gear === 0 ? 'N' : d.gear;
+    PW.text($('gear'), d.gear === -1 ? 'R' : d.gear === 0 ? 'N' : d.gear);
     $('gear').classList.toggle('shift', !!shiftNow);
     const mph = cfg && cfg.units === 'mph';
-    $('speed').textContent = Math.round(d.speed * (mph ? 2.23694 : 3.6));
-    $('unit').textContent = mph ? 'MPH' : 'KM/H';
+    PW.text($('speed'), Math.round(d.speed * (mph ? 2.23694 : 3.6)));
+    PW.text($('unit'), mph ? 'MPH' : 'KM/H');
     if (d.delta != null) {
-      $('delta').textContent = (d.delta > 0 ? '+' : d.delta < 0 ? '−' : '') + Math.abs(d.delta).toFixed(3);
-      $('delta').className = 'delta ' + (d.delta <= 0 ? 'good' : 'bad');
+      PW.text($('delta'), (d.delta > 0 ? '+' : d.delta < 0 ? '−' : '') + Math.abs(d.delta).toFixed(3));
+      PW.cls($('delta'), 'delta ' + (d.delta <= 0 ? 'good' : 'bad'));
       const w = Math.min(1, Math.abs(d.delta) / 2) * 50;
-      $('dbar').style.cssText = `width:${w}%;left:${d.delta < 0 ? 50 - w : 50}%`;
-    } else { $('delta').textContent = '0.000'; $('delta').className = 'delta'; $('dbar').style.width = '0'; }
+      PW.css($('dbar'), 'width', w + '%'); PW.css($('dbar'), 'left', (d.delta < 0 ? 50 - w : 50) + '%');
+    } else { PW.text($('delta'), '0.000'); PW.cls($('delta'), 'delta'); PW.css($('dbar'), 'width', '0'); }
     const lim = $('lim');
-    lim.className = 'lim' + (d.pitLimiter ? ' on' : d.onPitRoad ? ' nolim' : '');
-    lim.textContent = d.pitLimiter ? 'PIT LIMITER' : 'LIMITER AUS!';
-    $('cpos').textContent = 'P' + (d.classPosition || '–');
-    $('cpos').style.background = d.classColor || '#ffd23f';
-    $('ofN').textContent = d.classSize ? '/' + d.classSize : '';
+    PW.cls(lim, 'lim' + (d.pitLimiter ? ' on' : d.onPitRoad ? ' nolim' : ''));
+    PW.text(lim, d.pitLimiter ? 'PIT LIMITER' : 'LIMITER AUS!');
+    PW.text($('cpos'), 'P' + (d.classPosition || '–'));
+    PW.css($('cpos'), 'background', d.classColor || '#ffd23f');
+    PW.text($('ofN'), d.classSize ? '/' + d.classSize : '');
     const gain = d.gain;
-    $('gainC').textContent = gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '';
-    $('gainC').className = 'gain ' + (gain > 0 ? 'up' : 'down');
-    $('air').textContent = f1(d.airTemp, '°');
-    $('track').textContent = f1(d.trackTemp, '°');
+    PW.text($('gainC'), gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '');
+    PW.cls($('gainC'), 'gain ' + (gain > 0 ? 'up' : 'down'));
+    PW.text($('air'), f1(d.airTemp, '°'));
+    PW.text($('track'), f1(d.trackTemp, '°'));
 
     // Session
     const s = st.session;
-    $('sessT').textContent = s.lapsRemain > 0 ? s.lapsRemain + 'L' : fmtClock(s.timeRemain);
-    $('posT').innerHTML = d.classPosition ? `${d.classPosition}<small>/${d.classSize}</small>` : '–';
-    $('gainS').textContent = gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '';
-    $('gainS').className = 'gainS' + (gain < 0 ? ' down' : '');
-    $('lapT').textContent = d.lap || '–';
+    PW.text($('sessT'), s.lapsRemain > 0 ? s.lapsRemain + 'L' : fmtClock(s.timeRemain));
+    PW.html($('posT'), d.classPosition ? `${d.classPosition}<small>/${d.classSize}</small>` : '–');
+    PW.text($('gainS'), gain ? (gain > 0 ? '▲' : '▼') + Math.abs(gain) : '');
+    PW.cls($('gainS'), 'gainS' + (gain < 0 ? ' down' : ''));
+    PW.text($('lapT'), d.lap || '–');
     const t = new Date();
-    $('clock').textContent = `${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}`;
+    PW.text($('clock'), `${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}`);
 
     // Relative (gesamt / Klasse): oben = vor dir, unten = hinter dir, Abstand in Sekunden
+    // (Listen nur jedes 3. Mal = 10x pro Sekunde neu aufbauen – spart Rechenzeit, Zahlen wirken ruhiger)
+    const listTurn = ++listTick % 3 === 0;
     for (const [id, list] of [['relAll', d.relAll], ['relClass', d.relClass]]) {
-      if (!pageEls[id].classList.contains('on')) continue;
-      $(id).innerHTML = list && list.length ? list.map((c) => `
+      if (!listTurn || !pageEls[id].classList.contains('on')) continue;
+      PW.html($(id), list && list.length ? list.map((c) => `
         <div class="rr${c.isPlayer ? ' me' : ''}${c.lapState === 1 ? ' ahead' : c.lapState === -1 ? ' behind' : ''}${c.pit ? ' inpit' : ''}">
           <span class="cc" style="background:${c.classColor}"></span><span class="p">${c.classPos || ''}</span>
           <span class="n">${PW.esc(c.number)}</span>
           <span class="ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</span>
           <span class="g">${c.isPlayer ? '' : sign(c.gap > 0) + Math.abs(c.gap).toFixed(1)}</span>
-        </div>`).join('') : '<div class="none">Keine Daten</div>';
+        </div>`).join('') : '<div class="none">Keine Daten</div>');
     }
 
     // Abstände zu Vorder- und Hintermann mit Trend (wird der Abstand kleiner oder größer?)
     for (const [id, g] of [['gapAll', d.gaps && d.gaps.all], ['gapClass', d.gaps && d.gaps.cls]]) {
-      if (!pageEls[id].classList.contains('on')) continue;
-      $(id).innerHTML = g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : '<div class="gnone">Keine Daten</div>';
+      if (!listTurn || !pageEls[id].classList.contains('on')) continue;
+      PW.html($(id), g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : '<div class="gnone">Keine Daten</div>');
     }
 
     // Rundenzeiten
-    $('pred').textContent = PW.fmtLap(d.predicted);
-    $('last').textContent = PW.fmtLap(d.lastLap);
-    $('best').textContent = PW.fmtLap(d.bestLap);
+    PW.text($('pred'), PW.fmtLap(d.predicted));
+    PW.text($('last'), PW.fmtLap(d.lastLap));
+    PW.text($('best'), PW.fmtLap(d.bestLap));
 
     // Reifen
     for (const w of WHEELS) {
       const ty = d.tyres[w], el = $('t' + w);
       const temps = ty.t || [null, null, null];
       const vals = temps.filter((x) => x != null);
-      el.querySelector('.t').textContent = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) + '°' : '–';
-      el.querySelector('.p').textContent = ty.p ? (ty.p / 100).toFixed(2) : '–';
-      el.querySelectorAll('.segs i').forEach((sg, i) => (sg.style.background = tempColor(temps[i])));
+      PW.text(el.querySelector('.t'), vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) + '°' : '–');
+      PW.text(el.querySelector('.p'), ty.p ? (ty.p / 100).toFixed(2) : '–');
+      el.querySelectorAll('.segs i').forEach((sg, i) => (PW.css(sg, 'background', tempColor(temps[i]))));
       const wr = d.damage.wear[w];
-      el.querySelector('.w').textContent = wr ? Math.round(Math.min(...wr) * 100) + '%' : '–';
+      PW.text(el.querySelector('.w'), wr ? Math.round(Math.min(...wr) * 100) + '%' : '–');
     }
 
     // Motor
-    $('water').innerHTML = sm(d.water != null ? d.water.toFixed(1) : null, '°C');
-    $('oil').innerHTML = sm(d.oil != null ? d.oil.toFixed(1) : null, '°C');
-    $('oilp').innerHTML = sm(d.oilPress != null ? d.oilPress.toFixed(1) : null, 'bar');
-    $('fuelp').innerHTML = sm(d.fuelPress != null ? d.fuelPress.toFixed(1) : null, 'bar');
-    $('volt').innerHTML = sm(d.voltage != null ? d.voltage.toFixed(1) : null, 'V');
-    $('rpmv').innerHTML = sm(Math.round(d.rpm), 'U/min');
+    PW.html($('water'), sm(d.water != null ? d.water.toFixed(1) : null, '°C'));
+    PW.html($('oil'), sm(d.oil != null ? d.oil.toFixed(1) : null, '°C'));
+    PW.html($('oilp'), sm(d.oilPress != null ? d.oilPress.toFixed(1) : null, 'bar'));
+    PW.html($('fuelp'), sm(d.fuelPress != null ? d.fuelPress.toFixed(1) : null, 'bar'));
+    PW.html($('volt'), sm(d.voltage != null ? d.voltage.toFixed(1) : null, 'V'));
+    PW.html($('rpmv'), sm(Math.round(d.rpm), 'U/min'));
 
     // Sprit + Strategie
     const f = d.fuel;
     if (f) {
-      $('fL').textContent = f.level.toFixed(1);
-      $('fAvg').textContent = f.perLap ? (f.estimated ? '~' : '') + f.perLap.toFixed(2) : '–';
-      $('fLaps').textContent = f.laps != null ? f.laps.toFixed(1) : '–';
+      PW.text($('fL'), f.level.toFixed(1));
+      PW.text($('fAvg'), f.perLap ? (f.estimated ? '~' : '') + f.perLap.toFixed(2) : '–');
+      PW.text($('fLaps'), f.laps != null ? f.laps.toFixed(1) : '–');
       const fin = $('fFin');
-      if (f.toFinish == null) { fin.textContent = ''; }
-      else if (f.toFinish > 0) { fin.innerHTML = `<span class="warn">NACHTANKEN +${f.toFinish.toFixed(1)} L</span>`; }
-      else fin.innerHTML = `<span class="ok">REICHT · REST ${(-f.toFinish).toFixed(1)} L</span>`;
-      $('sPer').innerHTML = sm(f.perLap ? f.perLap.toFixed(2) : null, 'L');
-      $('sLaps').innerHTML = sm(f.laps != null ? f.laps.toFixed(1) : null, 'Rnd');
-      $('sToGo').innerHTML = sm(f.toGo != null ? f.toGo.toFixed(1) : null, 'Rnd');
-      $('sFin').innerHTML = f.toFinish == null ? '–' : f.toFinish > 0 ? `<span class="warn">+${f.toFinish.toFixed(1)}<small>L</small></span>` : `<span class="ok">${f.toFinish.toFixed(1)}<small>L</small></span>`;
-      $('sMax').innerHTML = sm(f.max ? f.max.toFixed(0) : null, 'L');
-      $('sStops').textContent = f.toFinish == null ? '–' : f.toFinish <= 0 ? '0' : f.max ? Math.ceil(f.toFinish / f.max) : '≥1';
+      if (f.toFinish == null) { PW.text(fin, ''); }
+      else if (f.toFinish > 0) { PW.html(fin, `<span class="warn">NACHTANKEN +${f.toFinish.toFixed(1)} L</span>`); }
+      else PW.html(fin, `<span class="ok">REICHT · REST ${(-f.toFinish).toFixed(1)} L</span>`);
+      PW.html($('sPer'), sm(f.perLap ? f.perLap.toFixed(2) : null, 'L'));
+      PW.html($('sLaps'), sm(f.laps != null ? f.laps.toFixed(1) : null, 'Rnd'));
+      PW.html($('sToGo'), sm(f.toGo != null ? f.toGo.toFixed(1) : null, 'Rnd'));
+      PW.html($('sFin'), f.toFinish == null ? '–' : f.toFinish > 0 ? `<span class="warn">+${f.toFinish.toFixed(1)}<small>L</small></span>` : `<span class="ok">${f.toFinish.toFixed(1)}<small>L</small></span>`);
+      PW.html($('sMax'), sm(f.max ? f.max.toFixed(0) : null, 'L'));
+      PW.text($('sStops'), f.toFinish == null ? '–' : f.toFinish <= 0 ? '0' : f.max ? Math.ceil(f.toFinish / f.max) : '≥1');
     }
 
     // Fahrzeug
-    $('tc').textContent = d.tc != null ? d.tc : '–';
-    $('tc2').textContent = d.tc2 != null ? d.tc2 : '–';
-    $('abs').textContent = d.abs != null ? d.abs : '–';
-    $('bb').textContent = d.bb != null ? d.bb.toFixed(1) : '–';
-    $('map').textContent = d.map ? d.map.value : '–';
-    $('mapL').textContent = d.map ? d.map.label : 'MAP';
+    PW.text($('tc'), d.tc != null ? d.tc : '–');
+    PW.text($('tc2'), d.tc2 != null ? d.tc2 : '–');
+    PW.text($('abs'), d.abs != null ? d.abs : '–');
+    PW.text($('bb'), d.bb != null ? d.bb.toFixed(1) : '–');
+    PW.text($('map'), d.map ? d.map.value : '–');
+    PW.text($('mapL'), d.map ? d.map.label : 'MAP');
 
     // Schaden
     const dm = d.damage, ds = $('dmgState');
-    if (dm.repair > 0) { ds.className = 'state st-req'; ds.innerHTML = 'SCHWERER SCHADEN<small>Reparatur in der Box</small>'; }
-    else if (dm.optRepair > 0) { ds.className = 'state st-opt'; ds.innerHTML = 'LEICHTER SCHADEN<small>optional reparierbar</small>'; }
-    else if (dm.repair == null && dm.optRepair == null) { ds.className = 'state'; ds.innerHTML = 'KEINE DATEN'; }
-    else { ds.className = 'state st-ok'; ds.innerHTML = 'KEIN SCHADEN'; }
-    $('rep').textContent = dm.repair != null ? dm.repair.toFixed(1) + ' s' : '–';
-    $('rep').className = 'big' + (dm.repair > 0 ? ' warn' : '');
-    $('opt').textContent = dm.optRepair != null ? dm.optRepair.toFixed(1) + ' s' : '–';
-    $('opt').className = 'big' + (dm.optRepair > 0 ? ' amber' : '');
-    $('warns').innerHTML = (dm.meatball ? ['Reparaturflagge'] : []).concat(dm.warnings).map((w) => `<span>${w}</span>`).join('');
+    if (dm.repair > 0) { PW.cls(ds, 'state st-req'); PW.html(ds, 'SCHWERER SCHADEN<small>Reparatur in der Box</small>'); }
+    else if (dm.optRepair > 0) { PW.cls(ds, 'state st-opt'); PW.html(ds, 'LEICHTER SCHADEN<small>optional reparierbar</small>'); }
+    else if (dm.repair == null && dm.optRepair == null) { PW.cls(ds, 'state'); PW.html(ds, 'KEINE DATEN'); }
+    else { PW.cls(ds, 'state st-ok'); PW.html(ds, 'KEIN SCHADEN'); }
+    PW.text($('rep'), dm.repair != null ? dm.repair.toFixed(1) + ' s' : '–');
+    PW.cls($('rep'), 'big' + (dm.repair > 0 ? ' warn' : ''));
+    PW.text($('opt'), dm.optRepair != null ? dm.optRepair.toFixed(1) + ' s' : '–');
+    PW.cls($('opt'), 'big' + (dm.optRepair > 0 ? ' amber' : ''));
+    PW.html($('warns'), (dm.meatball ? ['Reparaturflagge'] : []).concat(dm.warnings).map((w) => `<span>${w}</span>`).join(''));
     // Auto-Grafik
     const bp = dm.repair > 0 ? '#ff4d4d' : dm.optRepair > 0 ? '#ffb02e' : dm.repair == null && dm.optRepair == null ? '#8b94a3' : '#3ddc84';
     $('car').style.setProperty('--bp', bp);
@@ -547,8 +550,8 @@
     $('carEng').classList.toggle('bad', dm.warnings.length > 0);
     for (const w of WHEELS) {
       const wr = dm.wear[w], v = wr ? Math.min(...wr) : null;
-      $('ty' + w).style.fill = v == null ? '' : v >= 0.8 ? '#3ddc84' : v >= 0.6 ? '#ffd23f' : v >= 0.4 ? '#ff9a2e' : '#ff3b3b';
-      $('tw' + w).textContent = v == null ? '–' : Math.round(v * 100) + '%';
+      PW.css($('ty' + w), 'fill', v == null ? '' : v >= 0.8 ? '#3ddc84' : v >= 0.6 ? '#ffd23f' : v >= 0.4 ? '#ff9a2e' : '#ff3b3b');
+      PW.text($('tw' + w), v == null ? '–' : Math.round(v * 100) + '%');
     }
 
     // Flaggen
@@ -558,14 +561,14 @@
     const fb = $('flagbar'), root = $('root');
     if (flag) {
       const [bg, fg] = FLAG_COLORS[flag.kind] || ['#fff', '#111'];
-      fb.className = 'flagbar' + (['blue', 'yellow', 'black', 'meatball'].includes(flag.kind) ? ' blink' : '');
-      fb.style.background = flag.kind === 'checkered' ? 'repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/22px 22px' : bg;
-      fb.style.color = fg;
-      fb.innerHTML = flag.kind === 'checkered' ? `<span style="background:#111;color:#fff;padding:2px 10px;border-radius:5px">${flag.label}</span>` : flag.label;
+      PW.cls(fb, 'flagbar' + (['blue', 'yellow', 'black', 'meatball'].includes(flag.kind) ? ' blink' : ''));
+      PW.css(fb, 'background', flag.kind === 'checkered' ? 'repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/22px 22px' : bg);
+      PW.css(fb, 'color', fg);
+      PW.html(fb, flag.kind === 'checkered' ? `<span style="background:#111;color:#fff;padding:2px 10px;border-radius:5px">${flag.label}</span>` : flag.label);
       root.style.setProperty('--flag', bg); root.classList.add('flagged');
     } else {
-      if (!fb.classList.contains('idle')) { fb.className = 'flagbar idle'; fb.style.background = ''; fb.style.color = ''; fb.innerHTML = `${PW.LOGO}<span id="idleTxt"></span>`; }
-      $('idleTxt').textContent = (s.type || 'DBDASH').toUpperCase() + (s.track ? ' · ' + s.track.toUpperCase() : '');
+      if (!fb.classList.contains('idle')) { PW.cls(fb, 'flagbar idle'); PW.css(fb, 'background', ''); PW.css(fb, 'color', ''); PW.html(fb, `${PW.LOGO}<span id="idleTxt"></span>`); }
+      PW.text($('idleTxt'), (s.type || 'DBDASH').toUpperCase() + (s.track ? ' · ' + s.track.toUpperCase() : ''));
       root.classList.remove('flagged');
     }
   });

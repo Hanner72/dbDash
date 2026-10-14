@@ -4,6 +4,7 @@
 const { app, BrowserWindow, Tray, Menu, globalShortcut, nativeImage, dialog, shell, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { IRSDK } = require('./irsdk');
@@ -18,6 +19,12 @@ const VERSION = require('../package.json').version;
 const WEB = app.isPackaged ? path.join(process.resourcesPath, 'web') : path.join(__dirname, '..', 'web');
 
 if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+
+// Overlays ohne Grafikkarte zeichnen (Einstellung „gpu“ aus): muss vor dem Start feststehen, wirkt nach Neustart
+try {
+  const early = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'settings.json'), 'utf8'));
+  if (early.gpu === false) app.disableHardwareAcceleration();
+} catch { /* erster Start */ }
 
 // ---------------- Einstellungen ----------------
 const OVERLAYS = [
@@ -79,6 +86,7 @@ const DEFAULTS = {
   demo: true,
   units: 'kmh',
   hideEngineOff: true,
+  gpu: true,
   standingsCols: STANDINGS_COLS,
   dashModules: DASH_MODULES,
   dashPages: DASH_PAGES,
@@ -137,9 +145,17 @@ let flagMap = {};
 try { flagMap = JSON.parse(fs.readFileSync(path.join(WEB, 'flags', 'names.json'), 'utf8')); } catch (e) { console.error('Flaggen:', e.message); }
 let fuelSource = null;
 let lastTick = Date.now();
+let lastProbe = 0;
+let tickNo = 0;
 
 function tick() {
   const now = Date.now();
+  // Ohne iRacing nur einmal pro Sekunde nachsehen, ob es gestartet wurde (spart CPU, solange nichts läuft)
+  if (!cfg.demo && !state.connected) {
+    if (now - lastProbe < 1000) return;
+    lastProbe = now;
+  }
+  tickNo++;
   const dt = Math.min(0.2, (now - lastTick) / 1000);
   lastTick = now;
   let raw = null;
@@ -164,7 +180,41 @@ function tick() {
   } else {
     state = { connected: false, source };
   }
-  broadcast({ type: 'state', state });
+  broadcastState();
+}
+
+// Jedes Overlay bekommt nur die Daten, die es anzeigt, und nur so oft, wie es sie braucht.
+// Weniger Daten und seltenere Updates = weniger Neuzeichnen = mehr FPS für iRacing.
+const BASE_KEYS = ['connected', 'engineOn', 'source', 'error'];
+const TOPICS = {
+  relative: { hz: 10, keys: ['relative', 'player', 'session'] },
+  standings: { hz: 4, keys: ['classes', 'session'] },
+  inputs: { hz: 30, keys: ['player'] },
+  delta: { hz: 20, keys: ['player'] },
+  dash: { hz: 30, keys: ['dash', 'player', 'session'] },
+  radar: { hz: 30, keys: ['radar'] },
+  control: { hz: 1, keys: [] },
+};
+const TOPIC_ALL = { hz: 10, keys: null }; // unbekannte Seiten (z. B. eigene Overlays): alles, 10x pro Sekunde
+
+function stateMsg(topic) {
+  const t = TOPICS[topic] || TOPIC_ALL;
+  if (!t.keys) return JSON.stringify({ type: 'state', state });
+  const part = {};
+  for (const k of BASE_KEYS.concat(t.keys)) if (state[k] !== undefined) part[k] = state[k];
+  return JSON.stringify({ type: 'state', state: part });
+}
+
+function broadcastState() {
+  const cache = {};
+  const slow = !cfg.demo && !state.connected; // ohne iRacing: jeder Takt ist schon nur 1x pro Sekunde
+  for (const c of clients) {
+    if (c.readyState !== 1) continue;
+    const t = TOPICS[c.topic] || TOPIC_ALL;
+    if (!slow && tickNo % Math.max(1, Math.round(30 / t.hz))) continue;
+    if (!(c.topic in cache)) cache[c.topic] = stateMsg(c.topic);
+    c.send(cache[c.topic]);
+  }
 }
 
 // ---------------- Webserver + WebSocket ----------------
@@ -195,10 +245,11 @@ function startServer() {
       // Nur Seiten dieser App (und OBS-Browserquellen auf derselben Adresse) dürfen sich verbinden
       verifyClient: (info) => !info.origin || allowed.has(info.origin),
     });
-    wss.on('connection', (ws) => {
+    wss.on('connection', (ws, req) => {
+      ws.topic = new URL(req.url, 'http://x').searchParams.get('id') || '';
       clients.add(ws);
       ws.send(JSON.stringify(configMsg()));
-      ws.send(JSON.stringify({ type: 'state', state }));
+      ws.send(stateMsg(ws.topic));
       ws.on('message', (m) => { try { handleCmd(JSON.parse(m)); } catch (e) { console.error(e); } });
       ws.on('close', () => clients.delete(ws));
     });
@@ -260,7 +311,7 @@ function handleCmd(m) {
         cfg.radarAutoHide = !!m.value;
       } else if (m.path === 'radarRange' && RADAR_RANGES.includes(Number(m.value))) {
         cfg.radarRange = Number(m.value);
-      } else if (['demo', 'units', 'editMode', 'visible', 'relativeRows', 'standingsRows', 'hideEngineOff'].includes(parts[0]) && parts.length === 1) {
+      } else if (['demo', 'units', 'editMode', 'visible', 'relativeRows', 'standingsRows', 'hideEngineOff', 'gpu'].includes(parts[0]) && parts.length === 1) {
         cfg[parts[0]] = m.value;
         if (parts[0] === 'demo' && m.value) demo = new Demo();
       } else return;
@@ -468,6 +519,14 @@ function openPanel() {
   });
 }
 
+// Alle dbDash-Prozesse (Hauptprogramm, Overlay-Fenster, Grafik) mit niedrigerer Priorität laufen lassen:
+// Windows gibt dann iRacing immer zuerst Rechenzeit. Neue Fenster bekommen eigene Prozesse → regelmäßig wiederholen.
+function lowerPriority() {
+  for (const m of app.getAppMetrics()) {
+    try { os.setPriority(m.pid, os.constants.priority.PRIORITY_BELOW_NORMAL); } catch { /* Prozess schon beendet */ }
+  }
+}
+
 function iconPath() { return path.join(WEB, 'assets', 'icon.png'); }
 
 function updateTray() {
@@ -514,6 +573,8 @@ app.whenReady().then(async () => {
   openPanel();
   setInterval(tick, 1000 / 30);
   setInterval(keepOnTop, 3000);
+  lowerPriority();
+  setInterval(lowerPriority, 10000);
 
   // Entwickler-Test: Screenshots aller Fenster speichern und beenden
   if (process.env.DBDASH_SHOT) {

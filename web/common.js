@@ -7,13 +7,18 @@
   let ws = null, config = null, lastState = null;
 
   function connect() {
-    ws = new WebSocket(`ws://${location.host}/ws`);
+    // mit Namen anmelden: das Hauptprogramm schickt dann nur die Daten, die diese Seite braucht
+    const topic = id || location.pathname.split('/').pop().replace(/.html$/, '');
+    ws = new WebSocket(`ws://${location.host}/ws?id=${encodeURIComponent(topic)}`);
     ws.onmessage = (e) => {
       const m = JSON.parse(e.data);
       if (m.type === 'state') {
         lastState = m.state;
         document.body.classList.toggle('offline', !m.state.connected);
         updateEngine(m.state);
+        // ausgeblendet (Motor aus / kein iRacing): nichts berechnen und nichts zeichnen
+        const b = document.body.classList;
+        if (!b.contains('edit') && (b.contains('engineoff') || b.contains('offline'))) return;
         for (const f of stateFns) f(m.state, config);
       } else if (m.type === 'config') {
         config = m.config;
@@ -73,6 +78,11 @@
     get config() { return config; },
     get state() { return lastState; },
     send: (m) => ws && ws.readyState === 1 && ws.send(JSON.stringify(m)),
+    // Anzeige nur ändern, wenn sich der Wert wirklich geändert hat (jede Änderung kostet Neuzeichnen)
+    text(el, v) { v = 't' + (v == null ? '' : v); if (el._pw !== v) { el._pw = v; el.textContent = v.slice(1); } },
+    html(el, v) { v = 'h' + (v == null ? '' : v); if (el._pw !== v) { el._pw = v; el.innerHTML = v.slice(1); } },
+    cls(el, v) { if (el.className !== v) el.className = v; },
+    css(el, prop, v) { const k = '_s_' + prop; if (el[k] !== v) { el[k] = v; el.style[prop] = v; } },
     fmtLap(t) {
       if (!(t > 0)) return '—';
       const m = Math.floor(t / 60), s = t - m * 60;

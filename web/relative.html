@@ -39,7 +39,7 @@
   function render(st, cfg) {
     const n = (cfg && cfg.relativeRows) || 4;
     // ohne Verbindung leere Zeilen, damit das Overlay seine Größe behält
-    if (!st.connected) { rowsEl.innerHTML = '<div class="row empty"><div class="pos"></div></div>'.repeat(n * 2 + 1); return; }
+    if (!st.connected) { PW.html(rowsEl, '<div class="row empty"><div class="pos"></div></div>'.repeat(n * 2 + 1)); return; }
     const rel = st.relative || [];
     const me = rel.findIndex((c) => c.isPlayer);
     // feste Zeilenanzahl: n vor dir, du, n hinter dir
@@ -65,14 +65,14 @@
         <div class="gap">${gap}</div>
       </div>`;
     }
-    rowsEl.innerHTML = html;
-    document.getElementById('sess').innerHTML = PW.sessionLine(st);
-    document.getElementById('track').textContent = st.session.track || '';
+    PW.html(rowsEl, html);
+    PW.html(document.getElementById('sess'), PW.sessionLine(st));
+    PW.text(document.getElementById('track'), st.session.track || '');
     const p = st.player;
-    document.getElementById('pos').textContent = p.position ? (st.session.multiClass ? `${p.classPosition} (${p.position})` : p.position) + '/' + st.session.totalCars : '–';
-    document.getElementById('lap').textContent = p.lap || '–';
-    document.getElementById('last').textContent = PW.fmtLap(p.lastLap);
-    document.getElementById('best').textContent = PW.fmtLap(p.bestLap);
+    PW.text(document.getElementById('pos'), p.position ? (st.session.multiClass ? `${p.classPosition} (${p.position})` : p.position) + '/' + st.session.totalCars : '–');
+    PW.text(document.getElementById('lap'), p.lap || '–');
+    PW.text(document.getElementById('last'), PW.fmtLap(p.lastLap));
+    PW.text(document.getElementById('best'), PW.fmtLap(p.bestLap));
   }
   PW.onState(render);
 </script>

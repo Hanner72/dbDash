@@ -83,7 +83,7 @@
     setupCols(cfg);
     if (!st.connected) {
       const n = ((cfg && cfg.standingsRows) || 14) + 2;
-      if (body.dataset.empty !== String(n)) { body.innerHTML = '<div class="row"></div>'.repeat(n); body.dataset.empty = n; }
+      if (body.dataset.empty !== String(n)) { PW.html(body, '<div class="row"></div>'.repeat(n)); body.dataset.empty = n; }
       return;
     }
     body.dataset.empty = '';
@@ -97,9 +97,9 @@
           '</div>';
       }
     }
-    body.innerHTML = html;
-    document.getElementById('sess').innerHTML = PW.sessionLine(st);
-    document.getElementById('track').textContent = st.session.track || '';
+    PW.html(body, html);
+    PW.html(document.getElementById('sess'), PW.sessionLine(st));
+    PW.text(document.getElementById('track'), st.session.track || '');
   });
 </script>
 </body>

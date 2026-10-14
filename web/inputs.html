@@ -51,32 +51,34 @@
   const thr = [], brk = [];
   let maxRpm = 7800;
   const $ = (id) => document.getElementById(id);
+  let still = 0; // wie viele Takte Gas/Bremse schon unverändert sind
 
   PW.onState((st, cfg) => {
     if (!st.connected) return;
     const p = st.player;
+    still = thr.length && p.throttle === thr[thr.length - 1] && p.brake === brk[brk.length - 1] ? still + 1 : 0;
     thr.push(p.throttle); brk.push(p.brake);
     if (thr.length > HIST) { thr.shift(); brk.shift(); }
 
     // Balken
-    $('bc').style.height = (p.clutch * 100) + '%';
-    $('bb').style.height = (p.brake * 100) + '%';
-    $('bt').style.height = (p.throttle * 100) + '%';
+    PW.css($('bc'), 'height', (p.clutch * 100) + '%');
+    PW.css($('bb'), 'height', (p.brake * 100) + '%');
+    PW.css($('bt'), 'height', (p.throttle * 100) + '%');
 
     // Gang & Tempo
-    $('gear').textContent = p.gear === -1 ? 'R' : p.gear === 0 ? 'N' : p.gear;
+    PW.text($('gear'), p.gear === -1 ? 'R' : p.gear === 0 ? 'N' : p.gear);
     const mph = cfg && cfg.units === 'mph';
-    $('speed').textContent = Math.round(p.speed * (mph ? 2.23694 : 3.6));
-    $('unit').textContent = mph ? 'MPH' : 'KM/H';
+    PW.text($('speed'), Math.round(p.speed * (mph ? 2.23694 : 3.6)));
+    PW.text($('unit'), mph ? 'MPH' : 'KM/H');
 
     // Lenkrad (iRacing: positiv = links)
-    $('wheel').style.transform = `rotate(${(-p.steer * 180 / Math.PI).toFixed(1)}deg)`;
+    PW.css($('wheel'), 'transform', `rotate(${(-p.steer * 180 / Math.PI).toFixed(1)}deg)`);
 
     // Drehzahl
     if (p.rpm > maxRpm) maxRpm = p.rpm;
-    $('rpm').style.width = Math.min(100, p.rpm / maxRpm * 100) + '%';
+    PW.css($('rpm'), 'width', Math.min(100, p.rpm / maxRpm * 100) + '%');
 
-    drawTrace();
+    if (still <= HIST) drawTrace(); // Verlauf ist sonst eine flache, unveränderte Linie
   });
 
   function drawTrace() {
