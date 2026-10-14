@@ -73,10 +73,12 @@ Die Fahrer direkt vor und hinter dir auf der Strecke mit Zeitabstand, Lizenz und
 
 ### Standings
 
-Wertung nach Klassen mit SOF. Spalten einzeln ein- und ausschaltbar: **Plätze +/−** seit dem Start, **Startplatz**,
-**Landesflagge**, **Box** (wer gerade in der Box ist, sonst Anzahl Stopps), Startnummer, Lizenz, iRating,
-**iRating-Prognose** (falls das Rennen mit dem aktuellen Stand endet), **Incidents**, letzte / beste Runde, Abstand.
-Lila = schnellste Runde der Klasse.
+Wertung nach Klassen mit SOF. Spalten: **Plätze +/−** seit dem Start, **Startplatz**, Startnummer, **Landesflagge**,
+**Automarke**, **Reifen** (aktuelle Mischung: S rot, M gelb, H weiß, I grün, W blau), **Box** (wer gerade in der Box
+ist, sonst Anzahl Stopps), Lizenz, iRating, **iRating-Prognose** (falls das Rennen mit dem aktuellen Stand endet),
+**Incidents**, letzte / beste Runde, Abstand. Lila = schnellste Runde der Klasse.
+
+Jede Spalte lässt sich im Einstellungsfenster **ein- und ausschalten und frei verschieben** – per Maus ziehen oder mit ▲ / ▼.
 
 ![Standings](docs/img/standings.png)
 
@@ -150,6 +152,14 @@ FPS bringt, hängt vom PC ab – einfach beides ausprobieren (wirkt nach einem N
 
 <br clear="right">
 
+## Updates
+
+dbDash sieht beim Start und danach alle 6 Stunden auf GitHub nach, ob es eine neue Version gibt. Ist eine da, erscheint
+im Einstellungsfenster ein Hinweis – **„Jetzt installieren“** lädt das Update, beendet dbDash kurz und startet die neue
+Version. Installiert wird **nie von selbst** (kein Neustart mitten im Rennen), deine Einstellungen bleiben erhalten.
+Liegt dbDash in einem geschützten Ordner wie `C:Programme`, fragt Windows einmal nach Administrator-Rechten.
+Die Suche lässt sich im Einstellungsfenster abschalten.
+
 ## Stream Deck & SimHub
 
 <img src="grafiken/dbDash-Links-umschalten-144.png" width="72" alt="Links umschalten"> <img src="grafiken/dbDash-Rechts-umschalten-144.png" width="72" alt="Rechts umschalten">
@@ -209,7 +219,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 | Befehl | Was passiert |
 | --- | --- |
 | `npm install` | lädt alle Bausteine (einmalig, ca. 200 MB) |
-| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents und Radar |
+| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents, Radar und Standings-Spalten |
 | `npm start` | startet dbDash direkt aus dem Quellcode |
 | `npm run build` | baut das fertige Programm: `dist\dbDash\dbDash.exe` plus ZIP zum Weitergeben |
 | `npm run screenshots` | erzeugt die Bilder dieser Seite neu (`docs/img/`) |
@@ -219,7 +229,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 **Technik:** Electron (Chromium + Node.js). Die Telemetrie kommt direkt aus dem Shared Memory des offiziellen iRacing-SDK
 (`Local\IRSDKMemMapFileName`) über koffi und die Win32-API. Quellcode in `src/`: `main.js` (Fenster, Webserver),
 `irsdk.js` (SDK-Leser), `state.js` (Berechnungen), `fuel.js` (Sprit), `race.js` (Startplätze, Boxenstopps, Incidents),
-`joystick.js` (Lenkradknöpfe), `demo.js` (Simulation).
+`joystick.js` (Lenkradknöpfe), `updater.js` (Updates über GitHub-Releases), `demo.js` (Simulation).
 
 ## Lizenz
 

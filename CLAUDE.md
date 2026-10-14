@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar, Standings-Spalten (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
   (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
@@ -44,6 +44,15 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - **Incidents der Gegner**: iRacing liefert sie während der Session nicht (Session-Info = 0) → `race.js` zählt
   Ausritte (`CarIdxTrackSurface` 0 = OffTrack, je 1x, innerhalb 2 s nur einmal), Anzeige als Schätzung (`incEst`).
   Echte Werte > 0 aus der Session-Info haben Vorrang. Test: `test/incidents-test.js`.
+- **Standings-Spalten**: Liste/Standard-Reihenfolge `STANDINGS_COL_LIST` (main.js), `cfg.standingsOrder` (Reihenfolge,
+  `mergeOrder` fügt neue Spalten an ihrer Standard-Stelle ein) + `cfg.standingsCols` (an/aus). Einstellungsfenster:
+  sortierbare Liste (Ziehen oder ▲/▼, `renderOrder` in control.html). Automarke aus `CarScreenName` (`carBrand`, keine
+  Logos – Markenrechte), Reifen aus `CarIdxTireCompound` + `DriverInfo.DriverTires` (`tyreInfo`). Test: `test/standings-cols-test.js`.
+- **Updates** (`src/updater.js`): GitHub-API `releases/latest` von Hanner72/dbDash, Asset `*win64.zip`. Prüfen 10 s nach
+  Start + alle 6 h (nur fertiges Programm, Schalter `updateCheck`); Installieren NUR auf Knopfdruck: ZIP laden → Windows-
+  `tar.exe` entpackt → `update.cmd` wartet bis kein dbDash.exe mehr läuft → robocopy über den Programmordner → Neustart.
+  Nicht beschreibbarer Ordner → Skript mit Admin-Rechten (UAC). Testhilfe `DBDASH_UPDATE_API=<url>` (auch aus dem Quellcode).
+  Release-ZIP muss oben den Ordner `dbDash` mit `dbDash.exe` enthalten (macht build.js so).
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
   Reichweite (`radarRange`, 1–80 m) = Lücke Stoßstange zu Stoßstange (feste Länge 4,7 m, iRacing liefert keine);
   Radar erscheint nur bei Lücke ≤ Reichweite oder Spotter-Meldung, ohne Verzögerung aus; in Qualifikation aus.
@@ -87,6 +96,6 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
-2.2.0 – Incidents der Gegner (geschätzt), Dashboard überarbeitet (Schriften, Vorzeichen, Gas/Bremse, Schaden als
-GT3-Blueprint), Radar (1–80 m Lücke, sofort aus, Qualifikation aus, Blueprint), Leistung (CPU 9,6 % → 1 %),
-Vorstellungsvideo + README-Bilder per Skript. Davor 2.1.0: Umbenennung TriDash → dbDash.
+2.3.0 – Standings: Spalten Automarke und Reifen, Spalten frei sortierbar; automatische Updates über GitHub.
+2.2.0 – Incidents der Gegner, Dashboard überarbeitet, Radar (1–80 m, Blueprint), Leistung (CPU 9,6 % → 1 %),
+Vorstellungsvideo + README-Bilder per Skript. 2.1.0 – Umbenennung TriDash → dbDash.

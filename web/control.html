@@ -38,6 +38,19 @@
   .cols > div.single { grid-template-columns: 1fr; gap: 3px; }
   .cols > div.single select { min-width: 92px; }
   .cols input { accent-color: var(--accent); width: 15px; height: 15px; }
+  /* Spalten sortieren: ziehen oder ▲/▼ */
+  .sortlist { display: flex !important; flex-direction: column; gap: 3px !important; }
+  .srt { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; background: rgba(255,255,255,.04); border: 1px solid transparent; }
+  .srt .grip { cursor: grab; color: var(--dim); letter-spacing: -2px; user-select: none; padding: 0 2px; }
+  .srt label { flex: 1; }
+  .srt.off label { color: var(--dim); }
+  .srt.drag { opacity: .4; }
+  .srt.over-top { border-top-color: var(--accent); } .srt.over-bot { border-bottom-color: var(--accent); }
+  .srt .mv { background: none; border: 1px solid rgba(255,255,255,.12); color: var(--dim); border-radius: 4px; width: 22px; height: 20px; padding: 0; font-size: 10px; cursor: pointer; }
+  .srt .mv:hover { color: var(--text); border-color: var(--accent); }
+  .srt .mv:disabled { opacity: .25; cursor: default; }
+  .cols > div.sortwrap { display: block; }
+  .sorthint { font-size: 11px; color: var(--dim); margin-top: 6px; }
   .ov .url { display: flex; gap: 6px; margin-top: 8px; }
   .ov .url input { flex: 1; background: var(--bg); border: 1px solid var(--line); color: var(--dim); border-radius: 6px; padding: 5px 8px; font: 12px ui-monospace, Consolas, monospace; }
   input[type=range] { width: 100%; accent-color: var(--accent); }
@@ -56,6 +69,14 @@
   .hint li { margin: 3px 0; }
   .banner { border-radius: 10px; padding: 10px 12px; font-size: 13px; background: rgba(255,210,63,.1); border: 1px solid rgba(255,210,63,.3); color: #f3e3a3; }
   .banner.err { background: rgba(255,90,90,.1); border-color: rgba(255,90,90,.35); color: #ffc0c0; }
+  /* Update-Hinweis */
+  .banner.upd { background: rgba(198,255,61,.08); border-color: rgba(198,255,61,.35); color: var(--text); }
+  .banner.upd b { color: var(--accent); }
+  .banner.upd .btns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .banner.upd small { display: block; color: var(--dim); margin-top: 6px; font-size: 11px; }
+  .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); margin-top: 8px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  #updState { font-size: 12px; color: var(--dim); margin-right: 8px; }
   footer button { white-space: nowrap; }
   .bind { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; align-items: center; padding: 9px 0; }
   .bind + .bind { border-top: 1px solid var(--line); }
@@ -82,6 +103,7 @@
   <span class="pill" id="status">Verbinde …</span>
 </header>
 <main>
+  <div class="banner upd" id="updBanner" hidden></div>
   <div class="banner" id="demoBanner" hidden>Demo-Modus ist aktiv – die Overlays zeigen ein simuliertes Rennen. Für echte Daten aus iRacing unten ausschalten.</div>
   <div class="banner err" id="sdkBanner" hidden>iRacing-Daten können auf diesem System nicht gelesen werden (nur unter Windows möglich). Der Demo-Modus funktioniert trotzdem.</div>
 
@@ -91,6 +113,7 @@
     <div class="row"><div class="lbl">Overlays anzeigen<small>Alle ein-/ausblenden · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd></small></div><label class="switch"><input type="checkbox" data-k="visible"><span></span></label></div>
     <div class="row"><div class="lbl">Nur bei laufendem Motor anzeigen<small>Overlays verschwinden, solange der Motor aus ist (Box, Garage, Menü)</small></div><label class="switch"><input type="checkbox" data-k="hideEngineOff"><span></span></label></div>
     <div class="row"><div class="lbl">Overlays mit der Grafikkarte zeichnen<small>Aus = Overlays zeichnet der Prozessor (CPU). Ausprobieren, was in iRacing mehr FPS bringt · wirkt nach Neustart von dbDash</small></div><label class="switch"><input type="checkbox" data-k="gpu"><span></span></label></div>
+    <div class="row"><div class="lbl">Automatisch nach Updates suchen<small>Fragt beim Start und alle 6 Stunden bei GitHub nach · installiert wird nur auf Knopfdruck</small></div><span id="updState"></span><button class="small" id="updCheck">Jetzt prüfen</button><label class="switch"><input type="checkbox" data-k="updateCheck"><span></span></label></div>
     <div class="row"><div class="lbl">Overlays verschieben<small>Overlays mit der Maus an die gewünschte Stelle ziehen · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></small></div><label class="switch"><input type="checkbox" data-k="editMode"><span></span></label></div>
     <div class="row"><div class="lbl">Einheit Geschwindigkeit</div>
       <select data-k="units"><option value="kmh">km/h</option><option value="mph">mph</option></select></div>
@@ -233,6 +256,7 @@
     actions = cfgMsg.actions || []; learning = cfgMsg.learning; joyState = cfgMsg.joystick || {};
     renderBinds();
     renderApi();
+    renderUpdate();
     $('#ver').textContent = 'v' + status.version;
     $('#demoBanner').hidden = !cfg.demo;
     $('#sdkBanner').hidden = status.sdkAvailable || cfg.demo;
@@ -250,11 +274,80 @@
       box.querySelector('.bg').value = Math.round(c.bg * 100);
       box.querySelector('.bgv').textContent = Math.round(c.bg * 100) + '%';
     }
+    document.querySelectorAll('[data-order]').forEach(renderOrder);
     document.querySelectorAll('[data-opt]').forEach((el) => {
       const v = el.dataset.opt.split('.').reduce((o, k) => (o == null ? o : o[k]), cfg);
       if (el.type === 'checkbox') el.checked = v !== false; else el.value = String(v);
     });
   }
+
+  // Sortierbare Spaltenliste (z. B. Standings): Reihenfolge per Ziehen oder ▲/▼, Häkchen = Spalte anzeigen
+  let dragKey = null;
+  function renderOrder(list) {
+    if (dragKey) return; // nicht während des Ziehens neu aufbauen
+    const opt = ovOpts[list.dataset.order].order;
+    const labels = Object.fromEntries(opt.items);
+    const order = cfg[opt.path] || opt.items.map(([k]) => k);
+    const on = cfg[opt.cols] || {};
+    list.innerHTML = order.map((k, i) => {
+      const fixed = opt.fixed.includes(k);
+      return `<div class="srt${!fixed && on[k] === false ? ' off' : ''}" draggable="true" data-key="${k}">
+        <span class="grip" title="Ziehen zum Verschieben">⋮⋮</span>
+        <label><input type="checkbox" ${fixed ? 'checked disabled' : on[k] === false ? '' : 'checked'}> ${labels[k] || k}</label>
+        <button class="mv" data-d="-1" ${i === 0 ? 'disabled' : ''} title="nach oben">▲</button>
+        <button class="mv" data-d="1" ${i === order.length - 1 ? 'disabled' : ''} title="nach unten">▼</button></div>`;
+    }).join('');
+    const move = (from, to) => { const o = order.slice(); o.splice(to, 0, o.splice(from, 1)[0]); set(opt.path, o); };
+    list.querySelectorAll('.srt').forEach((row, i) => {
+      const k = row.dataset.key;
+      row.querySelector('input').onchange = (e) => set(`${opt.cols}.${k}`, e.target.checked);
+      row.querySelectorAll('.mv').forEach((b) => (b.onclick = () => move(i, i + Number(b.dataset.d))));
+      row.ondragstart = (e) => { dragKey = k; row.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; };
+      row.ondragend = () => { dragKey = null; renderOrder(list); };
+      row.ondragover = (e) => {
+        e.preventDefault();
+        const top = e.offsetY < row.offsetHeight / 2;
+        list.querySelectorAll('.srt').forEach((r) => r.classList.remove('over-top', 'over-bot'));
+        row.classList.add(top ? 'over-top' : 'over-bot');
+      };
+      row.ondrop = (e) => {
+        e.preventDefault();
+        const from = order.indexOf(dragKey);
+        let to = i + (row.classList.contains('over-bot') ? 1 : 0);
+        if (from < to) to--;
+        dragKey = null;
+        if (from >= 0 && from !== to) move(from, to); else renderOrder(list);
+      };
+    });
+  }
+
+  // Update-Hinweis und -Status
+  function renderUpdate() {
+    const u = cfgMsg.update || {};
+    const b = $('#updBanner');
+    $('#updCheck').disabled = !u.enabled || ['checking', 'downloading', 'installing'].includes(u.status);
+    $('#updState').textContent = !u.enabled ? 'nur im fertigen Programm'
+      : u.status === 'checking' ? 'prüfe …' : u.status === 'none' ? `aktuell (v${u.current})` : u.status === 'error' ? 'Prüfung fehlgeschlagen' : '';
+    if (u.status === 'available') {
+      b.hidden = false;
+      b.innerHTML = `<b>Neue Version ${u.latest} verfügbar</b> (du hast ${u.current}).
+        <div class="btns"><button class="small" id="updGo">Jetzt installieren</button><button class="small" id="updNotes">Was ist neu?</button></div>
+        <small>dbDash lädt das Update, beendet sich kurz und startet neu. Deine Einstellungen bleiben erhalten;
+        eigene Änderungen an den Overlay-Dateien (resources\\web) werden überschrieben. Am besten nicht während eines Rennens.</small>`;
+      $('#updGo').onclick = () => { if (confirm(`dbDash jetzt auf Version ${u.latest} aktualisieren und neu starten?`)) send({ cmd: 'updateInstall' }); };
+      $('#updNotes').onclick = () => send({ cmd: 'openRelease' });
+    } else if (u.status === 'downloading' || u.status === 'installing') {
+      b.hidden = false;
+      b.innerHTML = u.status === 'downloading'
+        ? `<b>Update ${u.latest} wird geladen …</b> ${u.progress || 0} %<div class="bar"><i style="width:${u.progress || 0}%"></i></div>`
+        : `<b>Update ${u.latest} wird installiert</b> – dbDash startet gleich neu …`;
+    } else if (u.status === 'error' && u.latest && u.error && !/Prüfung/.test(u.error)) {
+      b.hidden = false;
+      b.innerHTML = `<b>Update fehlgeschlagen</b><small>${u.error}</small><div class="btns"><button class="small" id="updRetry">Erneut prüfen</button></div>`;
+      $('#updRetry').onclick = () => send({ cmd: 'updateCheck' });
+    } else b.hidden = true;
+  }
+  $('#updCheck').onclick = () => send({ cmd: 'updateCheck' });
 
   function buildOverlays() {
     built = true;
@@ -266,7 +359,8 @@
           <span>Größe</span><input type="range" class="sc" min="50" max="200" step="5"><span class="scv"></span>
           <span>Hintergrund</span><input type="range" class="bg" min="0" max="100" step="1"><span class="bgv"></span>
         </div>
-        ${ovOpts[o.id] ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="${ovOpts[o.id].single ? 'single' : ''}">${ovOpts[o.id].items.map((it) => it.type === 'select'
+        ${ovOpts[o.id] && ovOpts[o.id].order ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="sortwrap"><div class="sortlist" data-order="${o.id}"></div><div class="sorthint">Ziehen oder mit ▲/▼ verschieben · Häkchen = anzeigen</div></div></div>` : ''}
+        ${ovOpts[o.id] && !ovOpts[o.id].order ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="${ovOpts[o.id].single ? 'single' : ''}">${ovOpts[o.id].items.map((it) => it.type === 'select'
           ? `<label>${it.label} <select data-opt="${it.path}">${it.options.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select></label>`
           : `<label><input type="checkbox" data-opt="${it.path}"> ${it.label}</label>`).join('')}</div></div>` : ''}
         <div class="url"><input readonly value="${base}${o.file}"><button class="small cp">Kopieren</button><button class="small op">Öffnen</button></div>

@@ -13,6 +13,7 @@ const { buildState } = require('./state');
 const { FuelTracker } = require('./fuel');
 const { RaceTracker } = require('./race');
 const { Joysticks, buttonLabel } = require('./joystick');
+const { Updater } = require('./updater');
 
 const VERSION = require('../package.json').version;
 // Im fertigen Programm liegen die Overlays offen im Ordner resources/web (frei anpassbar)
@@ -65,18 +66,32 @@ const DEFAULT_BINDINGS = {
   toggleVisible: { key: 'Alt+Shift+H', joy: null },
   toggleEdit: { key: 'Alt+Shift+E', joy: null },
 };
-// Spalten der Standings, die sich ein-/ausschalten lassen
 // Radar-Reichweite: Lücke Stoßstange zu Stoßstange in Metern
 const RADAR_RANGES = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 60, 80];
-const STANDINGS_COLS = { gain: true, start: false, flag: true, pit: true, number: true, license: false, iRating: true, irDelta: true, incidents: true, last: true, best: true, gap: true };
+// Spalten der Standings: ein-/ausschaltbar und in der Reihenfolge frei verschiebbar (Platz steht immer vorne,
+// Fahrer ist immer sichtbar). Reihenfolge hier = Standard.
+const STANDINGS_COL_LIST = [
+  ['gain', 'Plätze +/−'], ['start', 'Startplatz'], ['number', 'Startnummer'], ['flag', 'Landesflagge'], ['name', 'Fahrer'],
+  ['car', 'Automarke'], ['tyre', 'Reifen'], ['pit', 'Box / Stopps'], ['license', 'Lizenz'], ['iRating', 'iRating'],
+  ['irDelta', 'iRating +/−'], ['incidents', 'Incidents'], ['last', 'Letzte Runde'], ['best', 'Beste Runde'], ['gap', 'Abstand'],
+];
+const STANDINGS_COLS = { gain: true, start: false, number: true, flag: true, car: true, tyre: true, pit: true, license: false, iRating: true, irDelta: true, incidents: true, last: true, best: true, gap: true };
+const STANDINGS_ORDER = STANDINGS_COL_LIST.map(([k]) => k);
+// gespeicherte Reihenfolge übernehmen; neue Spalten an ihrer Standard-Stelle einfügen
+function mergeOrder(saved) {
+  const out = Array.isArray(saved) ? saved.filter((k, i) => STANDINGS_ORDER.includes(k) && saved.indexOf(k) === i) : [];
+  STANDINGS_ORDER.forEach((k, i) => {
+    if (out.includes(k)) return;
+    const before = STANDINGS_ORDER.slice(0, i).reverse().find((p) => out.includes(p));
+    out.splice(before ? out.indexOf(before) + 1 : 0, 0, k);
+  });
+  return out;
+}
 // Zusatz-Optionen je Overlay für das Einstellungsfenster
 const check = (path, label) => ({ path, label, type: 'check' });
 const OVERLAY_OPTIONS = {
-  standings: { title: 'Spalten', items: [
-    check('standingsCols.gain', 'Plätze +/−'), check('standingsCols.start', 'Startplatz'), check('standingsCols.flag', 'Landesflagge'),
-    check('standingsCols.pit', 'Box / Stopps'), check('standingsCols.number', 'Startnummer'), check('standingsCols.license', 'Lizenz'), check('standingsCols.iRating', 'iRating'),
-    check('standingsCols.irDelta', 'iRating +/−'), check('standingsCols.incidents', 'Incidents'), check('standingsCols.last', 'Letzte Runde'),
-    check('standingsCols.best', 'Beste Runde'), check('standingsCols.gap', 'Abstand')] },
+  // Spaltenliste zum Sortieren (ziehen oder ▲/▼) und Ein-/Ausschalten
+  standings: { title: 'Spalten', order: { path: 'standingsOrder', cols: 'standingsCols', items: STANDINGS_COL_LIST, fixed: ['name'] } },
   dash: { title: 'Anzeigen', single: true, items: [
     check('dashModules.shift', 'Schaltblitze'),
     ...DASH_PAGE_LIST.map(([k, label]) => ({ path: 'dashPages.' + k, label, type: 'select', options: SIDES }))] },
@@ -90,8 +105,10 @@ const DEFAULTS = {
   demo: true,
   units: 'kmh',
   hideEngineOff: true,
+  updateCheck: true,
   gpu: true,
   standingsCols: STANDINGS_COLS,
+  standingsOrder: STANDINGS_ORDER,
   dashModules: DASH_MODULES,
   dashPages: DASH_PAGES,
   dashPage: { left: 'tyres', right: 'laps' },
@@ -118,6 +135,7 @@ function loadConfig() {
   try { saved = JSON.parse(fs.readFileSync(cfgPath, 'utf8')); } catch { /* erster Start */ }
   cfg = { ...DEFAULTS, ...saved, editMode: false };
   cfg.standingsCols = { ...STANDINGS_COLS, ...(saved.standingsCols || {}) };
+  cfg.standingsOrder = mergeOrder(saved.standingsOrder);
   cfg.dashModules = { ...DASH_MODULES };
   for (const k in DASH_MODULES) if (saved.dashModules && k in saved.dashModules) cfg.dashModules[k] = saved.dashModules[k];
   cfg.dashPage = { ...DEFAULTS.dashPage, ...(saved.dashPage || {}) };
@@ -294,6 +312,7 @@ function configMsg() {
     learning: learning ? learning.action : null,
     joystick: { available: joysticks ? joysticks.available : false, devices: joysticks ? joysticks.devices() : [] },
     status: { version: VERSION, sdkAvailable: sdk.available, platform: process.platform, port: cfg.port },
+    update: { ...updater.info, enabled: UPDATES_ENABLED },
   };
 }
 function pushConfig() { broadcast(configMsg()); saveConfig(); applyWindows(); updateTray(); }
@@ -305,6 +324,8 @@ function handleCmd(m) {
       const parts = String(m.path).split('.');
       if (parts[0] === 'overlays' && cfg.overlays[parts[1]] && ['enabled', 'scale', 'bg'].includes(parts[2])) {
         cfg.overlays[parts[1]][parts[2]] = m.value;
+      } else if (m.path === 'standingsOrder' && Array.isArray(m.value)) {
+        cfg.standingsOrder = mergeOrder(m.value);
       } else if (parts[0] === 'standingsCols' && parts[1] in STANDINGS_COLS && parts.length === 2) {
         cfg.standingsCols[parts[1]] = !!m.value;
       } else if (parts[0] === 'dashModules' && parts[1] in DASH_MODULES && parts.length === 2) {
@@ -315,7 +336,7 @@ function handleCmd(m) {
         cfg.radarAutoHide = !!m.value;
       } else if (m.path === 'radarRange' && RADAR_RANGES.includes(Number(m.value))) {
         cfg.radarRange = Number(m.value);
-      } else if (['demo', 'units', 'editMode', 'visible', 'relativeRows', 'standingsRows', 'hideEngineOff', 'gpu'].includes(parts[0]) && parts.length === 1) {
+      } else if (['demo', 'units', 'editMode', 'visible', 'relativeRows', 'standingsRows', 'hideEngineOff', 'gpu', 'updateCheck'].includes(parts[0]) && parts.length === 1) {
         cfg[parts[0]] = m.value;
         if (parts[0] === 'demo' && m.value) demo = new Demo();
       } else return;
@@ -354,6 +375,15 @@ function handleCmd(m) {
       for (const o of OVERLAYS) Object.assign(cfg.overlays[o.id], { x: o.x, y: o.y });
       for (const o of OVERLAYS) { const w = windows[o.id]; if (w && !w.isDestroyed()) w.setPosition(o.x, o.y); }
       pushConfig();
+      break;
+    case 'updateCheck':
+      if (UPDATES_ENABLED) updater.check();
+      break;
+    case 'updateInstall':
+      if (UPDATES_ENABLED) updater.install(() => { quitting = true; app.quit(); });
+      break;
+    case 'openRelease':
+      if (/^https:\/\/github\.com\//.test(updater.info.page || '')) shell.openExternal(updater.info.page);
       break;
     case 'openUrl':
       if (/^https?:\/\/(127\.0\.0\.1|localhost):/.test(m.url)) shell.openExternal(m.url);
@@ -533,9 +563,34 @@ function lowerPriority() {
 
 function iconPath() { return path.join(WEB, 'assets', 'icon.png'); }
 
+// ---------------- Updates ----------------
+// Nur im fertigen Programm (aus dem Quellcode gestartet gibt es nichts zu ersetzen); Testhilfe DBDASH_UPDATE_API
+const UPDATES_ENABLED = app.isPackaged || !!process.env.DBDASH_UPDATE_API;
+let updateNotified = '';
+const updater = new Updater({
+  version: VERSION,
+  installDir: path.dirname(process.execPath),
+  onChange: (info) => {
+    broadcast(configMsg());
+    updateTray();
+    // einmal pro Version Bescheid geben – aber nicht, während iRacing läuft (keine Meldung über dem Spiel)
+    if (info.status === 'available' && updateNotified !== info.latest && tray && (cfg.demo || !state.connected)) {
+      updateNotified = info.latest;
+      tray.displayBalloon({ iconType: 'info', title: 'dbDash-Update verfügbar', content: `Version ${info.latest} ist da – im Einstellungsfenster mit einem Klick installieren.` });
+    }
+  },
+});
+function scheduleUpdates() {
+  if (!UPDATES_ENABLED) return;
+  setTimeout(() => cfg.updateCheck && updater.check(), 10000);
+  setInterval(() => cfg.updateCheck && updater.check(), 6 * 3600 * 1000);
+}
+
 function updateTray() {
   if (!tray) return;
+  const up = updater.info;
   tray.setContextMenu(Menu.buildFromTemplate([
+    ...(up.status === 'available' ? [{ label: `Update auf ${up.latest} installieren`, click: () => { openPanel(); } }, { type: 'separator' }] : []),
     { label: 'Einstellungen öffnen', click: openPanel },
     { type: 'separator' },
     { label: 'Overlays anzeigen', type: 'checkbox', checked: cfg.visible, click: (i) => { cfg.visible = i.checked; pushConfig(); } },
@@ -578,6 +633,7 @@ app.whenReady().then(async () => {
   setInterval(tick, 1000 / 30);
   setInterval(keepOnTop, 3000);
   lowerPriority();
+  scheduleUpdates();
   setInterval(lowerPriority, 10000);
 
   // Entwickler-Test: Screenshots aller Fenster speichern und beenden

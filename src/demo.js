@@ -83,6 +83,8 @@ class Demo {
   }
 
   _session() {
+    const GT3_CARS = ['BMW M4 GT3', 'Mercedes-AMG GT3 2020', 'Porsche 911 GT3 R (992)', 'Ferrari 296 GT3', 'Audi R8 LMS EVO II GT3',
+      'McLaren 720S GT3 EVO', 'Lamborghini Huracán GT3 EVO', 'Ford Mustang GT3', 'Chevrolet Corvette Z06 GT3.R', 'Aston Martin Vantage GT3 EVO'];
     const drivers = this.cars.map((c) => ({
       CarIdx: c.idx,
       UserName: NAMES[c.idx],
@@ -93,7 +95,8 @@ class Demo {
       CarClassShortName: c.proto ? 'LMP2' : 'GT3',
       CarClassColor: c.proto ? 0x5ac8fa : 0xffc04a,
       CarClassEstLapTime: c.proto ? 93.5 : 102.0,
-      CarScreenNameShort: c.proto ? 'Prototype' : 'GT3 Car',
+      CarScreenName: c.proto ? 'Dallara P217' : GT3_CARS[c.idx % GT3_CARS.length],
+      CarScreenNameShort: c.proto ? 'Dallara P217' : GT3_CARS[c.idx % GT3_CARS.length],
       IRating: c.iR,
       LicString: `${c.lic} ${c.sr}`,
       LicColor: { A: 0x0153db, B: 0x00c702, C: 0xfeec04 }[c.lic],
@@ -108,6 +111,7 @@ class Demo {
       DriverInfo: {
         DriverCarIdx: this.player, Drivers: drivers,
         DriverCarRedLine: 7800, DriverCarSLFirstRPM: 6400, DriverCarSLShiftRPM: 7350, DriverCarSLLastRPM: 7550, DriverCarSLBlinkRPM: 7700,
+        DriverTires: [{ TireIndex: 0, TireCompoundType: 'Soft' }, { TireIndex: 1, TireCompoundType: 'Medium' }, { TireIndex: 2, TireCompoundType: 'Hard' }, { TireIndex: 3, TireCompoundType: 'Wet' }],
         DriverCarFuelMaxLtr: 100, DriverCarMaxFuelPct: 1, DriverCarEstLapTime: 102,
       },
       SessionInfo: { Sessions: [{ SessionNum: 0, SessionType: 'Race' }] },
@@ -282,6 +286,8 @@ class Demo {
       CarIdxLapDistPct: pct, CarIdxLapCompleted: lapC, CarIdxEstTime: est, CarIdxPosition: pos,
       CarIdxClassPosition: cpos, CarIdxF2Time: f2, CarIdxOnPitRoad: pit, CarIdxLastLapTime: last,
       CarIdxBestLapTime: best, CarIdxTrackSurface: surf,
+      // Reifen: meist Medium/Hard, einzelne Autos auf Soft oder (Strategie-Poker) auf Regenreifen
+      CarIdxTireCompound: cars.map((c) => [1, 2, 1, 0, 1, 2, 1, 3, 1, 2, 0, 1, 2, 1, 1, 2, 0, 1][c.idx] ?? 1).concat(new Array(n - cars.length).fill(-1)),
     };
     return { data: d, session: this.session };
   }

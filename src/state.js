@@ -38,6 +38,8 @@ function buildState(d, s, opts) {
   const last = d.CarIdxLastLapTime || [];
   const best = d.CarIdxBestLapTime || [];
   const surf = d.CarIdxTrackSurface || [];
+  const tyreIdx = d.CarIdxTireCompound || [];
+  const tyreNames = tyreNameMap(di);
 
   // Fahrerliste
   const cars = [];
@@ -74,6 +76,9 @@ function buildState(d, s, opts) {
       isPlayer: i === me,
       flag: flagCode(dr.FlairName, opts.flagMap),
       flagName: dr.FlairName ? String(dr.FlairName) : '',
+      brand: carBrand(dr.CarScreenName || dr.CarScreenNameShort),
+      carName: String(dr.CarScreenName || dr.CarScreenNameShort || ''),
+      tyre: tyreIdx[i] != null && tyreIdx[i] >= 0 ? tyreInfo(tyreIdx[i], tyreNames) : null,
       // Incidents: eigener Wert live aus der Telemetrie, sonst aus der Session-Info
       inc: i === me && d.PlayerCarMyIncidentCount != null ? d.PlayerCarMyIncidentCount
         : (dr.CurDriverIncidentCount != null ? dr.CurDriverIncidentCount : (dr.TeamIncidentCount != null ? dr.TeamIncidentCount : -1)),
@@ -288,12 +293,47 @@ function pickRows(list, limit) {
   return out;
 }
 
+// Automarke aus dem iRacing-Fahrzeugnamen (z. B. „Mercedes-AMG GT3 2020“ → „Mercedes“)
+const BRANDS = [
+  [/^mercedes|^amg/i, 'Mercedes'], [/^bmw/i, 'BMW'], [/^porsche/i, 'Porsche'], [/^ferrari/i, 'Ferrari'], [/^audi/i, 'Audi'],
+  [/^mclaren/i, 'McLaren'], [/^lamborghini/i, 'Lamborghini'], [/^aston/i, 'Aston Martin'], [/^ford/i, 'Ford'],
+  [/^chevrolet|^corvette|^chevy/i, 'Chevrolet'], [/^acura/i, 'Acura'], [/^honda/i, 'Honda'], [/^cadillac/i, 'Cadillac'],
+  [/^toyota/i, 'Toyota'], [/^mazda|^global mazda/i, 'Mazda'], [/^nissan/i, 'Nissan'], [/^hyundai/i, 'Hyundai'],
+  [/^volkswagen|^vw/i, 'VW'], [/^dallara/i, 'Dallara'], [/^ligier/i, 'Ligier'], [/^oreca/i, 'Oreca'], [/^radical/i, 'Radical'],
+  [/^ruf/i, 'RUF'], [/^lotus/i, 'Lotus'], [/^williams/i, 'Williams'], [/^renault/i, 'Renault'], [/^subaru/i, 'Subaru'],
+  [/^kia/i, 'Kia'], [/^pontiac/i, 'Pontiac'], [/^ray/i, 'Ray'], [/^skip barber/i, 'Skip Barber'], [/^super formula/i, 'Super Formula'],
+];
+function carBrand(name) {
+  name = String(name || '').trim();
+  if (!name) return '';
+  const hit = BRANDS.find(([re]) => re.test(name));
+  return hit ? hit[1] : name.split(/[\s-]/)[0];
+}
+
+// Reifenmischung: Index aus der Telemetrie, Namen aus der Session-Info (DriverInfo.DriverTires)
+function tyreNameMap(di) {
+  const map = {};
+  for (const t of (di && di.DriverTires) || []) if (t && t.TireIndex != null) map[t.TireIndex] = String(t.TireCompoundType || '');
+  return map;
+}
+const TYRE_KINDS = [
+  [/soft/i, 'S', 'Soft'], [/medium/i, 'M', 'Medium'], [/hard|dry|slick/i, 'H', 'Hard'], [/inter/i, 'I', 'Intermediate'],
+  [/wet|rain/i, 'W', 'Wet'], [/primary/i, 'P', 'Primary'], [/alternate/i, 'A', 'Alternate'],
+];
+function tyreInfo(idx, names) {
+  const name = names[idx];
+  if (!name) return { idx, letter: String(idx), name: 'Mischung ' + idx };
+  const k = TYRE_KINDS.find(([re]) => re.test(name));
+  return { idx, letter: k ? k[1] : name[0].toUpperCase(), name: k ? k[2] : name };
+}
+
 function slimCar(c) {
   return {
     idx: c.idx, name: c.name, number: c.number, car: c.car, className: c.className, classColor: c.classColor,
     iRating: c.iRating, license: c.license, sr: c.sr, licColor: c.licColor, pos: c.pos, classPos: c.classPos,
     pit: c.pit, last: c.last, best: c.best, isPlayer: c.isPlayer, gap: c.gap, lapState: c.lapState,
     gapText: c.gapText, fastest: c.fastest, gapBefore: c.gapBefore, lap: c.lap,
+    brand: c.brand, carName: c.carName, tyre: c.tyre,
     inc: c.inc, incEst: c.incEst, irDelta: c.irDelta, flag: c.flag, flagName: c.flagName, startPos: c.startPos, gain: c.gain, stops: c.stops,
   };
 }
