@@ -97,7 +97,8 @@ class Demo {
       IRating: c.iR,
       LicString: `${c.lic} ${c.sr}`,
       LicColor: { A: 0x0153db, B: 0x00c702, C: 0xfeec04 }[c.lic],
-      CurDriverIncidentCount: c.inc,
+      // wie in offiziellen iRacing-Rennen: fremde Incidents sind während der Session verborgen (0)
+      CurDriverIncidentCount: c.idx === this.player ? c.inc : 0,
       FlairName: FLAIRS[c.idx],
       IsSpectator: 0,
       CarIsPaceCar: 0,
@@ -162,7 +163,9 @@ class Demo {
       f2[i] = (total(leader) - total(c)) * (c.proto ? 93.5 : 102.0);
       last[i] = c.last || -1;
       best[i] = c.best || -1;
-      surf[i] = 3;
+      // ab und zu ein kurzer Ausritt neben die Strecke (für die geschätzten Incidents der Gegner)
+      const offCycle = 140 + i * 23;
+      surf[i] = i !== this.player && i % 3 !== 0 && (this.t + i * 41) % offCycle < 1.5 ? 0 : 3;
       // ein Auto fährt alle paar Runden durch die Box
       pit[i] = c.idx === 14 && lapC[i] % 4 === 3 && (p > 0.94 || p < 0.04);
     });

@@ -11,15 +11,15 @@ Ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose Overlays 
   Lila = schnellste Runde der Klasse.
 - **Inputs** – Gas/Bremse-Verlauf, Pedalbalken, Gang, Tempo, Lenkrad.
 - **Delta** – Delta zur besten Runde mit Balken, Rundenzeit-Prognose, beste und letzte Runde.
-- **Dashboard** – großes Fahrer-Display: Schaltblitze, Gang, Tempo, Drehzahlbalken, Delta, Position mit Plätzen +/−,
+- **Dashboard** – großes Fahrer-Display: Schaltblitze, Gang, Tempo, Gas-/Bremsbalken, Delta, Position mit Plätzen +/−,
   Restzeit, Runde, Uhr, Flaggen-Feld (Blau, Gelb, Weiß, Karo …) mit Pitlimiter-Hinweis, TC / TC 2 / ABS / Bremsbalance / Motor-Map
   und Sprit (Liter, Ø pro Runde, Reichweite, Nachtank-Menge bis ins Ziel).
   Zwei umschaltbare Fenster (links/rechts) mit diesen Anzeigen: Reifen (Temperatur, Druck, Verschleiß), Motor (Wasser, Öl,
   Drücke, Batterie), Sprit-Strategie, **Relative – Gesamt**, **Relative – Klasse** (je 3 Autos vor/hinter dir),
-  **Abstände – Gesamt**, **Abstände – Klasse** (Zeitabstand zum Vorder- und Hintermann nach Position, mit Trend pro Runde
+  **Abstände – Gesamt**, **Abstände – Klasse** (Zeitabstand zum Vorder- und Hintermann nach Position – „−“ = vor dir, „+“ = hinter dir –, mit Trend pro Runde
   ▲/▼ – grün = gut für dich, rot = schlecht – sowie deren letzte und beste Runde),
-  Rundenzeiten (**Prognose**, letzte, beste) und **Schaden** (Pflicht- und optionale Reparaturzeit, Motor-Warnungen,
-  Reifenverschleiß). Für jede Anzeige wählst du in den Einstellungen **Links, Rechts oder Aus**.
+  Rundenzeiten (**Prognose**, letzte, beste) und **Schaden** (Auto-Grafik: Karosserie in der Farbe der Schadensstufe, Motor-Warnungen, Reifenverschleiß; dazu Pflicht- und optionale Reparaturzeit).
+  Für jede Anzeige wählst du in den Einstellungen **Links, Rechts oder Aus**.
   Umschalten per Taste oder Lenkradknopf.
 - **Radar (Ghost)** – Draufsicht mit den Autos vor, hinter und neben dir (Reichweite 20–80 m). Rot = neben dir,
   Gelb = näher als 12 m. Seiten-Warnung links/rechts, Abstand zum nächsten Auto davor/dahinter.
@@ -28,8 +28,9 @@ Ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose Overlays 
 Alle Overlays werden automatisch ausgeblendet, solange der Motor nicht läuft (abschaltbar).
 
 Hinweise: Die iRating-Prognose verwendet die von der Community ermittelte iRacing-Formel und ist eine Schätzung
-(berechnet pro Klasse, nur in Rennsessions). Incidents anderer Fahrer liefert iRacing nicht in jeder Session mit –
-deine eigenen werden immer live angezeigt.
+(berechnet pro Klasse, nur in Rennsessions). Deine eigenen Incidents werden immer live angezeigt.
+Die Incidents anderer Fahrer hält iRacing während der Session geheim – dbDash zählt deshalb ihre Ausritte neben die
+Strecke (je 1x) und zeigt diese Schätzung *kursiv und abgeblendet*. Kontakte (2x/4x) sind darin nicht enthalten.
 
 Radar: iRacing liefert keine seitliche Position der anderen Autos, nur den Abstand auf der Strecke und die
 Spotter-Meldung „Auto links/rechts“. Das Radar zeigt deshalb Autos davor/dahinter mittig und Autos neben dir

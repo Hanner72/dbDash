@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, Joystick, Abstände (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run icons` – Programmsymbol (`build/icon.svg` → `build/icon.ico`, `web/assets/icon.png`) und Stream-Deck-Grafiken
   (`grafiken/*.svg` → PNGs) neu erzeugen. Läuft in Electron; in VS Code ggf. `ELECTRON_RUN_AS_NODE` leeren.
@@ -34,6 +34,9 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Wichtige Entscheidungen / bekannte Fallstricke
 - **Abstände Vorder-/Hintermann**: im Rennen LIVE-Reihenfolge nach Distanz (`CarIdxLap + LapDistPct`), weil iRacing
   `CarIdxPosition` erst an der Ziellinie aktualisiert. Garage/getrennte Autos zählen nicht. Test: `test/gaps-test.js`.
+- **Incidents der Gegner**: iRacing liefert sie während der Session nicht (Session-Info = 0) → `race.js` zählt
+  Ausritte (`CarIdxTrackSurface` 0 = OffTrack, je 1x, innerhalb 2 s nur einmal), Anzeige als Schätzung (`incEst`).
+  Echte Werte > 0 aus der Session-Info haben Vorrang. Test: `test/incidents-test.js`.
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
 - Schaden: nur über `PitRepairLeft` / `PitOptRepairLeft` (Reparaturzeiten), Motor-Warnungen, Reifenverschleiß.
 - Overlays werden ausgeblendet, wenn der Motor aus ist (RPM ≤ 300 oder EngineWarnings 0x08), mit 1,5 s Verzögerung.

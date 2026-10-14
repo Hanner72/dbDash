@@ -30,6 +30,7 @@
   .down { color: var(--bad); font-weight: 600; font-size: 13px; }
   .inc { font-size: 13px; }
   .inc.warn { color: #ffd23f; } .inc.high { color: var(--bad); font-weight: 600; }
+  .inc.est { opacity: .6; font-style: italic; } /* geschätzt (Ausritte gezählt) */
   .row.me { background: var(--me) !important; }
   .row.me .name { color: var(--accent); font-weight: 600; }
   .row.inpit { opacity: .6; }
@@ -58,7 +59,7 @@
     { key: 'license', w: '50px', h: 'Liz.', html: (c) => `<span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${c.sr ? Number(c.sr).toFixed(1) : ''}</span>` },
     { key: 'iRating', w: '42px', h: 'iR', cls: 'r ir', html: (c) => PW.fmtIR(c.iRating) },
     { key: 'irDelta', w: '42px', h: 'iR±', cls: 'r', html: (c) => c.irDelta == null ? '' : c.irDelta > 0 ? `<span class="up">+${c.irDelta}</span>` : c.irDelta < 0 ? `<span class="down">−${-c.irDelta}</span>` : '<span class="ir">0</span>' },
-    { key: 'incidents', w: '36px', h: 'Inc', cls: 'r', html: (c) => c.inc == null || c.inc < 0 ? '' : `<span class="inc${c.inc >= 12 ? ' high' : c.inc >= 6 ? ' warn' : ''}">${c.inc}x</span>` },
+    { key: 'incidents', w: '36px', h: 'Inc', cls: 'r', html: (c) => c.inc == null || c.inc < 0 ? '' : `<span class="inc${c.inc >= 12 ? ' high' : c.inc >= 6 ? ' warn' : ''}${c.incEst ? ' est' : ''}"${c.incEst ? ' title="geschätzt: gezählte Ausritte (iRacing zeigt fremde Incidents erst nach dem Rennen)"' : ''}>${c.inc}x</span>` },
     { key: 'last', w: '70px', h: 'Letzte', cls: 'r t', html: (c) => PW.fmtLap(c.last) },
     { key: 'best', w: '70px', h: 'Beste', cls: 'r t', html: (c) => PW.fmtLap(c.best), extra: (c) => c.fastest ? ' f' : '' },
     { key: 'gap', w: '58px', h: 'Abst.', cls: 'r gap', html: (c) => PW.esc(c.gapText || '') },

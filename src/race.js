@@ -12,12 +12,16 @@ class RaceTracker {
     this.startSource = null;    // 'qualify' | 'snapshot'
     this.stops = new Map();     // carIdx -> Anzahl Boxenstopps
     this.inPit = new Map();     // carIdx -> war zuletzt in der Boxengasse
+    this.surf = new Map();      // carIdx -> letzte Streckenlage (CarIdxTrackSurface)
+    this.offAt = new Map();     // carIdx -> Sessionzeit, zu der das Auto zuletzt neben der Strecke war
+    this.offs = new Map();      // carIdx -> Anzahl Ausritte (Schätzung für Incidents)
   }
 
   // cars: [{ idx, classId, classPos, pit }] (classPos 1-basiert, 0 = unbekannt)
   update(d, s, isRace, cars) {
     const key = `${d.SessionUniqueID ?? ''}/${d.SessionNum ?? 0}`;
     if (key !== this.key) { this.reset(); this.key = key; }
+    this.countOffTracks(d, cars);
     if (!isRace) return;
 
     // 1. Startaufstellung aus der Qualifikation (Positionen sind dort 0-basiert)
@@ -41,7 +45,28 @@ class RaceTracker {
     }
   }
 
+  // iRacing verrät die Incidents der Gegner während der Session nicht (Session-Info liefert 0).
+  // Schätzung: jeder Ausritt neben die Strecke (TrackSurface 0 = OffTrack) zählt 1x;
+  // war das Auto vor weniger als 2 s schon neben der Strecke, gilt es als derselbe Ausritt.
+  countOffTracks(d, cars) {
+    const surf = d.CarIdxTrackSurface;
+    if (!surf) return;
+    const t = d.SessionTime != null ? d.SessionTime : Date.now() / 1000;
+    for (const c of cars) {
+      const now = surf[c.idx], prev = this.surf.get(c.idx);
+      if (now === 0) {
+        const lastOff = this.offAt.get(c.idx);
+        if (prev != null && prev > 0 && !(lastOff != null && t - lastOff >= 0 && t - lastOff < 2)) {
+          this.offs.set(c.idx, (this.offs.get(c.idx) || 0) + 1);
+        }
+        this.offAt.set(c.idx, t);
+      }
+      this.surf.set(c.idx, now);
+    }
+  }
+
   startPos(idx) { return this.start.get(idx) || 0; }
+  offTracks(idx) { return this.offs.get(idx) || 0; }
   pitStops(idx) { return this.stops.get(idx) || 0; }
 }
 

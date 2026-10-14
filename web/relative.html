@@ -54,7 +54,8 @@
       if (c.lapState === -1) cls.push('behind');
       if (c.pit) cls.push('inpit');
       // Oben = vor dir auf der Strecke, unten = hinter dir; Abstand in Sekunden
-      const gap = c.isPlayer ? '' : Math.abs(c.gap).toFixed(1);
+      // Vorzeichen wie im Dashboard: vor dir „−“, hinter dir „+“
+      const gap = c.isPlayer ? '' : (c.gap > 0 ? '−' : '+') + Math.abs(c.gap).toFixed(1);
       html += `<div class="${cls.join(' ')}" style="--cc:${c.classColor}">
         <div class="pos">${c.classPos || ''}</div>
         <div><span class="num" style="box-shadow: inset 0 -2px 0 ${c.classColor}">${PW.esc(c.number)}</span></div>

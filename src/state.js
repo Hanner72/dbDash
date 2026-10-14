@@ -157,6 +157,8 @@ function buildState(d, s, opts) {
       c.startPos = opts.race.startPos(c.idx);
       c.gain = isRace && c.startPos && c.classPos ? c.startPos - c.classPos : null;
       c.stops = opts.race.pitStops(c.idx);
+      // Incidents der Gegner: iRacing liefert sie nicht live → Ausritte zählen (eigener Wert ist exakt)
+      if (!c.isPlayer && !(c.inc > 0)) { c.inc = opts.race.offTracks(c.idx); c.incEst = true; }
     }
   }
 
@@ -292,7 +294,7 @@ function slimCar(c) {
     iRating: c.iRating, license: c.license, sr: c.sr, licColor: c.licColor, pos: c.pos, classPos: c.classPos,
     pit: c.pit, last: c.last, best: c.best, isPlayer: c.isPlayer, gap: c.gap, lapState: c.lapState,
     gapText: c.gapText, fastest: c.fastest, gapBefore: c.gapBefore, lap: c.lap,
-    inc: c.inc, irDelta: c.irDelta, flag: c.flag, flagName: c.flagName, startPos: c.startPos, gain: c.gain, stops: c.stops,
+    inc: c.inc, incEst: c.incEst, irDelta: c.irDelta, flag: c.flag, flagName: c.flagName, startPos: c.startPos, gain: c.gain, stops: c.stops,
   };
 }
 

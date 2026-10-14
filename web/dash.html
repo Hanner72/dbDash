@@ -65,30 +65,47 @@
   .tyname { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); background: #2a2d33; border-radius: 99px; padding: 3px 12px; font-size: 12px; font-weight: 800; z-index: 1; letter-spacing: .06em; }
 
   /* Wertelisten (Motor, Strategie, Schaden) */
-  .vals { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; align-content: center; height: 100%; }
-  .val .big { font-size: 28px; margin-top: 2px; }
-  .val .big small { font-size: 14px; color: var(--muted); font-weight: 600; margin-left: 2px; }
+  .vals { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 1fr); gap: 0 14px; align-items: center; height: 100%; padding: 0 6px; }
+  .val .lbl { font-size: 11px; }
+  .val .big { font-size: 40px; margin-top: 3px; }
+  .val .big small { font-size: 17px; color: var(--muted); font-weight: 600; margin-left: 3px; }
   .warn { color: var(--bad); } .ok { color: var(--good); } .amber { color: #ffb02e; }
 
   /* Rundenzeiten */
-  .laps { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 6px; }
-  .lt { text-align: right; }
-  .lt .big { font-size: 46px; }
-  .lt .lbl { margin-top: 1px; }
+  .laps { display: flex; flex-direction: column; justify-content: space-evenly; height: 100%; }
+  .lt { text-align: center; }
+  .lt .big { font-size: 54px; }
+  .lt .lbl { margin-top: 2px; font-size: 11px; }
   .lt.pred .big { color: var(--ink); } .lt.last .big { color: var(--c-last); } .lt.best .big { color: var(--c-best); }
 
   /* Schaden */
-  .dmg { display: flex; flex-direction: column; gap: 10px; height: 100%; justify-content: center; }
-  .dmg .state { border-radius: 10px; padding: 10px; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: .04em; }
-  .dmg .state small { display: block; font-size: 11px; letter-spacing: .1em; font-weight: 700; opacity: .8; margin-top: 2px; }
+  .dmg { display: grid; grid-template-columns: 140px 1fr; gap: 8px; height: 100%; align-items: center; }
+  .dmg .car { width: 140px; height: 100%; display: block; }
+  .dmg .car { --bp: #3ddc84; }
+  .dmg .car .grid { fill: none; stroke: var(--bp); stroke-opacity: .10; stroke-width: .6; }
+  .dmg .car .aux { fill: none; stroke: var(--bp); stroke-opacity: .35; stroke-width: .7; stroke-dasharray: 4 3; }
+  .dmg .car .ln { fill: none; stroke: var(--bp); stroke-width: 1.4; stroke-linejoin: round; }
+  .dmg .car .ln.thin { stroke-width: .9; stroke-opacity: .8; }
+  .dmg .car .ln.fill, .dmg .car .body { fill: var(--bp); fill-opacity: .07; }
+  .dmg .car .tyre { fill: #3a3f48; fill-opacity: .8; stroke: var(--bp); stroke-width: 1; }
+  .dmg .car .eng { fill: none; stroke: var(--bp); stroke-width: .9; stroke-dasharray: 3 2; }
+  .dmg .car .eng.bad { fill: #ff3b3b; fill-opacity: .55; stroke: #ff3b3b; stroke-dasharray: none; }
+  .dmg .car .engT { fill: var(--bp); font-size: 8px; letter-spacing: .08em; }
+  .dmg .car .eng.bad + .engT { fill: #fff; }
+  .dmg .car.blink .body { animation: fl .6s steps(1) infinite; }
+  .dmg .car text { font-family: inherit; font-weight: 800; }
+  .dmg .car .tw { font-size: 13px; fill: #f3f5f8; }
+  .dmg .info { display: flex; flex-direction: column; gap: 10px; justify-content: center; height: 100%; min-width: 0; }
+  .dmg .state { border-radius: 10px; padding: 8px 6px; text-align: center; font-size: 17px; font-weight: 800; letter-spacing: .04em; }
+  .dmg .state small { display: block; font-size: 11px; letter-spacing: .08em; font-weight: 700; opacity: .8; margin-top: 3px; }
   .st-ok { background: rgba(61,220,132,.14); color: var(--good); }
   .st-opt { background: rgba(255,176,46,.16); color: #ffb02e; }
   .st-req { background: rgba(255,59,59,.2); color: #ff6b6b; }
-  .dmg .rep { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; min-height: 20px; }
-  .chips span { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: var(--bad); color: #fff; letter-spacing: .04em; }
-  .wear { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
-  .wear b { display: block; font-size: 16px; }
+  .dmg .rep { display: flex; flex-direction: column; gap: 8px; padding: 0 2px; }
+  .dmg .rep .big { font-size: 32px; }
+  .dmg .rep .lbl { letter-spacing: .05em; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; min-height: 22px; }
+  .chips span { font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 4px; background: var(--bad); color: #fff; letter-spacing: .04em; }
 
   /* Fahrzeug-Kacheln */
   .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; height: 86px; }
@@ -105,14 +122,16 @@
   .gearbox { flex: 1; background: #26292e; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; min-height: 214px; }
   .gear { font-size: 168px; font-weight: 800; line-height: .9; }
   .gear.shift { color: #4aa3ff; }
-  .speed { font-size: 24px; font-weight: 600; margin-top: 4px; }
-  .speed small { font-size: 11px; color: var(--muted); margin-left: 4px; letter-spacing: .1em; }
+  .speed { font-size: 38px; font-weight: 700; margin-top: 6px; line-height: 1; }
+  .speed small { font-size: 13px; color: var(--muted); margin-left: 5px; letter-spacing: .1em; font-weight: 600; }
   .lim { position: absolute; left: 6px; right: 6px; top: 8px; text-align: center; font-weight: 800; font-size: 14px; letter-spacing: .1em; border-radius: 6px; padding: 4px; display: none; }
   .lim.on { display: block; background: #2f7cff; }
   .lim.nolim { display: block; background: var(--bad); animation: fl .4s steps(1) infinite; }
-  .rpmbar { height: 10px; background: #1b1d21; border-radius: 3px; overflow: hidden; position: relative; }
-  .rpmbar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #22c55e 0 70%, #ffd23f 70% 88%, #ff3b3b 88%); background-size: 172px 100%; }
-  .rpmbar i.shift { background: #4aa3ff; }
+  /* Gas (grün) und Bremse (rot) */
+  .pedals { display: flex; flex-direction: column; gap: 3px; }
+  .pbar { height: 8px; background: #1b1d21; border-radius: 3px; overflow: hidden; position: relative; }
+  .pbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 3px; }
+  .pbar.thr i { background: #22c55e; } .pbar.brk i { background: #ff3b3b; }
   .posbox { height: 44px; background: #fff; border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 8px; color: #0b0c0e; }
   .posbox .cp { background: #ffd23f; border-radius: 5px; padding: 1px 7px; font-size: 18px; font-weight: 800; }
   .posbox .of { font-size: 26px; font-weight: 800; }
@@ -133,32 +152,35 @@
   .fuel .big { font-size: 34px; }
   .fuel .fin { position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); background: rgb(6,7,9); padding: 0 8px; font-size: 11px; font-weight: 800; letter-spacing: .06em; white-space: nowrap; }
   /* Relative im Dashboard */
-  .rel { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 2px; }
-  .rr { display: grid; grid-template-columns: 4px 26px 36px 1fr 46px; align-items: center; gap: 6px; height: 30px; border-radius: 6px; padding-right: 6px; font-size: 15px; font-weight: 700; }
-  .rr .cc { height: 20px; border-radius: 2px; }
-  .rr .p { text-align: center; color: var(--muted); font-size: 13px; }
-  .rr .n { text-align: center; font-size: 12px; background: rgba(255,255,255,.1); border-radius: 4px; line-height: 20px; }
+  .rel { display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 3px; }
+  .rr { display: grid; grid-template-columns: 4px 26px 40px 1fr 50px; align-items: center; gap: 7px; flex: 1 1 0; max-height: 42px; min-height: 0; border-radius: 6px; padding-right: 6px; font-size: 18px; font-weight: 700; }
+  .rr .cc { height: 62%; border-radius: 2px; }
+  .rr .p { text-align: center; color: var(--muted); font-size: 15px; }
+  .rr .n { text-align: center; font-size: 14px; background: rgba(255,255,255,.1); border-radius: 4px; line-height: 23px; }
+  .rr .g { font-size: 19px; }
   .rr .g { text-align: right; }
   .rr.me { background: rgba(198,255,61,.16); color: var(--accent); }
   .rr.me .p { color: var(--accent); }
   .rr.ahead { color: #ff8a6a; } .rr.behind { color: #6fb6ff; }
   .rr.inpit { opacity: .5; }
   .rr .pit { margin-left: 6px; }
-  .rel .none { text-align: center; color: var(--muted); font-size: 13px; }
+  .rel .none { text-align: center; color: var(--muted); font-size: 15px; }
   /* Abstände Vorder-/Hintermann */
   .gaps { display: flex; flex-direction: column; height: 100%; justify-content: space-between; }
-  .gp { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto; column-gap: 8px; }
-  .gp .who { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; min-width: 0; }
-  .gp .who .lbl { flex: none; }
-  .gp .who .n { font-size: 11px; background: rgba(255,255,255,.1); border-radius: 4px; padding: 0 5px; line-height: 17px; flex: none; }
-  .gp .who .cc { width: 4px; height: 15px; border-radius: 2px; flex: none; }
-  .gp .gv { grid-row: 1 / 4; grid-column: 2; align-self: center; text-align: right; font-size: 40px; font-weight: 800; line-height: 1; }
-  .gp .gv small { display: block; font-size: 13px; font-weight: 700; margin-top: 3px; }
-  .gp .sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .gp { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto auto auto; column-gap: 10px; }
+  .gp > .lbl { grid-column: 1 / 3; font-size: 11px; }
+  .gp .who { grid-column: 1 / 3; display: flex; align-items: center; gap: 7px; font-size: 18px; font-weight: 700; min-width: 0; margin: 3px 0 2px; }
+  .gp .who.long { font-size: 15px; }
+  .gp .who .n { font-size: 13px; background: rgba(255,255,255,.1); border-radius: 4px; padding: 0 6px; line-height: 21px; flex: none; }
+  .gp .who .cc { width: 4px; height: 19px; border-radius: 2px; flex: none; }
+  .gp .who .pp { flex: none; }
+  .gp .gv { grid-row: 3 / 5; grid-column: 2; align-self: center; text-align: right; font-size: 46px; font-weight: 800; line-height: 1; }
+  .gp .gv small { display: block; font-size: 14px; font-weight: 700; margin-top: 4px; }
+  .gp .sub { grid-column: 1; font-size: 14px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
   .gp .sub b { color: var(--ink); font-weight: 700; }
-  .gmid { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 800; font-size: 13px; letter-spacing: .06em; }
+  .gmid { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 800; font-size: 15px; letter-spacing: .06em; }
   .gmid::before, .gmid::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.18); }
-  .gnone { color: var(--muted); font-size: 13px; text-align: center; padding: 14px 0; }
+  .gnone { color: var(--muted); font-size: 15px; text-align: center; padding: 14px 0; }
   .off { display: none !important; }
 </style>
 </head>
@@ -217,7 +239,7 @@
         <div class="gear big" id="gear">N</div>
         <div class="speed"><span id="speed">0</span><small id="unit">KM/H</small></div>
       </div>
-      <div class="rpmbar"><i id="rpmbar"></i></div>
+      <div class="pedals"><div class="pbar thr"><i id="thrBar"></i></div><div class="pbar brk"><i id="brkBar"></i></div></div>
       <div class="posbox"><span class="cp" id="cpos">P–</span><span class="of" id="ofN"></span><span class="gain" id="gainC"></span></div>
       <div class="weather"><div><span>LUFT</span><b id="air">–</b></div><div><span>STRECKE</span><b id="track">–</b></div></div>
     </div>
@@ -241,14 +263,52 @@
         </div>
         <div class="pg" data-page="damage">
           <div class="dmg">
-            <div class="state" id="dmgState">–</div>
-            <div class="rep">
-              <div class="val"><div class="lbl">Pflicht-Reparatur</div><div class="big" id="rep">–</div></div>
-              <div class="val"><div class="lbl">Optionale Reparatur</div><div class="big" id="opt">–</div></div>
+            <!-- GT3 von oben als technische Zeichnung: Linienfarbe = Schadensstufe (grün / orange / rot),
+                 Motorfeld = Warnungen, Reifen = Verschleiß (letzter Stopp). iRacing meldet keine Schadensposition. -->
+            <svg class="car" id="car" viewBox="0 0 156 232" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <defs><pattern id="bpGrid" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8,0 L0,0 0,8" class="grid"/></pattern></defs>
+              <rect x="30" y="2" width="96" height="228" fill="url(#bpGrid)"/>
+              <path class="aux" d="M78,2 L78,230 M26,60 L130,60 M26,171 L130,171"/>
+              <!-- Reifen (unter der Karosserie) -->
+              <rect id="tyLF" class="tyre" x="32" y="46" width="13" height="28" rx="3"/>
+              <rect id="tyRF" class="tyre" x="111" y="46" width="13" height="28" rx="3"/>
+              <rect id="tyLR" class="tyre" x="31" y="156" width="14" height="30" rx="3"/>
+              <rect id="tyRR" class="tyre" x="111" y="156" width="14" height="30" rx="3"/>
+              <!-- Karosserie mit Kotflügelverbreiterungen -->
+              <path class="ln body" id="carBody" d="M78,12 Q100,12 112,18 L117,26 Q121,36 122,48 L122,72 Q121,82 115,88 L112,100 L112,132 L116,140 Q123,150 124,160 L124,182 Q123,194 117,200 L114,210 Q100,216 78,216 Q56,216 42,210 L39,200 Q33,194 32,182 L32,160 Q33,150 40,140 L44,132 L44,100 L41,88 Q35,82 34,72 L34,48 Q35,36 39,26 L44,18 Q56,12 78,12 Z"/>
+              <path class="ln" d="M42,17 Q78,5 114,17"/>
+              <!-- Motorhaube, Lufteinlässe, Motor -->
+              <path class="ln thin" d="M52,24 Q78,20 104,24 L106,76 Q78,80 50,76 Z"/>
+              <path class="ln thin" d="M60,28 L96,28 M58,72 L66,72 M90,72 L98,72"/>
+              <rect id="carEng" class="eng" x="60" y="36" width="36" height="30" rx="3"/>
+              <text id="carEngT" class="engT" x="78" y="54" text-anchor="middle">MOTOR</text>
+              <!-- Spiegel, Scheiben, Dach, Türen -->
+              <path class="ln" d="M112,90 L121,87 L122,94 L112,97 Z M44,90 L35,87 L34,94 L44,97 Z"/>
+              <path class="ln fill" d="M54,82 Q78,76 102,82 L98,100 Q78,96 58,100 Z"/>
+              <path class="ln thin" d="M58,100 Q78,96 98,100 L98,140 Q78,143 58,140 Z"/>
+              <rect class="ln thin" x="71" y="112" width="14" height="14" rx="2"/>
+              <path class="ln fill" d="M58,140 Q78,143 98,140 L102,158 Q78,162 54,158 Z"/>
+              <path class="ln thin" d="M108,100 L108,132 M48,100 L48,132"/>
+              <!-- Heckflügel, Diffusor -->
+              <path class="ln thin" d="M64,180 L64,192 M92,180 L92,192"/>
+              <rect class="ln fill" x="36" y="192" width="84" height="8" rx="1.5"/>
+              <rect class="ln" x="33" y="186" width="4" height="19" rx="1"/>
+              <rect class="ln" x="119" y="186" width="4" height="19" rx="1"/>
+              <path class="ln thin" d="M50,211 L50,219 M62,214 L62,220 M94,214 L94,220 M106,211 L106,219"/>
+              <!-- Verschleiß in % neben den Reifen -->
+              <text id="twLF" class="tw" x="0" y="65">–</text>
+              <text id="twRF" class="tw" x="156" y="65" text-anchor="end">–</text>
+              <text id="twLR" class="tw" x="0" y="176">–</text>
+              <text id="twRR" class="tw" x="156" y="176" text-anchor="end">–</text>
+            </svg>
+            <div class="info">
+              <div class="state" id="dmgState">–</div>
+              <div class="rep">
+                <div class="val"><div class="lbl">Pflicht-Reparatur</div><div class="big" id="rep">–</div></div>
+                <div class="val"><div class="lbl">Optionale Reparatur</div><div class="big" id="opt">–</div></div>
+              </div>
+              <div class="chips" id="warns"></div>
             </div>
-            <div class="chips" id="warns"></div>
-            <div><div class="lbl" style="text-align:center;margin-bottom:4px">Reifenverschleiß (letzter Stopp)</div>
-              <div class="wear" id="wear"></div></div>
           </div>
         </div>
         <div class="pg" data-page="relAll"><div class="rel" id="relAll"></div></div>
@@ -275,7 +335,6 @@
   const leds = [...$('leds').children];
   const WHEELS = ['LF', 'RF', 'LR', 'RR'];
   for (const w of WHEELS) $('t' + w).innerHTML = `<div class="t big">–</div><div class="row"><span class="p">–</span><div class="segs"><i></i><i></i><i></i></div><span class="w">–</span></div>`;
-  $('wear').innerHTML = WHEELS.map((w) => `<div><b id="w${w}">–</b><span class="lbl">${w}</span></div>`).join('');
 
   const PAGE_TITLES = { tyres: 'Reifen', engine: 'Motor', strategy: 'Sprit-Strategie', relAll: 'Relative – Gesamt', relClass: 'Relative – Klasse',
     gapAll: 'Abstände – Gesamt', gapClass: 'Abstände – Klasse', laps: 'Rundenzeiten', damage: 'Schaden' };
@@ -325,13 +384,15 @@
     if (now - t0 < 8) return null; // noch zu wenig Verlauf
     return (gap - g0) / (now - t0) * span; // Änderung pro Runde
   }
+  // Vorzeichen der Abstände: vor dir „−“ (du liegst zurück), hinter dir „+“ (dein Vorsprung)
+  const sign = (ahead) => (ahead ? '−' : '+');
   function gapBlock(c, side, myLast, page) {
     const title = side === 'ahead' ? 'VOR DIR' : 'HINTER DIR';
     if (!c) return `<div class="gnone">${side === 'ahead' ? 'Niemand vor dir – du führst!' : 'Niemand hinter dir'}</div>`;
     let val = '–', tr = '';
-    if (c.gap && c.gap.laps) val = (side === 'ahead' ? '+' : '−') + c.gap.laps + 'L';
+    if (c.gap && c.gap.laps) val = sign(side === 'ahead') + c.gap.laps + 'L';
     else if (c.gap && c.gap.s != null) {
-      val = c.gap.s.toFixed(c.gap.s < 10 ? 2 : 1);
+      val = sign(side === 'ahead') + c.gap.s.toFixed(c.gap.s < 10 ? 2 : 1);
       const t = trend(page + side, c.idx, c.gap.s, myLast || c.last);
       if (t != null && Math.abs(t) >= 0.02) {
         const closing = t < 0;
@@ -343,7 +404,8 @@
     const ld = c.lastDiff;
     const ldTxt = ld == null ? '' : ` <span class="${(side === 'ahead' ? ld > 0 : ld > 0) ? 'ok' : 'warn'}">(${ld > 0 ? '+' : '−'}${Math.abs(ld).toFixed(2)})</span>`;
     return `<div class="gp">
-      <div class="who"><span class="lbl">${title}</span><span class="cc" style="background:${c.classColor}"></span><span>P${c.pos}</span><span class="n">${PW.esc(c.number)}</span><span class="ellipsis">${PW.esc(c.name)}</span>${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
+      <div class="lbl">${title}</div>
+      <div class="who${c.name.length > 22 ? ' long' : ''}"><span class="cc" style="background:${c.classColor}"></span><span class="pp">P${c.pos}</span><span class="n">${PW.esc(c.number)}</span><span class="ellipsis">${PW.esc(c.name)}</span>${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
       <div class="gv">${val}${tr}</div>
       <div class="sub">Letzte <b>${PW.fmtLap(c.last)}</b>${ldTxt}</div>
       <div class="sub">Beste <b>${PW.fmtLap(c.best)}</b></div>
@@ -360,9 +422,9 @@
     let lit = 0;
     if (sh.first && sh.last > sh.first) lit = Math.max(0, Math.min(LEDS, Math.ceil((d.rpm - sh.first) / (sh.last - sh.first) * LEDS)));
     leds.forEach((el, i) => { el.className = shiftNow ? (blink ? '' : 's') : i < lit ? (i < LEDS * 0.4 ? 'g' : i < LEDS * 0.75 ? 'y' : 'r') : ''; });
-    const red = sh.blink || sh.last || 8000;
-    $('rpmbar').style.width = Math.min(100, d.rpm / red * 100) + '%';
-    $('rpmbar').classList.toggle('shift', !!shiftNow);
+    const pl = st.player || {};
+    $('thrBar').style.width = Math.round(Math.max(0, Math.min(1, pl.throttle || 0)) * 100) + '%';
+    $('brkBar').style.width = Math.round(Math.max(0, Math.min(1, pl.brake || 0)) * 100) + '%';
 
     // Mitte
     $('gear').textContent = d.gear === -1 ? 'R' : d.gear === 0 ? 'N' : d.gear;
@@ -406,7 +468,7 @@
           <span class="cc" style="background:${c.classColor}"></span><span class="p">${c.classPos || ''}</span>
           <span class="n">${PW.esc(c.number)}</span>
           <span class="ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</span>
-          <span class="g">${c.isPlayer ? '' : Math.abs(c.gap).toFixed(1)}</span>
+          <span class="g">${c.isPlayer ? '' : sign(c.gap > 0) + Math.abs(c.gap).toFixed(1)}</span>
         </div>`).join('') : '<div class="none">Keine Daten</div>';
     }
 
@@ -469,8 +531,8 @@
 
     // Schaden
     const dm = d.damage, ds = $('dmgState');
-    if (dm.repair > 0) { ds.className = 'state st-req'; ds.innerHTML = `PFLICHT-REPARATUR<small>${dm.repair.toFixed(1)} s in der Box</small>`; }
-    else if (dm.optRepair > 0) { ds.className = 'state st-opt'; ds.innerHTML = `LEICHTER SCHADEN<small>optional ${dm.optRepair.toFixed(1)} s reparierbar</small>`; }
+    if (dm.repair > 0) { ds.className = 'state st-req'; ds.innerHTML = 'SCHWERER SCHADEN<small>Reparatur in der Box</small>'; }
+    else if (dm.optRepair > 0) { ds.className = 'state st-opt'; ds.innerHTML = 'LEICHTER SCHADEN<small>optional reparierbar</small>'; }
     else if (dm.repair == null && dm.optRepair == null) { ds.className = 'state'; ds.innerHTML = 'KEINE DATEN'; }
     else { ds.className = 'state st-ok'; ds.innerHTML = 'KEIN SCHADEN'; }
     $('rep').textContent = dm.repair != null ? dm.repair.toFixed(1) + ' s' : '–';
@@ -478,7 +540,16 @@
     $('opt').textContent = dm.optRepair != null ? dm.optRepair.toFixed(1) + ' s' : '–';
     $('opt').className = 'big' + (dm.optRepair > 0 ? ' amber' : '');
     $('warns').innerHTML = (dm.meatball ? ['Reparaturflagge'] : []).concat(dm.warnings).map((w) => `<span>${w}</span>`).join('');
-    for (const w of WHEELS) { const wr = dm.wear[w]; $('w' + w).textContent = wr ? Math.round(Math.min(...wr) * 100) + '%' : '–'; }
+    // Auto-Grafik
+    const bp = dm.repair > 0 ? '#ff4d4d' : dm.optRepair > 0 ? '#ffb02e' : dm.repair == null && dm.optRepair == null ? '#8b94a3' : '#3ddc84';
+    $('car').style.setProperty('--bp', bp);
+    $('car').classList.toggle('blink', !!dm.meatball);
+    $('carEng').classList.toggle('bad', dm.warnings.length > 0);
+    for (const w of WHEELS) {
+      const wr = dm.wear[w], v = wr ? Math.min(...wr) : null;
+      $('ty' + w).style.fill = v == null ? '' : v >= 0.8 ? '#3ddc84' : v >= 0.6 ? '#ffd23f' : v >= 0.4 ? '#ff9a2e' : '#ff3b3b';
+      $('tw' + w).textContent = v == null ? '–' : Math.round(v * 100) + '%';
+    }
 
     // Flaggen
     const greenOnly = d.flags.length && d.flags.every((x) => x.kind === 'green');
