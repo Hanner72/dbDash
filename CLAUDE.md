@@ -2,7 +2,7 @@
 
 dbDash – „dannerbam Dash“, ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose iRacing-Overlays
 (ähnlich RaceLabs) als Windows-Programm. Eigenes Design, eigener Name – keine Kopie
-von RaceLabs/Lovely. Autor: Johann Danner. Kommunikation mit dem Autor auf **Deutsch**; er programmiert sonst
+von RaceLabs/Lovely. Autor: Johann Danner. Kommunikation mit dem Autor auf **Deutsch** (das Programm selbst ist zweisprachig, siehe „Sprachen“); er programmiert sonst
 hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electron-Fachjargon vorauszusetzen.
 
 ## Befehle
@@ -68,6 +68,18 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - WebSocket nimmt nur Verbindungen ohne Origin oder von 127.0.0.1/localhost an; `/api/*` weist Browser-Aufrufe
   fremder Seiten ab (Sec-Fetch-Site/Origin).
 
+## Sprachen (Deutsch / Englisch)
+- Alle sichtbaren Texte stehen in `web/lang/de.json` und `en.json` (Schlüssel → Text, `{platzhalter}`); `_name` = Anzeigename.
+  Neue Sprache = neue Datei, erscheint automatisch in der Auswahl. Fehlende Texte fallen auf Deutsch zurück.
+- Sprache: `cfg.lang` (`auto` = Windows-Sprache über `app.getLocale()`, sonst Englisch). Der Hauptprogramm-`configMsg`
+  schickt `lang` + `strings` an alle Seiten; Umschalten wirkt sofort ohne Neustart.
+- Overlays: `PW.t('schlüssel', { platzhalter })`, feste Texte im HTML mit `data-i18n` / `data-i18n-html` / `data-i18n-title`
+  (common.js setzt sie). Einstellungsfenster hat eigenes `t()`. Hauptprogramm: `t()` in main.js (Tray, Meldungen, Listen).
+- `state.js` liefert keine Anzeigetexte, sondern Schlüssel (Flaggen `flag.*`, Warnungen `warn.*`); Updater-Fehler als
+  `errorCode`/`errorKey`. **Neuer Text → in beide Sprachdateien**, `test/i18n-test.js` prüft gleiche Schlüssel,
+  gleiche Platzhalter und dass jeder im Code benutzte Schlüssel existiert.
+- README auf Deutsch (`README.md`) und Englisch (`README.en.md`) – beide pflegen. Video/Sprechtext bleiben Deutsch.
+
 ## Leistung (iRacing darf keine FPS verlieren)
 - Jedes Overlay meldet sich per `/ws?id=<overlay>` an und bekommt nur seine Daten in eigener Rate
   (`TOPICS` in `src/main.js`: Standings 4 Hz, Relative 10 Hz, Delta 20 Hz, Dash/Inputs/Radar 30 Hz, Einstellungen 1 Hz).
@@ -96,6 +108,7 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
+2.4.0 – Zweisprachig (Deutsch / Englisch, automatisch nach Windows-Sprache, live umschaltbar), README.en.md.
 2.3.0 – Standings: Spalten Automarke und Reifen, Spalten frei sortierbar; automatische Updates über GitHub.
 2.2.0 – Incidents der Gegner, Dashboard überarbeitet, Radar (1–80 m, Blueprint), Leistung (CPU 9,6 % → 1 %),
 Vorstellungsvideo + README-Bilder per Skript. 2.1.0 – Umbenennung TriDash → dbDash.

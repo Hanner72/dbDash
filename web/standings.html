@@ -60,12 +60,12 @@
     { key: 'flag', w: '24px', h: '', cls: 'c', html: (c) => c.flag ? `<img class="flag" src="flags/${c.flag}.svg" title="${PW.esc(c.flagName)}" alt="">` : '' },
     { key: 'name', w: '180px', h: 'Fahrer', cls: 'name ellipsis', fixed: true, html: (c, cl, cfg) => PW.esc(c.name) + (c.pit && !(cfg && cfg.standingsCols && cfg.standingsCols.pit !== false) ? '<span class="pit">PIT</span>' : '') },
     { key: 'car', w: '84px', h: 'Auto', cls: 'car ellipsis', html: (c) => `<span title="${PW.esc(c.carName)}">${PW.esc(c.brand)}</span>` },
-    { key: 'tyre', w: '30px', h: 'Rf.', cls: 'c', html: (c) => c.tyre ? `<span class="tyre" style="--tc:${TYRE_COLORS[c.tyre.letter] || '#c9d1dc'}" title="${PW.esc(c.tyre.name)}">${PW.esc(c.tyre.letter)}</span>` : '' },
-    { key: 'pit', w: '44px', h: 'Box', cls: 'c', html: (c) => c.pit ? '<span class="pitb">BOX</span>' : c.stops ? `<span class="ir">${c.stops}×</span>` : '' },
+    { key: 'tyre', w: '30px', h: 'Rf.', cls: 'c', html: (c) => c.tyre ? `<span class="tyre" style="--tc:${TYRE_COLORS[c.tyre.letter] || '#c9d1dc'}" title="${PW.esc(c.tyre.name || PW.t('tyre.compound', { n: c.tyre.idx }))}">${PW.esc(c.tyre.letter)}</span>` : '' },
+    { key: 'pit', w: '44px', h: 'Box', cls: 'c', html: (c) => c.pit ? `<span class="pitb">${PW.t('st.box')}</span>` : c.stops ? `<span class="ir">${c.stops}×</span>` : '' },
     { key: 'license', w: '50px', h: 'Liz.', html: (c) => `<span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${c.sr ? Number(c.sr).toFixed(1) : ''}</span>` },
     { key: 'iRating', w: '42px', h: 'iR', cls: 'r ir', html: (c) => PW.fmtIR(c.iRating) },
     { key: 'irDelta', w: '42px', h: 'iR±', cls: 'r', html: (c) => c.irDelta == null ? '' : c.irDelta > 0 ? `<span class="up">+${c.irDelta}</span>` : c.irDelta < 0 ? `<span class="down">−${-c.irDelta}</span>` : '<span class="ir">0</span>' },
-    { key: 'incidents', w: '36px', h: 'Inc', cls: 'r', html: (c) => c.inc == null || c.inc < 0 ? '' : `<span class="inc${c.inc >= 12 ? ' high' : c.inc >= 6 ? ' warn' : ''}${c.incEst ? ' est' : ''}"${c.incEst ? ' title="geschätzt: gezählte Ausritte (iRacing zeigt fremde Incidents erst nach dem Rennen)"' : ''}>${c.inc}x</span>` },
+    { key: 'incidents', w: '36px', h: 'Inc', cls: 'r', html: (c) => c.inc == null || c.inc < 0 ? '' : `<span class="inc${c.inc >= 12 ? ' high' : c.inc >= 6 ? ' warn' : ''}${c.incEst ? ' est' : ''}"${c.incEst ? ` title="${PW.esc(PW.t('st.incEst'))}"` : ''}>${c.inc}x</span>` },
     { key: 'last', w: '70px', h: 'Letzte', cls: 'r t', html: (c) => PW.fmtLap(c.last) },
     { key: 'best', w: '70px', h: 'Beste', cls: 'r t', html: (c) => PW.fmtLap(c.best), extra: (c) => c.fastest ? ' f' : '' },
     { key: 'gap', w: '58px', h: 'Abst.', cls: 'r gap', html: (c) => PW.esc(c.gapText || '') },
@@ -82,11 +82,11 @@
     const byKey = Object.fromEntries(COLS.map((c) => [c.key, c]));
     active = [byKey.pos, ...order.filter((k) => k !== 'pos' && byKey[k]).map((k) => byKey[k])]
       .filter((c) => c.fixed || on[c.key] !== false);
-    const key = active.map((c) => c.key).join(',');
+    const key = PW.lang + ':' + active.map((c) => c.key).join(','); // bei Sprachwechsel Überschriften neu
     if (key === colKey) return;
     colKey = key;
     document.getElementById('root').style.setProperty('--cols', active.map((c) => c.w).join(' '));
-    document.getElementById('colhdr').innerHTML = active.map((c) => `<span class="${c.key === 'pos' ? 'pos' : (c.cls || '').split(' ').includes('r') ? 'r' : (c.cls || '').split(' ').includes('c') ? 'c' : ''}">${c.h}</span>`).join('');
+    document.getElementById('colhdr').innerHTML = active.map((c) => `<span class="${c.key === 'pos' ? 'pos' : (c.cls || '').split(' ').includes('r') ? 'r' : (c.cls || '').split(' ').includes('c') ? 'c' : ''}">${PW.esc(PW.t('colh.' + c.key))}</span>`).join('');
     body.dataset.empty = '';
   }
   PW.onConfig(setupCols);
@@ -101,7 +101,7 @@
     body.dataset.empty = '';
     let html = '';
     for (const cl of st.classes || []) {
-      html += `<div class="cls" style="--cc:${cl.color}"><span>${PW.esc(cl.name || 'Klasse')}</span><span class="meta">${cl.size} Autos · SOF ${cl.sof}</span></div>`;
+      html += `<div class="cls" style="--cc:${cl.color}"><span>${PW.esc(cl.name || 'Klasse')}</span><span class="meta">${PW.t('st.cars', { n: cl.size })} · SOF ${cl.sof}</span></div>`;
       for (const c of cl.rows) {
         if (c.gapBefore) html += '<div class="dots"></div>';
         html += `<div class="row${c.isPlayer ? ' me' : ''}${c.pit ? ' inpit' : ''}">` +

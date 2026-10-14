@@ -12,7 +12,7 @@ const { Demo } = require('./demo');
 const { buildState } = require('./state');
 const { FuelTracker } = require('./fuel');
 const { RaceTracker } = require('./race');
-const { Joysticks, buttonLabel } = require('./joystick');
+const { Joysticks } = require('./joystick');
 const { Updater } = require('./updater');
 
 const VERSION = require('../package.json').version;
@@ -31,33 +31,50 @@ try {
   if (early.gpu === false) app.disableHardwareAcceleration();
 } catch { /* erster Start */ }
 
+// ---------------- Sprachen ----------------
+// Texte stehen in web/lang/<sprache>.json (neue Sprache = neue Datei). Fehlende Texte fallen auf Deutsch zurück.
+const LANG_DIR = path.join(WEB, 'lang');
+const langCache = {};
+function readLang(code) {
+  if (!langCache[code]) { try { langCache[code] = JSON.parse(fs.readFileSync(path.join(LANG_DIR, code + '.json'), 'utf8')); } catch { langCache[code] = {}; } }
+  return langCache[code];
+}
+function languages() {
+  try { return fs.readdirSync(LANG_DIR).filter((f) => /^[a-z]{2}\.json$/.test(f)).map((f) => f.slice(0, 2)).map((c) => [c, readLang(c)._name || c]); } catch { return [['de', 'Deutsch']]; }
+}
+// „auto“ = Sprache von Windows (Deutsch bei deutschem Windows, sonst Englisch bzw. die passende Sprachdatei)
+function currentLang() {
+  const avail = languages().map(([c]) => c);
+  if (cfg && cfg.lang && cfg.lang !== 'auto' && avail.includes(cfg.lang)) return cfg.lang;
+  const sys = String(app.getLocale() || 'en').slice(0, 2).toLowerCase();
+  return avail.includes(sys) ? sys : 'en';
+}
+function strings() { return { ...readLang('de'), ...readLang(currentLang()) }; }
+function t(key, vars) {
+  let s = strings()[key];
+  if (s == null) s = key;
+  for (const k in vars || {}) s = s.split('{' + k + '}').join(vars[k]);
+  return s;
+}
+
 // ---------------- Einstellungen ----------------
 const OVERLAYS = [
-  { id: 'relative', title: 'Relative', file: 'relative.html', x: 60, y: 520 },
-  { id: 'standings', title: 'Standings', file: 'standings.html', x: 60, y: 60 },
-  { id: 'inputs', title: 'Inputs', file: 'inputs.html', x: 60, y: 860 },
-  { id: 'delta', title: 'Delta', file: 'delta.html', x: 760, y: 60 },
-  { id: 'dash', title: 'Dashboard', file: 'dash.html', x: 980, y: 560 },
-  { id: 'radar', title: 'Radar (Ghost)', file: 'radar.html', x: 1640, y: 180 },
+  { id: 'relative', file: 'relative.html', x: 60, y: 520 },
+  { id: 'standings', file: 'standings.html', x: 60, y: 60 },
+  { id: 'inputs', file: 'inputs.html', x: 60, y: 860 },
+  { id: 'delta', file: 'delta.html', x: 760, y: 60 },
+  { id: 'dash', file: 'dash.html', x: 980, y: 560 },
+  { id: 'radar', file: 'radar.html', x: 1640, y: 180 },
 ];
 // Module des Dashboards
 const DASH_MODULES = { shift: true };
 // Anzeigen des Dashboards: jede kann links, rechts oder gar nicht angezeigt werden
-const DASH_PAGE_LIST = [
-  ['tyres', 'Reifen'], ['engine', 'Motor'], ['strategy', 'Sprit-Strategie'], ['relAll', 'Relative – Gesamt'],
-  ['relClass', 'Relative – Klasse'], ['gapAll', 'Abstände – Gesamt'], ['gapClass', 'Abstände – Klasse'], ['laps', 'Rundenzeiten'], ['damage', 'Schaden'],
-];
+const DASH_PAGE_KEYS = ['tyres', 'engine', 'strategy', 'relAll', 'relClass', 'gapAll', 'gapClass', 'laps', 'damage'];
+const DASH_PAGE_LIST = DASH_PAGE_KEYS.map((k) => [k, 'page.' + k]); // [Schlüssel, Textschlüssel]
 const DASH_PAGES = { tyres: 'left', engine: 'left', strategy: 'left', relAll: 'right', relClass: 'left', gapAll: 'left', gapClass: 'right', laps: 'right', damage: 'right' };
-const SIDES = [['left', 'Links'], ['right', 'Rechts'], ['off', 'Aus']];
+const SIDES = [['left', 'side.left'], ['right', 'side.right'], ['off', 'side.off']];
 // Aktionen, die auf Tasten oder Lenkradknöpfe gelegt werden können
-const ACTIONS = [
-  { id: 'dashLeft', label: 'Dashboard: linkes Fenster umschalten' },
-  { id: 'dashRight', label: 'Dashboard: rechtes Fenster umschalten' },
-  { id: 'dashLeftPrev', label: 'Dashboard: linkes Fenster zurück' },
-  { id: 'dashRightPrev', label: 'Dashboard: rechtes Fenster zurück' },
-  { id: 'toggleVisible', label: 'Alle Overlays ein/aus' },
-  { id: 'toggleEdit', label: 'Overlays verschieben ein/aus' },
-];
+const ACTIONS = ['dashLeft', 'dashRight', 'dashLeftPrev', 'dashRightPrev', 'toggleVisible', 'toggleEdit'].map((id) => ({ id }));
 const DEFAULT_BINDINGS = {
   dashLeft: { key: 'Alt+Shift+Left', joy: null },
   dashRight: { key: 'Alt+Shift+Right', joy: null },
@@ -70,11 +87,8 @@ const DEFAULT_BINDINGS = {
 const RADAR_RANGES = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 60, 80];
 // Spalten der Standings: ein-/ausschaltbar und in der Reihenfolge frei verschiebbar (Platz steht immer vorne,
 // Fahrer ist immer sichtbar). Reihenfolge hier = Standard.
-const STANDINGS_COL_LIST = [
-  ['gain', 'Plätze +/−'], ['start', 'Startplatz'], ['number', 'Startnummer'], ['flag', 'Landesflagge'], ['name', 'Fahrer'],
-  ['car', 'Automarke'], ['tyre', 'Reifen'], ['pit', 'Box / Stopps'], ['license', 'Lizenz'], ['iRating', 'iRating'],
-  ['irDelta', 'iRating +/−'], ['incidents', 'Incidents'], ['last', 'Letzte Runde'], ['best', 'Beste Runde'], ['gap', 'Abstand'],
-];
+const STANDINGS_COL_LIST = ['gain', 'start', 'number', 'flag', 'name', 'car', 'tyre', 'pit', 'license', 'iRating', 'irDelta', 'incidents', 'last', 'best', 'gap']
+  .map((k) => [k, 'col.' + k]);
 const STANDINGS_COLS = { gain: true, start: false, number: true, flag: true, car: true, tyre: true, pit: true, license: false, iRating: true, irDelta: true, incidents: true, last: true, best: true, gap: true };
 const STANDINGS_ORDER = STANDINGS_COL_LIST.map(([k]) => k);
 // gespeicherte Reihenfolge übernehmen; neue Spalten an ihrer Standard-Stelle einfügen
@@ -91,13 +105,13 @@ function mergeOrder(saved) {
 const check = (path, label) => ({ path, label, type: 'check' });
 const OVERLAY_OPTIONS = {
   // Spaltenliste zum Sortieren (ziehen oder ▲/▼) und Ein-/Ausschalten
-  standings: { title: 'Spalten', order: { path: 'standingsOrder', cols: 'standingsCols', items: STANDINGS_COL_LIST, fixed: ['name'] } },
-  dash: { title: 'Anzeigen', single: true, items: [
-    check('dashModules.shift', 'Schaltblitze'),
+  standings: { title: 'opt.columns', order: { path: 'standingsOrder', cols: 'standingsCols', items: STANDINGS_COL_LIST, fixed: ['name'] } },
+  dash: { title: 'opt.displays', single: true, items: [
+    check('dashModules.shift', 'opt.shift'),
     ...DASH_PAGE_LIST.map(([k, label]) => ({ path: 'dashPages.' + k, label, type: 'select', options: SIDES }))] },
-  radar: { title: 'Optionen', items: [
-    check('radarAutoHide', 'Nur zeigen, wenn ein Auto innerhalb der Reichweite ist'),
-    { path: 'radarRange', label: 'Reichweite (Lücke zum anderen Auto)', type: 'select', options: RADAR_RANGES.map((m) => [m, m + ' m']) }] },
+  radar: { title: 'opt.options', items: [
+    check('radarAutoHide', 'opt.radarAutoHide'),
+    { path: 'radarRange', label: 'opt.radarRange', type: 'select', options: RADAR_RANGES.map((m) => [m, m + ' m']), raw: true }] },
 };
 
 const DEFAULTS = {
@@ -106,6 +120,7 @@ const DEFAULTS = {
   units: 'kmh',
   hideEngineOff: true,
   updateCheck: true,
+  lang: 'auto',
   gpu: true,
   standingsCols: STANDINGS_COLS,
   standingsOrder: STANDINGS_ORDER,
@@ -301,14 +316,28 @@ function broadcast(msg) {
   for (const c of clients) if (c.readyState === 1) c.send(s);
 }
 
+// Optionen fürs Einstellungsfenster mit Texten in der aktuellen Sprache
+function translateOptions() {
+  const out = {};
+  for (const [id, o] of Object.entries(OVERLAY_OPTIONS)) {
+    out[id] = { ...o, title: t(o.title) };
+    if (o.items) out[id].items = o.items.map((it) => ({ ...it, label: t(it.label), options: it.options && (it.raw ? it.options : it.options.map(([v, l]) => [v, t(l)])) }));
+    if (o.order) out[id].order = { ...o.order, items: o.order.items.map(([k, l]) => [k, t(l)]) };
+  }
+  return out;
+}
+
 function configMsg() {
   return {
     type: 'config',
     config: cfg,
-    overlays: OVERLAYS.map(({ id, title, file }) => ({ id, title, file })),
-    overlayOptions: OVERLAY_OPTIONS,
-    dashPageList: DASH_PAGE_LIST,
-    actions: ACTIONS.map((a) => ({ ...a, key: cfg.bindings[a.id].key, joy: cfg.bindings[a.id].joy ? joyLabel(cfg.bindings[a.id].joy) : null, keyError: shortcutErrors.has(a.id) })),
+    overlays: OVERLAYS.map(({ id, file }) => ({ id, title: t('ov.' + id), file })),
+    overlayOptions: translateOptions(),
+    dashPageList: DASH_PAGE_LIST.map(([k, l]) => [k, t(l)]),
+    lang: currentLang(),
+    languages: languages(),
+    strings: strings(),
+    actions: ACTIONS.map((a) => ({ ...a, label: t('act.' + a.id), key: cfg.bindings[a.id].key, joy: cfg.bindings[a.id].joy ? joyLabel(cfg.bindings[a.id].joy) : null, keyError: shortcutErrors.has(a.id) })),
     learning: learning ? learning.action : null,
     joystick: { available: joysticks ? joysticks.available : false, devices: joysticks ? joysticks.devices() : [] },
     status: { version: VERSION, sdkAvailable: sdk.available, platform: process.platform, port: cfg.port },
@@ -324,6 +353,8 @@ function handleCmd(m) {
       const parts = String(m.path).split('.');
       if (parts[0] === 'overlays' && cfg.overlays[parts[1]] && ['enabled', 'scale', 'bg'].includes(parts[2])) {
         cfg.overlays[parts[1]][parts[2]] = m.value;
+      } else if (m.path === 'lang' && (m.value === 'auto' || languages().some(([c]) => c === m.value))) {
+        cfg.lang = m.value;
       } else if (m.path === 'standingsOrder' && Array.isArray(m.value)) {
         cfg.standingsOrder = mergeOrder(m.value);
       } else if (parts[0] === 'standingsCols' && parts[1] in STANDINGS_COLS && parts.length === 2) {
@@ -441,7 +472,7 @@ function applyShortcuts() {
   }
 }
 
-function joyLabel(j) { return `${j.name || 'Gerät ' + (j.dev + 1)} · ${buttonLabel(j.btn)}`; }
+function joyLabel(j) { return `${j.name || t('joy.device', { n: j.dev + 1 })} · ${j.btn > 32 ? t('joy.hat' + j.btn) : t('joy.button', { n: j.btn })}`; }
 
 function onJoyButton(dev, btn) {
   const name = joysticks.deviceName(dev);
@@ -481,7 +512,7 @@ function createOverlay(o) {
     x: c.x, y: c.y, width: 300, height: 100,
     transparent: true, frame: false, resizable: false, hasShadow: false,
     skipTaskbar: true, focusable: false, show: false, alwaysOnTop: true,
-    backgroundColor: '#00000000', title: `dbDash – ${o.title}`,
+    backgroundColor: '#00000000', title: `dbDash – ${t('ov.' + o.id)}`,
     webPreferences: { backgroundThrottling: false, contextIsolation: true, nodeIntegration: false },
   });
   win.setAlwaysOnTop(true, 'screen-saver');
@@ -576,7 +607,7 @@ const updater = new Updater({
     // einmal pro Version Bescheid geben – aber nicht, während iRacing läuft (keine Meldung über dem Spiel)
     if (info.status === 'available' && updateNotified !== info.latest && tray && (cfg.demo || !state.connected)) {
       updateNotified = info.latest;
-      tray.displayBalloon({ iconType: 'info', title: 'dbDash-Update verfügbar', content: `Version ${info.latest} ist da – im Einstellungsfenster mit einem Klick installieren.` });
+      tray.displayBalloon({ iconType: 'info', title: t('upd.balloonTitle'), content: t('upd.balloon', { v: info.latest }) });
     }
   },
 });
@@ -590,14 +621,14 @@ function updateTray() {
   if (!tray) return;
   const up = updater.info;
   tray.setContextMenu(Menu.buildFromTemplate([
-    ...(up.status === 'available' ? [{ label: `Update auf ${up.latest} installieren`, click: () => { openPanel(); } }, { type: 'separator' }] : []),
-    { label: 'Einstellungen öffnen', click: openPanel },
+    ...(up.status === 'available' ? [{ label: t('tray.update', { v: up.latest }), click: () => { openPanel(); } }, { type: 'separator' }] : []),
+    { label: t('tray.open'), click: openPanel },
     { type: 'separator' },
-    { label: 'Overlays anzeigen', type: 'checkbox', checked: cfg.visible, click: (i) => { cfg.visible = i.checked; pushConfig(); } },
-    { label: 'Overlays verschieben', type: 'checkbox', checked: cfg.editMode, click: (i) => { cfg.editMode = i.checked; pushConfig(); } },
-    { label: 'Demo-Modus', type: 'checkbox', checked: cfg.demo, click: (i) => { cfg.demo = i.checked; if (i.checked) demo = new Demo(); pushConfig(); } },
+    { label: t('tray.visible'), type: 'checkbox', checked: cfg.visible, click: (i) => { cfg.visible = i.checked; pushConfig(); } },
+    { label: t('tray.edit'), type: 'checkbox', checked: cfg.editMode, click: (i) => { cfg.editMode = i.checked; pushConfig(); } },
+    { label: t('tray.demo'), type: 'checkbox', checked: cfg.demo, click: (i) => { cfg.demo = i.checked; if (i.checked) demo = new Demo(); pushConfig(); } },
     { type: 'separator' },
-    { label: 'Beenden', click: () => app.quit() },
+    { label: t('tray.quit'), click: () => app.quit() },
   ]));
 }
 
@@ -608,7 +639,7 @@ app.whenReady().then(async () => {
   try {
     await startServer();
   } catch (e) {
-    dialog.showErrorBox('dbDash', `Port ${cfg.port} ist bereits belegt. Läuft dbDash schon?\n\n${e.message}`);
+    dialog.showErrorBox('dbDash', `${t('err.port', { port: cfg.port })}\n\n${e.message}`);
     app.quit();
     return;
   }

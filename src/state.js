@@ -322,7 +322,7 @@ const TYRE_KINDS = [
 ];
 function tyreInfo(idx, names) {
   const name = names[idx];
-  if (!name) return { idx, letter: String(idx), name: 'Mischung ' + idx };
+  if (!name) return { idx, letter: String(idx), name: null }; // Anzeige: „Mischung <n>“ in der jeweiligen Sprache
   const k = TYRE_KINDS.find(([re]) => re.test(name));
   return { idx, letter: k ? k[1] : name[0].toUpperCase(), name: k ? k[2] : name };
 }
@@ -339,11 +339,12 @@ function slimCar(c) {
 }
 
 // ---------- Dashboard ----------
+// Flaggen: Bit, Art, Textschlüssel (übersetzt wird in der Anzeige, siehe web/lang/*.json)
 const FLAG_BITS = [
-  [0x10000, 'black', 'SCHWARZE FLAGGE'], [0x20000, 'black', 'DISQUALIFIZIERT'], [0x100000, 'meatball', 'REPARATUR'],
-  [0x10, 'red', 'ROTE FLAGGE'], [0x1, 'checkered', 'ZIELFLAGGE'], [0x4000, 'yellow', 'SAFETY CAR'], [0x8000, 'yellow', 'SAFETY CAR'],
-  [0x8, 'yellow', 'GELBE FLAGGE'], [0x100, 'yellow', 'GELBE FLAGGE'], [0x40, 'debris', 'ÖL / TRÜMMER'],
-  [0x20, 'blue', 'BLAUE FLAGGE'], [0x2, 'white', 'LETZTE RUNDE'], [0x4, 'green', 'GRÜN'],
+  [0x10000, 'black', 'flag.black'], [0x20000, 'black', 'flag.dq'], [0x100000, 'meatball', 'flag.repair'],
+  [0x10, 'red', 'flag.red'], [0x1, 'checkered', 'flag.checkered'], [0x4000, 'yellow', 'flag.sc'], [0x8000, 'yellow', 'flag.sc'],
+  [0x8, 'yellow', 'flag.yellow'], [0x100, 'yellow', 'flag.yellow'], [0x40, 'debris', 'flag.debris'],
+  [0x20, 'blue', 'flag.blue'], [0x2, 'white', 'flag.white'], [0x4, 'green', 'flag.green'],
 ];
 function flagCode(name, map) {
   if (!name || !map) return null;
@@ -419,7 +420,7 @@ function buildDash(d, s, opts, { meCar, isRace, classList }) {
     optRepair: num(d.PitOptRepairLeft),
     meatball: !!((carFlags | flagsBits) & 0x100000),
     warnings: [
-      [0x01, 'Wassertemperatur'], [0x02, 'Benzindruck'], [0x04, 'Öldruck'], [0x40, 'Öltemperatur'], [0x08, 'Motor abgewürgt'],
+      [0x01, 'warn.water'], [0x02, 'warn.fuelPress'], [0x04, 'warn.oilPress'], [0x40, 'warn.oilTemp'], [0x08, 'warn.stalled'],
     ].filter(([b]) => ew & b).map(([, t]) => t),
     wear: { LF: wear('LF'), RF: wear('RF'), LR: wear('LR'), RR: wear('RR') },
   };

@@ -78,6 +78,7 @@ function moveDir(from, to) {
   fs.copyFileSync(path.join(out, 'LICENSE'), path.join(out, 'LICENSE-Electron.txt'));
   fs.rmSync(path.join(out, 'LICENSE'), { force: true, maxRetries: 10, retryDelay: 500 });
   fs.copyFileSync(path.join(ROOT, 'README.md'), path.join(out, 'LIESMICH.md'));
+  fs.copyFileSync(path.join(ROOT, 'README.en.md'), path.join(out, 'README.en.md'));
   fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(out, 'LICENSE.txt'));
   execSync(`node "${path.join(__dirname, 'notices.js')}" "${path.join(out, 'DRITTANBIETER-LIZENZEN.txt')}"`, { stdio: 'inherit' });
   fs.cpSync(path.join(ROOT, 'grafiken'), path.join(out, 'Grafiken'), { recursive: true });

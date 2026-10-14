@@ -4,6 +4,8 @@
 
 # dbDash – dannerbam Dash
 
+**Deutsch** · [English](README.en.md)
+
 **Kostenlose Overlays für iRacing – entwickelt von einem Simracer für Simracer.**
 
 Relative · Standings · Dashboard · Radar · Inputs · Delta – schonend für deine FPS und auch als OBS-Browserquelle.
@@ -29,6 +31,7 @@ Relative · Standings · Dashboard · Radar · Inputs · Delta – schonend für
   (im Test ca. **1 % CPU** mit allen sechs Overlays).
 - 🎛️ **Bedienung vom Lenkrad aus** – Dashboard-Seiten per Lenkradknopf, Button-Box, Taste oder Stream Deck umschalten.
 - 📺 **Für Streamer** – jedes Overlay gibt es auch als OBS-Browserquelle.
+- 🌍 **Deutsch und Englisch** – richtet sich automatisch nach der Windows-Sprache, jederzeit umschaltbar.
 - 🧪 **Sofort ausprobieren** – der Demo-Modus zeigt ein simuliertes Mehrklassen-Rennen, ganz ohne iRacing.
 
 ## Funktionen
@@ -136,7 +139,7 @@ Alle Overlays blenden sich automatisch aus, solange der Motor nicht läuft (absc
 <img src="docs/img/einstellungen.png" width="360" align="right" alt="Einstellungsfenster">
 
 Im **Einstellungsfenster** schaltest du jedes Overlay ein oder aus und stellst **Größe** und **Hintergrund-Deckkraft**
-ein. Dazu wählst du die Spalten der Standings, die Dashboard-Seiten (links / rechts / aus), die Radar-Reichweite und die
+ein. Dazu wählst du die Sprache, die Spalten der Standings, die Dashboard-Seiten (links / rechts / aus), die Radar-Reichweite und die
 Einheit (km/h oder mph). Positionen und Einstellungen werden gespeichert (`%APPDATA%\dbDash\settings.json`).
 
 **Tasten & Lenkradknöpfe:** Alle Aktionen lassen sich neu belegen: „Zuweisen“ klicken und eine Taste oder einen Knopf
@@ -159,6 +162,15 @@ im Einstellungsfenster ein Hinweis – **„Jetzt installieren“** lädt das Up
 Version. Installiert wird **nie von selbst** (kein Neustart mitten im Rennen), deine Einstellungen bleiben erhalten.
 Liegt dbDash in einem geschützten Ordner wie `C:Programme`, fragt Windows einmal nach Administrator-Rechten.
 Die Suche lässt sich im Einstellungsfenster abschalten.
+
+## Sprachen
+
+dbDash spricht **Deutsch** und **Englisch** und richtet sich automatisch nach der Sprache von Windows; umschalten geht
+jederzeit im Einstellungsfenster (*Sprache*). Alle Texte stehen in `web/lang/<sprache>.json` (`de.json`, `en.json`).
+
+**dbDash in deiner Sprache?** `en.json` kopieren, die Texte übersetzen (Schlüssel und `{Platzhalter}` unverändert lassen)
+und mir die Datei schicken – zum Beispiel als GitHub-Issue. Ich nehme sie in die nächste Version auf. Wegen der Lizenz
+bitte keine übersetzten Fassungen selbst veröffentlichen.
 
 ## Stream Deck & SimHub
 
@@ -219,7 +231,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 | Befehl | Was passiert |
 | --- | --- |
 | `npm install` | lädt alle Bausteine (einmalig, ca. 200 MB) |
-| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents, Radar und Standings-Spalten |
+| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents, Radar, Standings-Spalten und Übersetzungen |
 | `npm start` | startet dbDash direkt aus dem Quellcode |
 | `npm run build` | baut das fertige Programm: `dist\dbDash\dbDash.exe` plus ZIP zum Weitergeben |
 | `npm run screenshots` | erzeugt die Bilder dieser Seite neu (`docs/img/`) |
@@ -227,7 +239,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 | `npm run icons` | erzeugt Programmsymbol und Stream-Deck-Grafiken aus den SVG-Vorlagen |
 
 **Technik:** Electron (Chromium + Node.js). Die Telemetrie kommt direkt aus dem Shared Memory des offiziellen iRacing-SDK
-(`Local\IRSDKMemMapFileName`) über koffi und die Win32-API. Quellcode in `src/`: `main.js` (Fenster, Webserver),
+(`Local\IRSDKMemMapFileName`) über koffi und die Win32-API. Quellcode in `src/`: `main.js` (Fenster, Webserver, Sprachen),
 `irsdk.js` (SDK-Leser), `state.js` (Berechnungen), `fuel.js` (Sprit), `race.js` (Startplätze, Boxenstopps, Incidents),
 `joystick.js` (Lenkradknöpfe), `updater.js` (Updates über GitHub-Releases), `demo.js` (Simulation).
 

@@ -5,6 +5,22 @@
   const id = params.get('id') || document.body.dataset.overlay;
   const stateFns = [], configFns = [];
   let ws = null, config = null, lastState = null;
+  let strings = {}, lang = '';
+
+  // Übersetzen: Text zum Schlüssel aus web/lang/<sprache>.json, {platzhalter} werden ersetzt
+  function t(key, vars) {
+    let s = strings[key];
+    if (s == null) s = key;
+    for (const k in vars || {}) s = s.split('{' + k + '}').join(vars[k]);
+    return s;
+  }
+  // Feste Texte im HTML: data-i18n (Text), data-i18n-html (mit Formatierung), data-i18n-title (Tooltip)
+  function applyI18n() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
+    document.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => (el.title = t(el.dataset.i18nTitle)));
+  }
 
   function connect() {
     // mit Namen anmelden: das Hauptprogramm schickt dann nur die Daten, die diese Seite braucht
@@ -22,6 +38,7 @@
         for (const f of stateFns) f(m.state, config);
       } else if (m.type === 'config') {
         config = m.config;
+        if (m.strings && m.lang !== lang) { strings = m.strings; lang = m.lang; applyI18n(); }
         applyConfig();
         for (const f of configFns) f(m.config, m);
       }
@@ -72,7 +89,8 @@
 
   window.PW = {
     LOGO,
-    isWin, id,
+    isWin, id, t,
+    get lang() { return lang; },
     onState: (f) => stateFns.push(f),
     onConfig: (f) => configFns.push(f),
     get config() { return config; },
@@ -100,7 +118,7 @@
       const s = st.session || {};
       const parts = [];
       if (s.type) parts.push(`<b>${PW.esc(s.type)}</b>`);
-      if (s.lapsRemain > 0) parts.push(`${s.lapsRemain} Rnd übrig`);
+      if (s.lapsRemain > 0) parts.push(t('common.lapsLeft', { n: s.lapsRemain }));
       else if (s.timeRemain >= 0) parts.push(PW.fmtTime(s.timeRemain));
       return parts.join(' · ');
     },
@@ -109,7 +127,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     const root = document.getElementById('root');
     if (root) {
-      root.insertAdjacentHTML('beforeend', '<div class="waiting">Warte auf iRacing …</div><div class="edit-label">verschieben</div>');
+      root.insertAdjacentHTML('beforeend', '<div class="waiting" data-i18n="common.waiting">Warte auf iRacing …</div><div class="edit-label" data-i18n="common.move">verschieben</div>');
       // Logo: in Überschriften vorne, sonst als kleines Zeichen in der Ecke (außer das Overlay setzt es selbst)
       const brands = document.querySelectorAll('.brand');
       brands.forEach((el) => el.insertAdjacentHTML('afterbegin', LOGO));

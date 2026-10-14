@@ -30,14 +30,19 @@ class Updater {
     this.release = null;
   }
 
+  // Fehler sprachneutral melden: errorCode (check | install) + Textschlüssel/Platzhalter für Details (web/lang/*.json)
+  fail(code, e) {
+    this.set({ status: 'error', errorCode: code, errorKey: e.key || null, errorVars: e.vars || null, errorText: e.key ? null : String(e.message || e) });
+  }
+
   set(patch) { Object.assign(this.info, patch); this.onChange(this.info); }
 
   async check() {
     if (['checking', 'downloading', 'installing'].includes(this.info.status)) return this.info;
-    this.set({ status: 'checking', error: null });
+    this.set({ status: 'checking', errorCode: null });
     try {
       const res = await fetch(API, { headers: { 'User-Agent': 'dbDash-Updater', Accept: 'application/vnd.github+json' } });
-      if (!res.ok) throw new Error(`GitHub antwortet mit ${res.status}`);
+      if (!res.ok) throw Object.assign(new Error('http'), { key: 'upd.d.http', vars: { s: res.status } });
       const r = await res.json();
       const asset = (r.assets || []).find((a) => /win64\.zip$/i.test(a.name));
       const latest = String(r.tag_name || '').replace(/^v/, '');
@@ -45,7 +50,7 @@ class Updater {
       const available = !!(asset && newer(latest, this.version));
       this.set({ status: available ? 'available' : 'none', latest, page: r.html_url, notes: String(r.body || '').slice(0, 1500), checked: Date.now() });
     } catch (e) {
-      this.set({ status: 'error', error: 'Update-Prüfung fehlgeschlagen: ' + e.message });
+      this.fail('check', e);
     }
     return this.info;
   }
@@ -58,10 +63,10 @@ class Updater {
       fs.rmSync(work, { recursive: true, force: true });
       fs.mkdirSync(work, { recursive: true });
       // 1. herunterladen (mit Fortschritt)
-      this.set({ status: 'downloading', progress: 0, error: null });
+      this.set({ status: 'downloading', progress: 0, errorCode: null });
       const zip = path.join(work, 'update.zip');
       const res = await fetch(this.release.url, { headers: { 'User-Agent': 'dbDash-Updater' } });
-      if (!res.ok || !res.body) throw new Error(`Download fehlgeschlagen (${res.status})`);
+      if (!res.ok || !res.body) throw Object.assign(new Error('download'), { key: 'upd.d.download', vars: { s: res.status } });
       const total = Number(res.headers.get('content-length')) || this.release.size || 0;
       const out = fs.createWriteStream(zip);
       let got = 0, lastPct = -1;
@@ -72,7 +77,7 @@ class Updater {
         if (pct !== lastPct) { lastPct = pct; this.set({ progress: pct }); }
       }
       await new Promise((ok, fail) => out.end((e) => (e ? fail(e) : ok())));
-      if (total && got !== total) throw new Error('Download unvollständig');
+      if (total && got !== total) throw Object.assign(new Error('incomplete'), { key: 'upd.d.incomplete' });
 
       // 2. entpacken (tar.exe ist in Windows 10/11 enthalten und kann ZIP)
       this.set({ status: 'installing', progress: 100 });
@@ -80,7 +85,7 @@ class Updater {
       fs.mkdirSync(unpacked);
       execFileSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', zip, '-C', unpacked], { windowsHide: true });
       const src = [unpacked, ...fs.readdirSync(unpacked).map((d) => path.join(unpacked, d))].find((d) => fs.existsSync(path.join(d, 'dbDash.exe')));
-      if (!src) throw new Error('dbDash.exe nicht im Update gefunden');
+      if (!src) throw Object.assign(new Error('noexe'), { key: 'upd.d.noexe' });
 
       // 3. Skript, das nach dem Beenden kopiert und neu startet
       const log = path.join(work, 'update.log');
@@ -105,7 +110,7 @@ class Updater {
       }
       quit();
     } catch (e) {
-      this.set({ status: 'error', error: 'Update fehlgeschlagen: ' + e.message });
+      this.fail('install', e);
     }
   }
 

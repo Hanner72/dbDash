@@ -100,69 +100,85 @@
 <header>
   <img class="logo" src="assets/icon.png" alt="">
   <h1>dbDash <small id="ver"></small></h1>
-  <span class="pill" id="status">Verbinde …</span>
+  <span class="pill" id="status" data-i18n="ctl.connecting">Verbinde …</span>
 </header>
 <main>
   <div class="banner upd" id="updBanner" hidden></div>
-  <div class="banner" id="demoBanner" hidden>Demo-Modus ist aktiv – die Overlays zeigen ein simuliertes Rennen. Für echte Daten aus iRacing unten ausschalten.</div>
-  <div class="banner err" id="sdkBanner" hidden>iRacing-Daten können auf diesem System nicht gelesen werden (nur unter Windows möglich). Der Demo-Modus funktioniert trotzdem.</div>
+  <div class="banner" id="demoBanner" hidden data-i18n="ctl.demoBanner">Demo-Modus ist aktiv – die Overlays zeigen ein simuliertes Rennen. Für echte Daten aus iRacing unten ausschalten.</div>
+  <div class="banner err" id="sdkBanner" hidden data-i18n="ctl.sdkBanner">iRacing-Daten können auf diesem System nicht gelesen werden (nur unter Windows möglich). Der Demo-Modus funktioniert trotzdem.</div>
 
   <section>
-    <h2>Allgemein</h2>
-    <div class="row"><div class="lbl">Demo-Modus<small>Simuliertes Mehrklassen-Rennen zum Testen ohne iRacing</small></div><label class="switch"><input type="checkbox" data-k="demo"><span></span></label></div>
-    <div class="row"><div class="lbl">Overlays anzeigen<small>Alle ein-/ausblenden · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd></small></div><label class="switch"><input type="checkbox" data-k="visible"><span></span></label></div>
-    <div class="row"><div class="lbl">Nur bei laufendem Motor anzeigen<small>Overlays verschwinden, solange der Motor aus ist (Box, Garage, Menü)</small></div><label class="switch"><input type="checkbox" data-k="hideEngineOff"><span></span></label></div>
-    <div class="row"><div class="lbl">Overlays mit der Grafikkarte zeichnen<small>Aus = Overlays zeichnet der Prozessor (CPU). Ausprobieren, was in iRacing mehr FPS bringt · wirkt nach Neustart von dbDash</small></div><label class="switch"><input type="checkbox" data-k="gpu"><span></span></label></div>
-    <div class="row"><div class="lbl">Automatisch nach Updates suchen<small>Fragt beim Start und alle 6 Stunden bei GitHub nach · installiert wird nur auf Knopfdruck</small></div><span id="updState"></span><button class="small" id="updCheck">Jetzt prüfen</button><label class="switch"><input type="checkbox" data-k="updateCheck"><span></span></label></div>
-    <div class="row"><div class="lbl">Overlays verschieben<small>Overlays mit der Maus an die gewünschte Stelle ziehen · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></small></div><label class="switch"><input type="checkbox" data-k="editMode"><span></span></label></div>
-    <div class="row"><div class="lbl">Einheit Geschwindigkeit</div>
+    <h2 data-i18n="ctl.general">Allgemein</h2>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.lang">Sprache · Language</span><small data-i18n="ctl.langSub">Automatisch = Sprache von Windows</small></div>
+      <select data-k="lang" id="langSel"><option value="auto">Automatisch</option></select></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.demoMode">Demo-Modus</span><small data-i18n="ctl.demoModeSub">Simuliertes Mehrklassen-Rennen zum Testen ohne iRacing</small></div><label class="switch"><input type="checkbox" data-k="demo"><span></span></label></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.show">Overlays anzeigen</span><small data-i18n-html="ctl.showSub">Alle ein-/ausblenden · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>H</kbd></small></div><label class="switch"><input type="checkbox" data-k="visible"><span></span></label></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.engine">Nur bei laufendem Motor anzeigen</span><small data-i18n="ctl.engineSub">Overlays verschwinden, solange der Motor aus ist (Box, Garage, Menü)</small></div><label class="switch"><input type="checkbox" data-k="hideEngineOff"><span></span></label></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.gpu">Overlays mit der Grafikkarte zeichnen</span><small data-i18n="ctl.gpuSub">Aus = Overlays zeichnet der Prozessor (CPU). Ausprobieren, was in iRacing mehr FPS bringt · wirkt nach Neustart von dbDash</small></div><label class="switch"><input type="checkbox" data-k="gpu"><span></span></label></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.upd">Automatisch nach Updates suchen</span><small data-i18n="ctl.updSub">Fragt beim Start und alle 6 Stunden bei GitHub nach · installiert wird nur auf Knopfdruck</small></div><span id="updState"></span><button class="small" id="updCheck" data-i18n="ctl.updCheck">Jetzt prüfen</button><label class="switch"><input type="checkbox" data-k="updateCheck"><span></span></label></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.edit">Overlays verschieben</span><small data-i18n-html="ctl.editSub">Overlays mit der Maus an die gewünschte Stelle ziehen · <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></small></div><label class="switch"><input type="checkbox" data-k="editMode"><span></span></label></div>
+    <div class="row"><div class="lbl" data-i18n="ctl.units">Einheit Geschwindigkeit</div>
       <select data-k="units"><option value="kmh">km/h</option><option value="mph">mph</option></select></div>
-    <div class="row"><div class="lbl">Relative: Fahrer vor/hinter dir</div>
+    <div class="row"><div class="lbl" data-i18n="ctl.relRows">Relative: Fahrer vor/hinter dir</div>
       <select data-k="relativeRows" data-num><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-    <div class="row"><div class="lbl">Standings: max. Zeilen</div>
+    <div class="row"><div class="lbl" data-i18n="ctl.stRows">Standings: max. Zeilen</div>
       <select data-k="standingsRows" data-num><option>8</option><option>10</option><option>12</option><option>14</option><option>18</option><option>22</option><option>30</option></select></div>
-    <div class="row"><div class="lbl">Positionen zurücksetzen<small>Falls ein Overlay außerhalb des Bildschirms gelandet ist</small></div><button class="small" id="reset">Zurücksetzen</button></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.reset">Positionen zurücksetzen</span><small data-i18n="ctl.resetSub">Falls ein Overlay außerhalb des Bildschirms gelandet ist</small></div><button class="small" id="reset" data-i18n="ctl.resetBtn">Zurücksetzen</button></div>
   </section>
 
   <section>
-    <h2>Overlays</h2>
+    <h2 data-i18n="ctl.overlays">Overlays</h2>
     <div id="ovs"></div>
   </section>
 
   <section>
-    <h2>Tasten &amp; Lenkradknöpfe</h2>
+    <h2 data-i18n="ctl.binds">Tasten &amp; Lenkradknöpfe</h2>
     <div id="binds"></div>
     <p class="hint" id="joyInfo" style="margin:10px 0 0"></p>
   </section>
 
   <section>
-    <h2>Stream Deck</h2>
-    <p class="hint" style="margin:0 0 8px"><b>Weg 1 – Tastenkürzel (ohne Plugin):</b> Am Stream Deck die Aktion <b>„Tastenkürzel“ / „Hotkey“</b>
-      auf eine Taste ziehen und eine Taste von <b>F13 bis F24</b> eintragen (die gibt es auf keiner Tastatur, also kein Konflikt mit iRacing).
-      Dann oben bei der gewünschten Aktion „Zuweisen“ klicken und die Stream-Deck-Taste drücken.</p>
-    <p class="hint" style="margin:0 0 8px"><b>Weg 2 – Web-Adresse:</b> Mit dem kostenlosen Stream-Deck-Plugin <b>„Web Requests“</b> (BarRaider, im Stream-Deck-Store)
-      eine dieser Adressen aufrufen lassen (Methode GET). Damit lässt sich auch jede Anzeige direkt öffnen:</p>
+    <h2 data-i18n="ctl.sd">Stream Deck</h2>
+    <p class="hint" style="margin:0 0 8px" data-i18n-html="ctl.sd1"></p>
+    <p class="hint" style="margin:0 0 8px" data-i18n-html="ctl.sd2"></p>
     <div id="apiList"></div>
   </section>
 
   <section>
-    <h2>Hinweise</h2>
+    <h2 data-i18n="ctl.hints">Hinweise</h2>
     <ul class="hint">
-      <li>Stelle iRacing unter <b>Options → Graphics</b> auf <b>„Borderless Window“ (Randloses Fenster)</b>. Im exklusiven Vollbild kann Windows keine Overlays darüber zeichnen.</li>
-      <li>Für OBS: <b>Quelle hinzufügen → Browser</b>, die Adresse des Overlays einfügen und die Größe passend setzen (Relative 430×300, Standings 640×460, Inputs 600×110, Delta 380×130, Dashboard 860×500, Radar 220×300 – je nach Zeilen/Spalten anpassen).</li>
-      <li>Das Schließen dieses Fensters beendet das Programm nicht – es läuft im Infobereich der Taskleiste weiter.</li>
-      <li>Alle Overlays sind normale HTML/CSS-Dateien im Ordner <code>resources/web</code> und lassen sich für den eigenen Gebrauch anpassen (veränderte Versionen dürfen nicht weitergegeben werden).</li>
+      <li data-i18n-html="ctl.h1"></li>
+      <li data-i18n-html="ctl.h2"></li>
+      <li data-i18n-html="ctl.h3"></li>
+      <li data-i18n-html="ctl.h4"></li>
     </ul>
   </section>
 </main>
 <footer>
-  <span>Kostenlos · © 2026 Johann Danner · Lizenz CC BY-NC-ND 4.0 · Nicht mit iRacing.com, RaceLabs oder SimHub verbunden</span>
-  <button id="quit">Programm beenden</button>
+  <span data-i18n="ctl.footer">Kostenlos · © 2026 Johann Danner · Lizenz CC BY-NC-ND 4.0 · Nicht mit iRacing.com, RaceLabs oder SimHub verbunden</span>
+  <button id="quit" data-i18n="ctl.quit">Programm beenden</button>
 </footer>
 <script>
   let cfgMsg = {};
   let ws, cfg, overlays = [], status = {}, built = false, ovOpts = {};
   const $ = (s) => document.querySelector(s);
+  // Übersetzen (Texte kommen mit der Konfiguration aus web/lang/<sprache>.json)
+  let strings = {}, lang = '';
+  function t(key, vars) {
+    let s = strings[key];
+    if (s == null) s = key;
+    for (const k in vars || {}) s = s.split('{' + k + '}').join(vars[k]);
+    return s;
+  }
+  function applyI18n() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = t(el.dataset.i18n)));
+    document.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
+    // Sprachauswahl: „Automatisch“ + alle vorhandenen Sprachdateien
+    $('#langSel').innerHTML = `<option value="auto">${esc(t('ctl.langAuto'))}</option>` + (cfgMsg.languages || []).map(([c, n]) => `<option value="${c}">${esc(n)}</option>`).join('');
+    lastStatus = ''; apiBuilt = false; // Status und Adressliste in der neuen Sprache neu aufbauen
+    if (built) { built = false; buildOverlays(); }
+  }
 
   function send(m) { ws && ws.readyState === 1 && ws.send(JSON.stringify(m)); }
   function set(path, value) { send({ cmd: 'set', path, value }); }
@@ -171,18 +187,22 @@
     ws = new WebSocket(`ws://${location.host}/ws?id=control`); // 1x pro Sekunde Status reicht
     ws.onmessage = (e) => {
       const m = JSON.parse(e.data);
-      if (m.type === 'config') { cfgMsg = m; cfg = m.config; overlays = m.overlays; status = m.status; ovOpts = m.overlayOptions || {}; render(); }
+      if (m.type === 'config') {
+        cfgMsg = m; cfg = m.config; overlays = m.overlays; status = m.status; ovOpts = m.overlayOptions || {};
+        if (m.strings && m.lang !== lang) { strings = m.strings; lang = m.lang; applyI18n(); }
+        render();
+      }
       if (m.type === 'state') renderStatus(m.state);
     };
-    ws.onclose = () => { $('#status').className = 'pill'; $('#status').textContent = 'Getrennt'; setTimeout(connect, 1000); };
+    ws.onclose = () => { $('#status').className = 'pill'; $('#status').textContent = t('ctl.disconnected'); setTimeout(connect, 1000); };
   }
 
   let lastStatus = '';
   function renderStatus(st) {
     let cls = 'pill', txt;
-    if (cfg && cfg.demo) { cls += ' demo'; txt = 'Demo-Modus'; }
-    else if (st.connected) { cls += ' ok'; txt = 'iRacing verbunden'; }
-    else txt = 'Warte auf iRacing …';
+    if (cfg && cfg.demo) { cls += ' demo'; txt = t('ctl.demoMode'); }
+    else if (st.connected) { cls += ' ok'; txt = t('ctl.connected'); }
+    else txt = t('common.waiting');
     const k = cls + txt;
     if (k !== lastStatus) { lastStatus = k; $('#status').className = cls; $('#status').textContent = txt; }
   }
@@ -194,13 +214,13 @@
       <div class="bind${learning === a.id ? ' learning' : ''}">
         <div>${a.label}</div>
         <div class="btns">
-          <button class="small" data-test="${a.id}" title="Aktion jetzt auslösen">Testen</button>
-          ${learning === a.id ? `<button class="small" data-cancel>Abbrechen</button>` : `<button class="small primary" data-learn="${a.id}">Zuweisen</button>`}
+          <button class="small" data-test="${a.id}" title="${esc(t('ctl.testTitle'))}">${t('ctl.test')}</button>
+          ${learning === a.id ? `<button class="small" data-cancel>${t('ctl.cancel')}</button>` : `<button class="small primary" data-learn="${a.id}">${t('ctl.assign')}</button>`}
         </div>
-        ${learning === a.id ? '<div class="learnmsg">Jetzt eine Taste oder einen Lenkradknopf drücken … (Esc = abbrechen)</div>' : ''}
+        ${learning === a.id ? `<div class="learnmsg">${t('ctl.learn')}</div>` : ''}
         <div class="slots">
-          <span class="slot${a.key ? '' : ' empty'}${a.keyError ? ' err' : ''}" title="${a.keyError ? 'Diese Taste ist schon von einem anderen Programm belegt' : ''}">⌨ ${a.key ? esc(a.key) + (a.keyError ? ' (belegt!)' : '') : 'keine Taste'}${a.key ? `<button data-clear="${a.id}" data-slot="key" title="Entfernen">✕</button>` : ''}</span>
-          <span class="slot${a.joy ? '' : ' empty'}">🎮 ${a.joy ? esc(a.joy) : 'kein Lenkradknopf'}${a.joy ? `<button data-clear="${a.id}" data-slot="joy" title="Entfernen">✕</button>` : ''}</span>
+          <span class="slot${a.key ? '' : ' empty'}${a.keyError ? ' err' : ''}" title="${a.keyError ? esc(t('ctl.keyBusy')) : ''}">⌨ ${a.key ? esc(a.key) + (a.keyError ? ' ' + t('ctl.busy') : '') : t('ctl.noKey')}${a.key ? `<button data-clear="${a.id}" data-slot="key" title="${esc(t('ctl.remove'))}">✕</button>` : ''}</span>
+          <span class="slot${a.joy ? '' : ' empty'}">🎮 ${a.joy ? esc(a.joy) : t('ctl.noJoy')}${a.joy ? `<button data-clear="${a.id}" data-slot="joy" title="${esc(t('ctl.remove'))}">✕</button>` : ''}</span>
         </div>
       </div>`).join('');
     document.querySelectorAll('[data-learn]').forEach((b) => (b.onclick = () => send({ cmd: 'learn', action: b.dataset.learn })));
@@ -208,21 +228,21 @@
     document.querySelectorAll('[data-test]').forEach((b) => (b.onclick = () => send({ cmd: 'action', action: b.dataset.test })));
     document.querySelectorAll('[data-clear]').forEach((b) => (b.onclick = () => send({ cmd: 'clearBinding', action: b.dataset.clear, slot: b.dataset.slot })));
     const j = joyState;
-    $('#joyInfo').innerHTML = !j.available ? 'Lenkradknöpfe werden nur unter Windows erkannt.'
-      : j.devices.length ? 'Erkannte Geräte: ' + j.devices.map((d) => '<b>' + esc(d.name) + '</b>').join(', ') + '. Tasten werden systemweit abgefangen – iRacing bekommt eine hier belegte Taste dann nicht mehr. Lenkradknöpfe sind davon nicht betroffen.'
-      : 'Kein Lenkrad / Controller erkannt. Gerät anschließen – es erscheint nach ein paar Sekunden.';
+    $('#joyInfo').innerHTML = !j.available ? esc(t('ctl.joyWin'))
+      : j.devices.length ? esc(t('ctl.joyFound')).replace('{list}', j.devices.map((d) => '<b>' + esc(d.name) + '</b>').join(', '))
+      : esc(t('ctl.joyNone'));
   }
   let apiBuilt = false;
   function renderApi() {
     if (apiBuilt || !status.port) return;
     apiBuilt = true;
     const base = `http://127.0.0.1:${status.port}/api/`;
-    const row = (label, url) => `<div class="api"><span>${esc(label)}</span><input readonly value="${url}"><button class="small" data-copy="${url}">Kopieren</button></div>`;
-    $('#apiList').innerHTML = '<div class="api-h">Aktionen</div>' + actions.map((a) => row(a.label, base + 'action/' + a.id)).join('') +
-      '<div class="api-h">Anzeige direkt öffnen</div>' + (cfgMsg.dashPageList || []).map(([k, n]) => row(n, base + 'page/' + k)).join('');
+    const row = (label, url) => `<div class="api"><span>${esc(label)}</span><input readonly value="${url}"><button class="small" data-copy="${url}">${t('ctl.copy')}</button></div>`;
+    $('#apiList').innerHTML = `<div class="api-h">${t('ctl.apiActions')}</div>` + actions.map((a) => row(a.label, base + 'action/' + a.id)).join('') +
+      `<div class="api-h">${t('ctl.apiPages')}</div>` + (cfgMsg.dashPageList || []).map(([k, n]) => row(n, base + 'page/' + k)).join('');
     document.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = async () => {
       try { await navigator.clipboard.writeText(b.dataset.copy); } catch { const i = b.previousElementSibling; i.select(); document.execCommand('copy'); }
-      b.textContent = 'Kopiert ✓'; setTimeout(() => (b.textContent = 'Kopieren'), 1500);
+      b.textContent = t('ctl.copied'); setTimeout(() => (b.textContent = t('ctl.copy')), 1500);
     }));
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
@@ -292,10 +312,10 @@
     list.innerHTML = order.map((k, i) => {
       const fixed = opt.fixed.includes(k);
       return `<div class="srt${!fixed && on[k] === false ? ' off' : ''}" draggable="true" data-key="${k}">
-        <span class="grip" title="Ziehen zum Verschieben">⋮⋮</span>
+        <span class="grip" title="${esc(t('ctl.dragTitle'))}">⋮⋮</span>
         <label><input type="checkbox" ${fixed ? 'checked disabled' : on[k] === false ? '' : 'checked'}> ${labels[k] || k}</label>
-        <button class="mv" data-d="-1" ${i === 0 ? 'disabled' : ''} title="nach oben">▲</button>
-        <button class="mv" data-d="1" ${i === order.length - 1 ? 'disabled' : ''} title="nach unten">▼</button></div>`;
+        <button class="mv" data-d="-1" ${i === 0 ? 'disabled' : ''} title="${esc(t('ctl.up'))}">▲</button>
+        <button class="mv" data-d="1" ${i === order.length - 1 ? 'disabled' : ''} title="${esc(t('ctl.down'))}">▼</button></div>`;
     }).join('');
     const move = (from, to) => { const o = order.slice(); o.splice(to, 0, o.splice(from, 1)[0]); set(opt.path, o); };
     list.querySelectorAll('.srt').forEach((row, i) => {
@@ -326,24 +346,24 @@
     const u = cfgMsg.update || {};
     const b = $('#updBanner');
     $('#updCheck').disabled = !u.enabled || ['checking', 'downloading', 'installing'].includes(u.status);
-    $('#updState').textContent = !u.enabled ? 'nur im fertigen Programm'
-      : u.status === 'checking' ? 'prüfe …' : u.status === 'none' ? `aktuell (v${u.current})` : u.status === 'error' ? 'Prüfung fehlgeschlagen' : '';
+    $('#updState').textContent = !u.enabled ? t('ctl.updOnlyBuilt')
+      : u.status === 'checking' ? t('ctl.updChecking') : u.status === 'none' ? t('ctl.updCurrent', { v: u.current }) : u.status === 'error' && u.errorCode === 'check' ? t('ctl.updFailed') : '';
     if (u.status === 'available') {
       b.hidden = false;
-      b.innerHTML = `<b>Neue Version ${u.latest} verfügbar</b> (du hast ${u.current}).
-        <div class="btns"><button class="small" id="updGo">Jetzt installieren</button><button class="small" id="updNotes">Was ist neu?</button></div>
-        <small>dbDash lädt das Update, beendet sich kurz und startet neu. Deine Einstellungen bleiben erhalten;
-        eigene Änderungen an den Overlay-Dateien (resources\\web) werden überschrieben. Am besten nicht während eines Rennens.</small>`;
-      $('#updGo').onclick = () => { if (confirm(`dbDash jetzt auf Version ${u.latest} aktualisieren und neu starten?`)) send({ cmd: 'updateInstall' }); };
+      b.innerHTML = `${t('ctl.updAvail', { v: esc(u.latest), cur: esc(u.current) })}
+        <div class="btns"><button class="small" id="updGo">${t('ctl.updInstall')}</button><button class="small" id="updNotes">${t('ctl.updNotes')}</button></div>
+        <small>${esc(t('ctl.updInfo'))}</small>`;
+      $('#updGo').onclick = () => { if (confirm(t('ctl.updConfirm', { v: u.latest }))) send({ cmd: 'updateInstall' }); };
       $('#updNotes').onclick = () => send({ cmd: 'openRelease' });
     } else if (u.status === 'downloading' || u.status === 'installing') {
       b.hidden = false;
       b.innerHTML = u.status === 'downloading'
-        ? `<b>Update ${u.latest} wird geladen …</b> ${u.progress || 0} %<div class="bar"><i style="width:${u.progress || 0}%"></i></div>`
-        : `<b>Update ${u.latest} wird installiert</b> – dbDash startet gleich neu …`;
-    } else if (u.status === 'error' && u.latest && u.error && !/Prüfung/.test(u.error)) {
+        ? `${t('ctl.updLoading', { v: esc(u.latest), p: u.progress || 0 })}<div class="bar"><i style="width:${u.progress || 0}%"></i></div>`
+        : t('ctl.updInstalling', { v: esc(u.latest) });
+    } else if (u.status === 'error' && u.errorCode === 'install') {
       b.hidden = false;
-      b.innerHTML = `<b>Update fehlgeschlagen</b><small>${u.error}</small><div class="btns"><button class="small" id="updRetry">Erneut prüfen</button></div>`;
+      const detail = u.errorKey ? t(u.errorKey, u.errorVars || {}) : (u.errorText || '');
+      b.innerHTML = `<b>${esc(t('upd.err.install'))}</b><small>${esc(detail)}</small><div class="btns"><button class="small" id="updRetry">${t('ctl.updRetry')}</button></div>`;
       $('#updRetry').onclick = () => send({ cmd: 'updateCheck' });
     } else b.hidden = true;
   }
@@ -356,14 +376,14 @@
       <div class="ov" id="ov-${o.id}">
         <div class="top"><b>${o.title}</b><label class="switch"><input type="checkbox" class="en"><span></span></label></div>
         <div class="grid">
-          <span>Größe</span><input type="range" class="sc" min="50" max="200" step="5"><span class="scv"></span>
-          <span>Hintergrund</span><input type="range" class="bg" min="0" max="100" step="1"><span class="bgv"></span>
+          <span>${t('ctl.size')}</span><input type="range" class="sc" min="50" max="200" step="5"><span class="scv"></span>
+          <span>${t('ctl.bg')}</span><input type="range" class="bg" min="0" max="100" step="1"><span class="bgv"></span>
         </div>
-        ${ovOpts[o.id] && ovOpts[o.id].order ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="sortwrap"><div class="sortlist" data-order="${o.id}"></div><div class="sorthint">Ziehen oder mit ▲/▼ verschieben · Häkchen = anzeigen</div></div></div>` : ''}
+        ${ovOpts[o.id] && ovOpts[o.id].order ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="sortwrap"><div class="sortlist" data-order="${o.id}"></div><div class="sorthint">${t('ctl.sortHint')}</div></div></div>` : ''}
         ${ovOpts[o.id] && !ovOpts[o.id].order ? `<div class="cols"><span>${ovOpts[o.id].title}</span><div class="${ovOpts[o.id].single ? 'single' : ''}">${ovOpts[o.id].items.map((it) => it.type === 'select'
           ? `<label>${it.label} <select data-opt="${it.path}">${it.options.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select></label>`
           : `<label><input type="checkbox" data-opt="${it.path}"> ${it.label}</label>`).join('')}</div></div>` : ''}
-        <div class="url"><input readonly value="${base}${o.file}"><button class="small cp">Kopieren</button><button class="small op">Öffnen</button></div>
+        <div class="url"><input readonly value="${base}${o.file}"><button class="small cp">${t('ctl.copy')}</button><button class="small op">${t('ctl.open')}</button></div>
       </div>`).join('');
     for (const o of overlays) {
       const box = document.getElementById('ov-' + o.id);
@@ -373,7 +393,7 @@
       const url = base + o.file;
       box.querySelector('.cp').onclick = async (e) => {
         try { await navigator.clipboard.writeText(url); } catch { box.querySelector('.url input').select(); document.execCommand('copy'); }
-        e.target.textContent = 'Kopiert ✓'; setTimeout(() => (e.target.textContent = 'Kopieren'), 1500);
+        e.target.textContent = t('ctl.copied'); setTimeout(() => (e.target.textContent = t('ctl.copy')), 1500);
       };
       box.querySelector('.op').onclick = () => send({ cmd: 'openUrl', url });
     }
@@ -390,7 +410,7 @@
     };
   });
   $('#reset').onclick = () => send({ cmd: 'resetPositions' });
-  $('#quit').onclick = () => { if (confirm('dbDash beenden?')) send({ cmd: 'quit' }); };
+  $('#quit').onclick = () => { if (confirm(t('ctl.quitConfirm'))) send({ cmd: 'quit' }); };
   connect();
 </script>
 </body>

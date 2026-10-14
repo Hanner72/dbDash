@@ -201,22 +201,22 @@
         </div>
         <div class="pg" data-page="engine">
           <div class="vals">
-            <div class="val"><div class="lbl">Wasser</div><div class="big" id="water">–</div></div>
-            <div class="val"><div class="lbl">Öl</div><div class="big" id="oil">–</div></div>
-            <div class="val"><div class="lbl">Öldruck</div><div class="big" id="oilp">–</div></div>
-            <div class="val"><div class="lbl">Benzindruck</div><div class="big" id="fuelp">–</div></div>
-            <div class="val"><div class="lbl">Batterie</div><div class="big" id="volt">–</div></div>
-            <div class="val"><div class="lbl">Drehzahl</div><div class="big" id="rpmv">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.water">Wasser</div><div class="big" id="water">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.oil">Öl</div><div class="big" id="oil">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.oilPress">Öldruck</div><div class="big" id="oilp">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.fuelPress">Benzindruck</div><div class="big" id="fuelp">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.battery">Batterie</div><div class="big" id="volt">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.rpm">Drehzahl</div><div class="big" id="rpmv">–</div></div>
           </div>
         </div>
         <div class="pg" data-page="strategy">
           <div class="vals">
-            <div class="val"><div class="lbl">Ø Verbrauch</div><div class="big" id="sPer">–</div></div>
-            <div class="val"><div class="lbl">Reicht für</div><div class="big" id="sLaps">–</div></div>
-            <div class="val"><div class="lbl">Runden bis Ziel</div><div class="big" id="sToGo">–</div></div>
-            <div class="val"><div class="lbl">Bis Ziel</div><div class="big" id="sFin">–</div></div>
-            <div class="val"><div class="lbl">Tankinhalt max.</div><div class="big" id="sMax">–</div></div>
-            <div class="val"><div class="lbl">Stopps nötig</div><div class="big" id="sStops">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.avgUse">Ø Verbrauch</div><div class="big" id="sPer">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.lastsFor">Reicht für</div><div class="big" id="sLaps">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.lapsToGo">Runden bis Ziel</div><div class="big" id="sToGo">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.toFinish">Bis Ziel</div><div class="big" id="sFin">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.tankMax">Tankinhalt max.</div><div class="big" id="sMax">–</div></div>
+            <div class="val"><div class="lbl" data-i18n="dash.stops">Stopps nötig</div><div class="big" id="sStops">–</div></div>
           </div>
         </div>
         <div class="dots" id="leftDots"></div>
@@ -240,24 +240,24 @@
       </div>
       <div class="pedals"><div class="pbar thr"><i id="thrBar"></i></div><div class="pbar brk"><i id="brkBar"></i></div></div>
       <div class="posbox"><span class="cp" id="cpos">P–</span><span class="of" id="ofN"></span><span class="gain" id="gainC"></span></div>
-      <div class="weather"><div><span>LUFT</span><b id="air">–</b></div><div><span>STRECKE</span><b id="track">–</b></div></div>
+      <div class="weather"><div><span data-i18n="dash.air">LUFT</span><b id="air">–</b></div><div><span data-i18n="dash.track">STRECKE</span><b id="track">–</b></div></div>
     </div>
 
     <!-- rechts -->
     <div class="col">
       <div class="card sess">
-        <div><div class="big" id="sessT">–</div><div class="lbl">Rest</div></div>
-        <div><div class="big" id="posT">–</div><div class="lbl"><span class="gainS" id="gainS"></span> Pos</div></div>
-        <div><div class="big" id="lapT">–</div><div class="lbl">Runde</div></div>
-        <div><div class="big" id="clock">–</div><div class="lbl">Uhr</div></div>
+        <div><div class="big" id="sessT">–</div><div class="lbl" data-i18n="dash.remain">Rest</div></div>
+        <div><div class="big" id="posT">–</div><div class="lbl"><span class="gainS" id="gainS"></span> <span data-i18n="dash.pos">Pos</span></div></div>
+        <div><div class="big" id="lapT">–</div><div class="lbl" data-i18n="dash.lap">Runde</div></div>
+        <div><div class="big" id="clock">–</div><div class="lbl" data-i18n="dash.clock">Uhr</div></div>
       </div>
       <div class="card page" id="right">
         <div class="legend" id="rightTitle">Rundenzeiten</div>
         <div class="pg" data-page="laps">
           <div class="laps">
-            <div class="lt pred"><div class="big" id="pred">–</div><div class="lbl">Prognose</div></div>
-            <div class="lt last"><div class="big" id="last">–</div><div class="lbl">Letzte Runde</div></div>
-            <div class="lt best"><div class="big" id="best">–</div><div class="lbl">Beste Runde</div></div>
+            <div class="lt pred"><div class="big" id="pred">–</div><div class="lbl" data-i18n="lap.pred">Prognose</div></div>
+            <div class="lt last"><div class="big" id="last">–</div><div class="lbl" data-i18n="lap.lastLong">Letzte Runde</div></div>
+            <div class="lt best"><div class="big" id="best">–</div><div class="lbl" data-i18n="lap.bestLong">Beste Runde</div></div>
           </div>
         </div>
         <div class="pg" data-page="damage">
@@ -280,7 +280,7 @@
               <path class="ln thin" d="M52,24 Q78,20 104,24 L106,76 Q78,80 50,76 Z"/>
               <path class="ln thin" d="M60,28 L96,28 M58,72 L66,72 M90,72 L98,72"/>
               <rect id="carEng" class="eng" x="60" y="36" width="36" height="30" rx="3"/>
-              <text id="carEngT" class="engT" x="78" y="54" text-anchor="middle">MOTOR</text>
+              <text id="carEngT" class="engT" x="78" y="54" text-anchor="middle" data-i18n="dmg.engine">MOTOR</text>
               <!-- Spiegel, Scheiben, Dach, Türen -->
               <path class="ln" d="M112,90 L121,87 L122,94 L112,97 Z M44,90 L35,87 L34,94 L44,97 Z"/>
               <path class="ln fill" d="M54,82 Q78,76 102,82 L98,100 Q78,96 58,100 Z"/>
@@ -303,8 +303,8 @@
             <div class="info">
               <div class="state" id="dmgState">–</div>
               <div class="rep">
-                <div class="val"><div class="lbl">Pflicht-Reparatur</div><div class="big" id="rep">–</div></div>
-                <div class="val"><div class="lbl">Optionale Reparatur</div><div class="big" id="opt">–</div></div>
+                <div class="val"><div class="lbl" data-i18n="dmg.required">Pflicht-Reparatur</div><div class="big" id="rep">–</div></div>
+                <div class="val"><div class="lbl" data-i18n="dmg.optional">Optionale Reparatur</div><div class="big" id="opt">–</div></div>
               </div>
               <div class="chips" id="warns"></div>
             </div>
@@ -317,10 +317,10 @@
         <div class="dots" id="rightDots"></div>
       </div>
       <div class="card fuel">
-        <div class="legend">Sprit</div>
-        <div><div class="big" id="fL">–</div><div class="lbl">Liter</div></div>
-        <div><div class="big" id="fAvg">–</div><div class="lbl">Ø / Runde</div></div>
-        <div><div class="big" id="fLaps">–</div><div class="lbl">Runden</div></div>
+        <div class="legend" data-i18n="dash.fuel">Sprit</div>
+        <div><div class="big" id="fL">–</div><div class="lbl" data-i18n="dash.liters">Liter</div></div>
+        <div><div class="big" id="fAvg">–</div><div class="lbl" data-i18n="dash.perLap">Ø / Runde</div></div>
+        <div><div class="big" id="fLaps">–</div><div class="lbl" data-i18n="dash.laps">Runden</div></div>
         <div class="fin" id="fFin"></div>
       </div>
     </div>
@@ -335,8 +335,7 @@
   const WHEELS = ['LF', 'RF', 'LR', 'RR'];
   for (const w of WHEELS) $('t' + w).innerHTML = `<div class="t big">–</div><div class="row"><span class="p">–</span><div class="segs"><i></i><i></i><i></i></div><span class="w">–</span></div>`;
 
-  const PAGE_TITLES = { tyres: 'Reifen', engine: 'Motor', strategy: 'Sprit-Strategie', relAll: 'Relative – Gesamt', relClass: 'Relative – Klasse',
-    gapAll: 'Abstände – Gesamt', gapClass: 'Abstände – Klasse', laps: 'Rundenzeiten', damage: 'Schaden' };
+  const pageTitle = (k) => PW.t('page.' + k);
   const ORDER = ['tyres', 'engine', 'strategy', 'relAll', 'relClass', 'gapAll', 'gapClass', 'laps', 'damage'];
   const DEFAULT_SIDES = { tyres: 'left', engine: 'left', strategy: 'left', relAll: 'right', relClass: 'left', gapAll: 'left', gapClass: 'right', laps: 'right', damage: 'right' };
   const pageEls = Object.fromEntries([...document.querySelectorAll('.pg')].map((el) => [el.dataset.page, el]));
@@ -352,7 +351,7 @@
       const box = $(side), dots = $(side + 'Dots');
       for (const k of list) if (pageEls[k].parentNode !== box) box.insertBefore(pageEls[k], dots); // Anzeige ins richtige Fenster verschieben
       for (const k of list) pageEls[k].classList.toggle('on', k === cur);
-      $(side + 'Title').innerHTML = cur ? PW.LOGO + PAGE_TITLES[cur] : PW.LOGO;
+      $(side + 'Title').innerHTML = cur ? PW.LOGO + PW.esc(pageTitle(cur)) : PW.LOGO;
       dots.innerHTML = list.length > 1 ? list.map((k) => `<i class="${k === cur ? 'on' : ''}"></i>`).join('') : '';
     }
     for (const k of ORDER) if (sides[k] !== 'left' && sides[k] !== 'right') pageEls[k].classList.remove('on');
@@ -386,8 +385,8 @@
   // Vorzeichen der Abstände: vor dir „−“ (du liegst zurück), hinter dir „+“ (dein Vorsprung)
   const sign = (ahead) => (ahead ? '−' : '+');
   function gapBlock(c, side, myLast, page) {
-    const title = side === 'ahead' ? 'VOR DIR' : 'HINTER DIR';
-    if (!c) return `<div class="gnone">${side === 'ahead' ? 'Niemand vor dir – du führst!' : 'Niemand hinter dir'}</div>`;
+    const title = PW.t(side === 'ahead' ? 'dash.ahead' : 'dash.behind');
+    if (!c) return `<div class="gnone">${PW.t(side === 'ahead' ? 'dash.noneAhead' : 'dash.noneBehind')}</div>`;
     let val = '–', tr = '';
     if (c.gap && c.gap.laps) val = sign(side === 'ahead') + c.gap.laps + 'L';
     else if (c.gap && c.gap.s != null) {
@@ -397,7 +396,7 @@
         const closing = t < 0;
         // vorne: Abstand wird kleiner = gut (grün); hinten: Abstand wird kleiner = Gefahr (rot)
         const good = side === 'ahead' ? closing : !closing;
-        tr = `<small class="${good ? 'ok' : 'warn'}">${closing ? '▼' : '▲'} ${Math.abs(t).toFixed(2)} / Rnd</small>`;
+        tr = `<small class="${good ? 'ok' : 'warn'}">${closing ? '▼' : '▲'} ${Math.abs(t).toFixed(2)} ${PW.t('dash.perLapTrend')}</small>`;
       }
     }
     const ld = c.lastDiff;
@@ -406,8 +405,8 @@
       <div class="lbl">${title}</div>
       <div class="who${c.name.length > 22 ? ' long' : ''}"><span class="cc" style="background:${c.classColor}"></span><span class="pp">P${c.pos}</span><span class="n">${PW.esc(c.number)}</span><span class="ellipsis">${PW.esc(c.name)}</span>${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
       <div class="gv">${val}${tr}</div>
-      <div class="sub">Letzte <b>${PW.fmtLap(c.last)}</b>${ldTxt}</div>
-      <div class="sub">Beste <b>${PW.fmtLap(c.best)}</b></div>
+      <div class="sub">${PW.t('lap.last')} <b>${PW.fmtLap(c.last)}</b>${ldTxt}</div>
+      <div class="sub">${PW.t('lap.best')} <b>${PW.fmtLap(c.best)}</b></div>
     </div>`;
   }
 
@@ -441,7 +440,7 @@
     } else { PW.text($('delta'), '0.000'); PW.cls($('delta'), 'delta'); PW.css($('dbar'), 'width', '0'); }
     const lim = $('lim');
     PW.cls(lim, 'lim' + (d.pitLimiter ? ' on' : d.onPitRoad ? ' nolim' : ''));
-    PW.text(lim, d.pitLimiter ? 'PIT LIMITER' : 'LIMITER AUS!');
+    PW.text(lim, PW.t(d.pitLimiter ? 'dash.limiter' : 'dash.noLimiter'));
     PW.text($('cpos'), 'P' + (d.classPosition || '–'));
     PW.css($('cpos'), 'background', d.classColor || '#ffd23f');
     PW.text($('ofN'), d.classSize ? '/' + d.classSize : '');
@@ -472,13 +471,13 @@
           <span class="n">${PW.esc(c.number)}</span>
           <span class="ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</span>
           <span class="g">${c.isPlayer ? '' : sign(c.gap > 0) + Math.abs(c.gap).toFixed(1)}</span>
-        </div>`).join('') : '<div class="none">Keine Daten</div>');
+        </div>`).join('') : `<div class="none">${PW.t('dash.noData')}</div>`);
     }
 
     // Abstände zu Vorder- und Hintermann mit Trend (wird der Abstand kleiner oder größer?)
     for (const [id, g] of [['gapAll', d.gaps && d.gaps.all], ['gapClass', d.gaps && d.gaps.cls]]) {
       if (!listTurn || !pageEls[id].classList.contains('on')) continue;
-      PW.html($(id), g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : '<div class="gnone">Keine Daten</div>');
+      PW.html($(id), g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : `<div class="gnone">${PW.t('dash.noData')}</div>`);
     }
 
     // Rundenzeiten
@@ -504,7 +503,7 @@
     PW.html($('oilp'), sm(d.oilPress != null ? d.oilPress.toFixed(1) : null, 'bar'));
     PW.html($('fuelp'), sm(d.fuelPress != null ? d.fuelPress.toFixed(1) : null, 'bar'));
     PW.html($('volt'), sm(d.voltage != null ? d.voltage.toFixed(1) : null, 'V'));
-    PW.html($('rpmv'), sm(Math.round(d.rpm), 'U/min'));
+    PW.html($('rpmv'), sm(Math.round(d.rpm), PW.t('unit.rpm')));
 
     // Sprit + Strategie
     const f = d.fuel;
@@ -514,11 +513,11 @@
       PW.text($('fLaps'), f.laps != null ? f.laps.toFixed(1) : '–');
       const fin = $('fFin');
       if (f.toFinish == null) { PW.text(fin, ''); }
-      else if (f.toFinish > 0) { PW.html(fin, `<span class="warn">NACHTANKEN +${f.toFinish.toFixed(1)} L</span>`); }
-      else PW.html(fin, `<span class="ok">REICHT · REST ${(-f.toFinish).toFixed(1)} L</span>`);
+      else if (f.toFinish > 0) { PW.html(fin, `<span class="warn">${PW.t('dash.refuel', { l: f.toFinish.toFixed(1) })}</span>`); }
+      else PW.html(fin, `<span class="ok">${PW.t('dash.enough', { l: (-f.toFinish).toFixed(1) })}</span>`);
       PW.html($('sPer'), sm(f.perLap ? f.perLap.toFixed(2) : null, 'L'));
-      PW.html($('sLaps'), sm(f.laps != null ? f.laps.toFixed(1) : null, 'Rnd'));
-      PW.html($('sToGo'), sm(f.toGo != null ? f.toGo.toFixed(1) : null, 'Rnd'));
+      PW.html($('sLaps'), sm(f.laps != null ? f.laps.toFixed(1) : null, PW.t('unit.laps')));
+      PW.html($('sToGo'), sm(f.toGo != null ? f.toGo.toFixed(1) : null, PW.t('unit.laps')));
       PW.html($('sFin'), f.toFinish == null ? '–' : f.toFinish > 0 ? `<span class="warn">+${f.toFinish.toFixed(1)}<small>L</small></span>` : `<span class="ok">${f.toFinish.toFixed(1)}<small>L</small></span>`);
       PW.html($('sMax'), sm(f.max ? f.max.toFixed(0) : null, 'L'));
       PW.text($('sStops'), f.toFinish == null ? '–' : f.toFinish <= 0 ? '0' : f.max ? Math.ceil(f.toFinish / f.max) : '≥1');
@@ -534,15 +533,15 @@
 
     // Schaden
     const dm = d.damage, ds = $('dmgState');
-    if (dm.repair > 0) { PW.cls(ds, 'state st-req'); PW.html(ds, 'SCHWERER SCHADEN<small>Reparatur in der Box</small>'); }
-    else if (dm.optRepair > 0) { PW.cls(ds, 'state st-opt'); PW.html(ds, 'LEICHTER SCHADEN<small>optional reparierbar</small>'); }
-    else if (dm.repair == null && dm.optRepair == null) { PW.cls(ds, 'state'); PW.html(ds, 'KEINE DATEN'); }
-    else { PW.cls(ds, 'state st-ok'); PW.html(ds, 'KEIN SCHADEN'); }
+    if (dm.repair > 0) { PW.cls(ds, 'state st-req'); PW.html(ds, `${PW.t('dmg.heavy')}<small>${PW.t('dmg.heavySub')}</small>`); }
+    else if (dm.optRepair > 0) { PW.cls(ds, 'state st-opt'); PW.html(ds, `${PW.t('dmg.light')}<small>${PW.t('dmg.lightSub')}</small>`); }
+    else if (dm.repair == null && dm.optRepair == null) { PW.cls(ds, 'state'); PW.html(ds, PW.t('dmg.noData')); }
+    else { PW.cls(ds, 'state st-ok'); PW.html(ds, PW.t('dmg.none')); }
     PW.text($('rep'), dm.repair != null ? dm.repair.toFixed(1) + ' s' : '–');
     PW.cls($('rep'), 'big' + (dm.repair > 0 ? ' warn' : ''));
     PW.text($('opt'), dm.optRepair != null ? dm.optRepair.toFixed(1) + ' s' : '–');
     PW.cls($('opt'), 'big' + (dm.optRepair > 0 ? ' amber' : ''));
-    PW.html($('warns'), (dm.meatball ? ['Reparaturflagge'] : []).concat(dm.warnings).map((w) => `<span>${w}</span>`).join(''));
+    PW.html($('warns'), (dm.meatball ? ['dmg.repairFlag'] : []).concat(dm.warnings).map((w) => `<span>${PW.t(w)}</span>`).join(''));
     // Auto-Grafik
     const bp = dm.repair > 0 ? '#ff4d4d' : dm.optRepair > 0 ? '#ffb02e' : dm.repair == null && dm.optRepair == null ? '#8b94a3' : '#3ddc84';
     $('car').style.setProperty('--bp', bp);
@@ -564,7 +563,7 @@
       PW.cls(fb, 'flagbar' + (['blue', 'yellow', 'black', 'meatball'].includes(flag.kind) ? ' blink' : ''));
       PW.css(fb, 'background', flag.kind === 'checkered' ? 'repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0/22px 22px' : bg);
       PW.css(fb, 'color', fg);
-      PW.html(fb, flag.kind === 'checkered' ? `<span style="background:#111;color:#fff;padding:2px 10px;border-radius:5px">${flag.label}</span>` : flag.label);
+      PW.html(fb, flag.kind === 'checkered' ? `<span style="background:#111;color:#fff;padding:2px 10px;border-radius:5px">${PW.t(flag.label)}</span>` : PW.t(flag.label));
       root.style.setProperty('--flag', bg); root.classList.add('flagged');
     } else {
       if (!fb.classList.contains('idle')) { PW.cls(fb, 'flagbar idle'); PW.css(fb, 'background', ''); PW.css(fb, 'color', ''); PW.html(fb, `${PW.LOGO}<span id="idleTxt"></span>`); }
