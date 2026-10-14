@@ -21,8 +21,9 @@ Ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose Overlays 
   Rundenzeiten (**Prognose**, letzte, beste) und **Schaden** (Auto-Grafik: Karosserie in der Farbe der Schadensstufe, Motor-Warnungen, Reifenverschleiß; dazu Pflicht- und optionale Reparaturzeit).
   Für jede Anzeige wählst du in den Einstellungen **Links, Rechts oder Aus**.
   Umschalten per Taste oder Lenkradknopf.
-- **Radar (Ghost)** – Draufsicht mit den Autos vor, hinter und neben dir. Reichweite 1–80 m, gemessen als Lücke
-  Stoßstange zu Stoßstange. Rot = neben dir, Gelb = Lücke unter 7 m. Seiten-Warnung links/rechts, Lücke zum nächsten
+- **Radar (Ghost)** – Draufsicht mit den Autos vor, hinter und neben dir, gezeichnet als GT3-Blueprint (dein Auto grün,
+  Klassenfarbe auf dem Dach). Reichweite 1–80 m, gemessen als Lücke
+  Stoßstange zu Stoßstange. Rot = neben dir, Orange = Lücke unter 7 m. Seiten-Warnung links/rechts, Lücke zum nächsten
   Auto davor/dahinter. Erscheint nur, solange ein Auto innerhalb der Reichweite ist, und verschwindet sofort wieder;
   in der Qualifikation bleibt das Radar aus.
 

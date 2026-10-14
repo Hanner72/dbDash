@@ -20,25 +20,43 @@
   const W = 220, H = 300, CX = W / 2, CY = H / 2;
   ctx.scale(2, 2); // scharf auf hochauflösenden Bildschirmen
   const OVERLAP = 5.5;          // m: ab hier gilt ein Auto als "neben dir"
-  const CAR_W = 20, LANE = 34;  // Darstellung in Pixeln
+  const CAR_W = 24, LANE = 38;  // Darstellung in Pixeln
+  const MIN_LEN = 48;           // Mindestlänge eines Autos in Pixeln (bei großer Reichweite)
   let shown = false;
 
   // iRacing CarLeftRight: 0 aus, 1 frei, 2 links, 3 rechts, 4 links+rechts, 5 zwei links, 6 zwei rechts
   const SIDES = { 2: ['L'], 3: ['R'], 4: ['L', 'R'], 5: ['L', 'L2'], 6: ['R', 'R2'] };
   const LANE_X = { L: -1, R: 1, L2: -1.9, R2: 1.9, C: 0 };
 
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-  }
+  // GT3 von oben als technische Zeichnung – dieselben Linien wie die Schadensgrafik im Dashboard
+  // (Zeichenfläche dort: x 32–124, y 6–218)
+  const BP = {
+    body: new Path2D('M78,12 Q100,12 112,18 L117,26 Q121,36 122,48 L122,72 Q121,82 115,88 L112,100 L112,132 L116,140 Q123,150 124,160 L124,182 Q123,194 117,200 L114,210 Q100,216 78,216 Q56,216 42,210 L39,200 Q33,194 32,182 L32,160 Q33,150 40,140 L44,132 L44,100 L41,88 Q35,82 34,72 L34,48 Q35,36 39,26 L44,18 Q56,12 78,12 Z'),
+    glass: new Path2D('M54,82 Q78,76 102,82 L98,100 Q78,96 58,100 Z M58,140 Q78,143 98,140 L102,158 Q78,162 54,158 Z'),
+    lines: new Path2D('M42,17 Q78,5 114,17 M52,24 Q78,20 104,24 L106,76 Q78,80 50,76 Z M58,100 L58,140 M98,100 L98,140 M64,180 L64,192 M92,180 L92,192'),
+    wing: new Path2D('M36,192 L120,192 L120,200 L36,200 Z M33,186 L37,186 L37,205 L33,205 Z M119,186 L123,186 L123,205 L119,205 Z'),
+    roof: new Path2D('M71,112 L85,112 L85,126 L71,126 Z'),
+  };
+  function bp(path, m) { const p = new Path2D(); p.addPath(path, m); return p; }
 
-  function drawCar(lane, dist, scale, len, fill, stroke, stripe) {
+  // color = Linienfarbe, alpha = Deckkraft (weiter entfernt = blasser), cls = Klassenfarbe (Dachluke)
+  // off = Versatz der Fahrzeugmitte in Pixeln nach vorne
+  function drawCar(lane, off, len, color, alpha, cls) {
     const x = CX + LANE_X[lane] * LANE - CAR_W / 2;
-    const y = CY - dist * scale - len / 2;
-    roundRect(x, y, CAR_W, len, 6);
-    ctx.fillStyle = fill; ctx.fill();
-    if (stroke) { ctx.lineWidth = 2; ctx.strokeStyle = stroke; ctx.stroke(); }
-    if (stripe) { ctx.fillStyle = stripe; roundRect(x + 4, y + 3, CAR_W - 8, 4, 2); ctx.fill(); }
+    const y = CY - off - len / 2;
+    const m = new DOMMatrix().translate(x, y).scale(CAR_W / 92, len / 212).translate(-32, -6);
+    const body = bp(BP.body, m);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.lineJoin = 'round';
+    ctx.fillStyle = color; ctx.globalAlpha = alpha * 0.14; ctx.fill(body);
+    ctx.globalAlpha = alpha * 0.22; ctx.fill(bp(BP.glass, m));
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke(body);
+    ctx.lineWidth = 0.8; ctx.globalAlpha = alpha * 0.85;
+    ctx.stroke(bp(BP.glass, m)); ctx.stroke(bp(BP.lines, m)); ctx.stroke(bp(BP.wing, m));
+    if (cls) { ctx.globalAlpha = alpha; ctx.fillStyle = cls; ctx.fill(bp(BP.roof, m)); }
+    ctx.restore();
   }
 
   function sideGlow(left) {
@@ -51,8 +69,15 @@
     const r = st.radar;
     if (!st.connected || !r) return;
     const range = r.range || 40, view = r.view || range, carLen = r.carLen || 4.7;
-    const scale = (H / 2 - 18) / view;
-    const len = Math.max(24, carLen * scale);
+    // Maßstab: Autos mindestens MIN_LEN lang; die Lücke zwischen den Autos bleibt maßstabsgetreu,
+    // damit sich die Zeichnungen nur berühren, wenn sich die Autos wirklich berühren
+    let scale = (H / 2 - 18) / view, len = carLen * scale;
+    if (len < MIN_LEN) { len = MIN_LEN; scale = (H / 2 - 18 - len) / Math.max(1, view - carLen); }
+    const pos = (c) => {
+      const ad = Math.abs(c.dist);
+      if (ad < carLen) return c.dist / carLen * len; // überlappend
+      return Math.sign(c.dist) * (len + (c.gap != null ? c.gap : ad - carLen) * scale);
+    };
     const sides = SIDES[r.side] || [];
 
     // In der Qualifikation kein Radar
@@ -67,13 +92,18 @@
     document.body.classList.toggle('radar-empty', autoHide && !busy);
 
     ctx.clearRect(0, 0, W, H);
+    // Blueprint-Raster
+    ctx.strokeStyle = 'rgba(61,220,132,.07)'; ctx.lineWidth = 0.6; ctx.beginPath();
+    for (let gx = CX % 10; gx < W; gx += 10) { ctx.moveTo(gx, 0); ctx.lineTo(gx, H); }
+    for (let gy = CY % 10; gy < H; gy += 10) { ctx.moveTo(0, gy); ctx.lineTo(W, gy); }
+    ctx.stroke();
     // Abstandslinien (beschriftet mit der Lücke zum anderen Auto)
     ctx.font = '600 9px Bahnschrift, Segoe UI, sans-serif';
     ctx.textAlign = 'left';
     const step = view <= 12 ? 2 : view <= 25 ? 5 : 10;
     for (let m = step; carLen + m <= view; m += step) {
       for (const s of [1, -1]) {
-        const y = CY - s * (carLen + m) * scale;
+        const y = CY - s * (len / 2 + m * scale); // Linie = Stoßstange eines Autos mit dieser Lücke
         ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1;
         ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(14, y); ctx.lineTo(W - 14, y); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillText(m + 'm', 6, y - 3);
@@ -97,15 +127,15 @@
     for (const c of cars) {
       const lane = c.lane || placed.get(c) || 'C';
       const ad = Math.abs(c.dist);
-      let fill, stroke = null;
-      if (lane !== 'C' || ad < OVERLAP) { fill = 'rgba(255,80,80,.9)'; stroke = '#ffb3b3'; }
-      else if (c.gap != null ? c.gap < 7 : ad < 12) { fill = 'rgba(255,210,63,.85)'; }
-      else fill = `rgba(235,240,248,${(0.25 + 0.45 * Math.max(0, 1 - ad / view)).toFixed(2)})`;
-      drawCar(lane, c.dist, scale, len, fill, stroke, c.ghostOnly ? null : c.color);
+      // rot = neben dir, orange = nah dran, sonst hell – je weiter weg, desto blasser
+      let color = '#cfd8e6', alpha = 0.45 + 0.5 * Math.max(0, 1 - ad / view);
+      if (lane !== 'C' || ad < OVERLAP) { color = '#ff4d4d'; alpha = 1; }
+      else if (c.gap != null ? c.gap < 7 : ad < 12) { color = '#ffb02e'; alpha = 1; }
+      drawCar(lane, pos(c), len, color, alpha, c.ghostOnly ? null : c.color);
     }
 
     // Eigenes Auto
-    drawCar('C', 0, scale, len, 'rgba(198,255,61,.22)', '#c6ff3d', null);
+    drawCar('C', 0, len, '#3ddc84', 1, null);
 
     // Lücke zum nächsten Auto davor / dahinter
     const ahead = r.cars.filter((c) => c.dist >= OVERLAP).sort((a, b) => a.dist - b.dist)[0];
