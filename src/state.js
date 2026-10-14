@@ -214,7 +214,7 @@ function buildState(d, s, opts) {
   }
   dash.relAll = relDash.all.map(slimCar);
   dash.relClass = relDash.cls.map(slimCar);
-  const radar = buildRadar(d, s, opts, { meCar, cars });
+  const radar = buildRadar(d, s, opts, { meCar, cars, sessionType });
 
   return {
     connected: true,
@@ -438,9 +438,14 @@ function trackLengthM(wi) {
   return m[2] === 'mi' ? v * 1609.34 : v * 1000;
 }
 
-function buildRadar(d, s, opts, { meCar, cars }) {
+// Radar: Reichweite = Lücke Stoßstange zu Stoßstange (iRacing liefert keine Fahrzeuglänge → typischer GT3-Wert).
+// Gezeigt wird etwas mehr als die Reichweite (view), damit die Umgebung sichtbar bleibt; ob das Radar
+// erscheint, entscheidet nur die Lücke (gap <= range). In der Qualifikation bleibt das Radar aus.
+const RADAR_CAR_LEN = 4.7;
+function buildRadar(d, s, opts, { meCar, cars, sessionType }) {
   const range = opts.radarRange || 40;
-  const out = { range, cars: [], side: d.CarLeftRight != null ? d.CarLeftRight : 0 };
+  const view = Math.max(range + RADAR_CAR_LEN, 12);
+  const out = { range, view, carLen: RADAR_CAR_LEN, qualify: /qual/i.test(sessionType || ''), cars: [], side: d.CarLeftRight != null ? d.CarLeftRight : 0 };
   if (!meCar || !meCar.inWorld) return out;
   const len = trackLengthM(s && s.WeekendInfo);
   const surf = d.CarIdxTrackSurface || [];
@@ -449,7 +454,9 @@ function buildRadar(d, s, opts, { meCar, cars }) {
     if (c.pit !== meCar.pit) continue; // Boxengasse und Strecke getrennt betrachten
     if (surf[c.idx] === 0 || surf[c.idx] === 1) continue; // nicht in Garage/Boxenplatz
     const dist = wrap(c.pct - meCar.pct, 1) * len;
-    if (Math.abs(dist) <= range) out.cars.push({ dist: Math.round(dist * 10) / 10, color: c.classColor, number: c.number, sameClass: c.classId === meCar.classId });
+    if (Math.abs(dist) > view) continue;
+    const gap = Math.max(0, Math.abs(dist) - RADAR_CAR_LEN);
+    out.cars.push({ dist: Math.round(dist * 10) / 10, gap: Math.round(gap * 10) / 10, color: c.classColor, number: c.number, sameClass: c.classId === meCar.classId });
   }
   out.cars.sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist));
   return out;

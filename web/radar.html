@@ -8,8 +8,8 @@
   #root { width: 220px; }
   #root.panel { background: rgba(12, 14, 18, calc(var(--bg-a) * .9)); border-radius: 16px; }
   canvas { display: block; width: 220px; height: 300px; }
-  /* Radar leer: ausblenden (außer im Verschiebe-Modus) */
-  body.radar-empty:not(.edit) #root { visibility: hidden; }
+  /* Radar leer oder Qualifikation: ausblenden (außer im Verschiebe-Modus) */
+  body.radar-empty:not(.edit) #root, body.radar-off:not(.edit) #root { visibility: hidden; }
 </style>
 </head>
 <body data-overlay="radar">
@@ -21,7 +21,7 @@
   ctx.scale(2, 2); // scharf auf hochauflösenden Bildschirmen
   const OVERLAP = 5.5;          // m: ab hier gilt ein Auto als "neben dir"
   const CAR_W = 20, LANE = 34;  // Darstellung in Pixeln
-  let emptySince = 0;
+  let shown = false;
 
   // iRacing CarLeftRight: 0 aus, 1 frei, 2 links, 3 rechts, 4 links+rechts, 5 zwei links, 6 zwei rechts
   const SIDES = { 2: ['L'], 3: ['R'], 4: ['L', 'R'], 5: ['L', 'L2'], 6: ['R', 'R2'] };
@@ -50,24 +50,30 @@
   PW.onState((st, cfg) => {
     const r = st.radar;
     if (!st.connected || !r) return;
-    const range = r.range || 40;
-    const scale = (H / 2 - 18) / range;
-    const len = Math.max(30, 4.7 * scale);
+    const range = r.range || 40, view = r.view || range, carLen = r.carLen || 4.7;
+    const scale = (H / 2 - 18) / view;
+    const len = Math.max(24, carLen * scale);
     const sides = SIDES[r.side] || [];
 
-    // Automatisch ausblenden, wenn niemand in der Nähe ist
-    const busy = r.cars.length > 0 || sides.length > 0;
-    const now = Date.now();
-    if (busy) emptySince = 0; else if (!emptySince) emptySince = now;
-    document.body.classList.toggle('radar-empty', !!(cfg && cfg.radarAutoHide !== false) && !busy && now - emptySince > 1200);
+    // In der Qualifikation kein Radar
+    document.body.classList.toggle('radar-off', !!r.qualify);
+
+    // Sofort ausblenden, sobald kein Auto innerhalb der Reichweite (Lücke) ist; kleine Toleranz beim
+    // Ausblenden, damit es an der Grenze nicht flackert
+    const limit = shown ? range + Math.max(0.2, range * 0.05) : range;
+    const busy = sides.length > 0 || r.cars.some((c) => (c.gap != null ? c.gap : Math.abs(c.dist)) <= limit);
+    const autoHide = !!(cfg && cfg.radarAutoHide !== false);
+    shown = busy || !autoHide;
+    document.body.classList.toggle('radar-empty', autoHide && !busy);
 
     ctx.clearRect(0, 0, W, H);
-    // Abstandsringe alle 10 m
+    // Abstandslinien (beschriftet mit der Lücke zum anderen Auto)
     ctx.font = '600 9px Bahnschrift, Segoe UI, sans-serif';
     ctx.textAlign = 'left';
-    for (let m = 10; m <= range; m += 10) {
+    const step = view <= 12 ? 2 : view <= 25 ? 5 : 10;
+    for (let m = step; carLen + m <= view; m += step) {
       for (const s of [1, -1]) {
-        const y = CY - s * m * scale;
+        const y = CY - s * (carLen + m) * scale;
         ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1;
         ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(14, y); ctx.lineTo(W - 14, y); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillText(m + 'm', 6, y - 3);
@@ -93,22 +99,23 @@
       const ad = Math.abs(c.dist);
       let fill, stroke = null;
       if (lane !== 'C' || ad < OVERLAP) { fill = 'rgba(255,80,80,.9)'; stroke = '#ffb3b3'; }
-      else if (ad < 12) { fill = 'rgba(255,210,63,.85)'; }
-      else fill = `rgba(235,240,248,${(0.25 + 0.45 * (1 - ad / range)).toFixed(2)})`;
+      else if (c.gap != null ? c.gap < 7 : ad < 12) { fill = 'rgba(255,210,63,.85)'; }
+      else fill = `rgba(235,240,248,${(0.25 + 0.45 * Math.max(0, 1 - ad / view)).toFixed(2)})`;
       drawCar(lane, c.dist, scale, len, fill, stroke, c.ghostOnly ? null : c.color);
     }
 
     // Eigenes Auto
     drawCar('C', 0, scale, len, 'rgba(198,255,61,.22)', '#c6ff3d', null);
 
-    // Abstand zum nächsten Auto davor / dahinter
+    // Lücke zum nächsten Auto davor / dahinter
     const ahead = r.cars.filter((c) => c.dist >= OVERLAP).sort((a, b) => a.dist - b.dist)[0];
     const behind = r.cars.filter((c) => c.dist <= -OVERLAP).sort((a, b) => b.dist - a.dist)[0];
     ctx.font = '700 13px Bahnschrift, Segoe UI, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,.85)';
-    if (ahead) ctx.fillText(ahead.dist.toFixed(1) + ' m', CX, 14);
-    if (behind) ctx.fillText(Math.abs(behind.dist).toFixed(1) + ' m', CX, H - 6);
+    const gapOf = (c) => (c.gap != null ? c.gap : Math.abs(c.dist));
+    if (ahead) ctx.fillText(gapOf(ahead).toFixed(1) + ' m', CX, 14);
+    if (behind) ctx.fillText(gapOf(behind).toFixed(1) + ' m', CX, H - 6);
   });
 </script>
 </body>

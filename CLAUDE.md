@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run icons` – Programmsymbol (`build/icon.svg` → `build/icon.ico`, `web/assets/icon.png`) und Stream-Deck-Grafiken
   (`grafiken/*.svg` → PNGs) neu erzeugen. Läuft in Electron; in VS Code ggf. `ELECTRON_RUN_AS_NODE` leeren.
@@ -38,6 +38,9 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
   Ausritte (`CarIdxTrackSurface` 0 = OffTrack, je 1x, innerhalb 2 s nur einmal), Anzeige als Schätzung (`incEst`).
   Echte Werte > 0 aus der Session-Info haben Vorrang. Test: `test/incidents-test.js`.
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
+  Reichweite (`radarRange`, 1–80 m) = Lücke Stoßstange zu Stoßstange (feste Länge 4,7 m, iRacing liefert keine);
+  Radar erscheint nur bei Lücke ≤ Reichweite oder Spotter-Meldung, ohne Verzögerung aus; in Qualifikation aus.
+  Test: `test/radar-test.js`.
 - Schaden: nur über `PitRepairLeft` / `PitOptRepairLeft` (Reparaturzeiten), Motor-Warnungen, Reifenverschleiß.
 - Overlays werden ausgeblendet, wenn der Motor aus ist (RPM ≤ 300 oder EngineWarnings 0x08), mit 1,5 s Verzögerung.
 - Statische Dateien: `no-store`, außer `flags/` und `assets/` (sonst laden Flaggen nicht, da 30×/s neu gerendert wird).

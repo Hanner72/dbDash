@@ -55,6 +55,8 @@ const DEFAULT_BINDINGS = {
   toggleEdit: { key: 'Alt+Shift+E', joy: null },
 };
 // Spalten der Standings, die sich ein-/ausschalten lassen
+// Radar-Reichweite: Lücke Stoßstange zu Stoßstange in Metern
+const RADAR_RANGES = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 30, 40, 60, 80];
 const STANDINGS_COLS = { gain: true, start: false, flag: true, pit: true, number: true, license: false, iRating: true, irDelta: true, incidents: true, last: true, best: true, gap: true };
 // Zusatz-Optionen je Overlay für das Einstellungsfenster
 const check = (path, label) => ({ path, label, type: 'check' });
@@ -68,8 +70,8 @@ const OVERLAY_OPTIONS = {
     check('dashModules.shift', 'Schaltblitze'),
     ...DASH_PAGE_LIST.map(([k, label]) => ({ path: 'dashPages.' + k, label, type: 'select', options: SIDES }))] },
   radar: { title: 'Optionen', items: [
-    check('radarAutoHide', 'Nur zeigen, wenn Autos in der Nähe'),
-    { path: 'radarRange', label: 'Reichweite', type: 'select', options: [[20, '20 m'], [30, '30 m'], [40, '40 m'], [60, '60 m'], [80, '80 m']] }] },
+    check('radarAutoHide', 'Nur zeigen, wenn ein Auto innerhalb der Reichweite ist'),
+    { path: 'radarRange', label: 'Reichweite (Lücke zum anderen Auto)', type: 'select', options: RADAR_RANGES.map((m) => [m, m + ' m']) }] },
 };
 
 const DEFAULTS = {
@@ -256,7 +258,7 @@ function handleCmd(m) {
         cfg.dashPages[parts[1]] = m.value;
       } else if (m.path === 'radarAutoHide') {
         cfg.radarAutoHide = !!m.value;
-      } else if (m.path === 'radarRange' && [20, 30, 40, 60, 80].includes(Number(m.value))) {
+      } else if (m.path === 'radarRange' && RADAR_RANGES.includes(Number(m.value))) {
         cfg.radarRange = Number(m.value);
       } else if (['demo', 'units', 'editMode', 'visible', 'relativeRows', 'standingsRows', 'hideEngineOff'].includes(parts[0]) && parts.length === 1) {
         cfg[parts[0]] = m.value;
