@@ -206,6 +206,7 @@ function tick() {
     raw = sdk.read();
     source = 'iracing';
   }
+  if (raw && raw.session && diag) recordDiag(raw);
   if (raw && raw.session) {
     try {
       if (fuelSource !== source) { fuelTracker.reset(); raceTracker.reset(); fuelSource = source; }
@@ -218,6 +219,49 @@ function tick() {
     state = { connected: false, source };
   }
   broadcastState();
+}
+
+// ---------------- Diagnose-Mitschnitt ----------------
+// Zeichnet 60 s lang 2x pro Sekunde rohe iRacing-Werte + berechnete Anzeige auf (für Fehlersuche ohne eigenes iRacing).
+const DIAG_SECONDS = 60;
+let diag = null;       // { start, last, samples, session }
+let diagResult = null; // { file } oder { error }
+const DIAG_VARS = /^(Lap|Session|Player|IsOnTrack|OnPitRoad|CarIdx)/;
+function diagStatus() {
+  return diag ? { running: true, left: Math.max(0, Math.ceil(DIAG_SECONDS - (Date.now() - diag.start) / 1000)) } : { running: false, ...(diagResult || {}) };
+}
+function startDiag() {
+  if (diag) return;
+  if (!state.connected) { diagResult = { error: 'nodata' }; broadcast(configMsg()); return; }
+  diag = { start: Date.now(), last: 0, samples: [], session: null };
+  diagResult = null;
+  broadcast(configMsg());
+}
+function recordDiag(raw) {
+  const now = Date.now();
+  if (!diag.session) diag.session = raw.session;
+  if (now - diag.last >= 500) {
+    diag.last = now;
+    const pick = {};
+    for (const k in raw.data) if (DIAG_VARS.test(k)) pick[k] = raw.data[k];
+    const d = state.dash || {};
+    diag.samples.push({
+      t: (now - diag.start) / 1000, raw: pick,
+      shown: { predicted: d.predicted, delta: d.delta, lastLap: d.lastLap, bestLap: d.bestLap, gaps: d.gaps,
+        relative: (state.relative || []).map((c) => ({ idx: c.idx, name: c.name, gap: c.gap })) },
+    });
+    if (diag.samples.length % 10 === 0) broadcast(configMsg()); // Restzeit im Einstellungsfenster
+  }
+  if (now - diag.start >= DIAG_SECONDS * 1000) {
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const file = path.join(app.getPath('documents'), `dbDash-Diagnose-${stamp}.json`);
+    try {
+      fs.writeFileSync(file, JSON.stringify({ version: VERSION, source: state.source, session: diag.session, samples: diag.samples }));
+      diagResult = { file };
+    } catch (e) { diagResult = { error: e.message }; }
+    diag = null;
+    broadcast(configMsg());
+  }
 }
 
 // Jedes Overlay bekommt nur die Daten, die es anzeigt, und nur so oft, wie es sie braucht.
@@ -342,6 +386,7 @@ function configMsg() {
     joystick: { available: joysticks ? joysticks.available : false, devices: joysticks ? joysticks.devices() : [] },
     status: { version: VERSION, sdkAvailable: sdk.available, platform: process.platform, port: cfg.port },
     update: { ...updater.info, enabled: UPDATES_ENABLED },
+    diag: diagStatus(),
   };
 }
 function pushConfig() { broadcast(configMsg()); saveConfig(); applyWindows(); updateTray(); }
@@ -406,6 +451,12 @@ function handleCmd(m) {
       for (const o of OVERLAYS) Object.assign(cfg.overlays[o.id], { x: o.x, y: o.y });
       for (const o of OVERLAYS) { const w = windows[o.id]; if (w && !w.isDestroyed()) w.setPosition(o.x, o.y); }
       pushConfig();
+      break;
+    case 'diagStart':
+      startDiag();
+      break;
+    case 'diagOpen':
+      if (diagResult && diagResult.file) shell.showItemInFolder(diagResult.file);
       break;
     case 'updateCheck':
       if (UPDATES_ENABLED) updater.check();

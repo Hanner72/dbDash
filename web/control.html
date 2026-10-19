@@ -123,6 +123,7 @@
       <select data-k="relativeRows" data-num><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
     <div class="row"><div class="lbl" data-i18n="ctl.stRows">Standings: max. Zeilen</div>
       <select data-k="standingsRows" data-num><option>8</option><option>10</option><option>12</option><option>14</option><option>18</option><option>22</option><option>30</option></select></div>
+    <div class="row"><div class="lbl"><span data-i18n="ctl.diag">Diagnose-Mitschnitt</span><small data-i18n="ctl.diagSub"></small><small id="diagState"></small></div><button class="small" id="diagBtn" data-i18n="ctl.diagStart">Aufzeichnen</button></div>
     <div class="row"><div class="lbl"><span data-i18n="ctl.reset">Positionen zurücksetzen</span><small data-i18n="ctl.resetSub">Falls ein Overlay außerhalb des Bildschirms gelandet ist</small></div><button class="small" id="reset" data-i18n="ctl.resetBtn">Zurücksetzen</button></div>
   </section>
 
@@ -277,6 +278,7 @@
     renderBinds();
     renderApi();
     renderUpdate();
+    renderDiag();
     $('#ver').textContent = 'v' + status.version;
     $('#demoBanner').hidden = !cfg.demo;
     $('#sdkBanner').hidden = status.sdkAvailable || cfg.demo;
@@ -368,6 +370,18 @@
     } else b.hidden = true;
   }
   $('#updCheck').onclick = () => send({ cmd: 'updateCheck' });
+
+  // Diagnose-Mitschnitt
+  function renderDiag() {
+    const g = cfgMsg.diag || {};
+    const b = $('#diagBtn');
+    b.disabled = !!g.running;
+    $('#diagState').innerHTML = g.running ? `<b style="color:var(--accent)">${esc(t('ctl.diagRunning', { s: g.left }))}</b>`
+      : g.file ? `${esc(t('ctl.diagDone', { file: g.file }))} <a href="#" id="diagOpen">${esc(t('ctl.diagOpen'))}</a>`
+      : g.error === 'nodata' ? esc(t('ctl.diagNoData')) : g.error ? esc(g.error) : '';
+    const o = $('#diagOpen'); if (o) o.onclick = (e) => { e.preventDefault(); send({ cmd: 'diagOpen' }); };
+  }
+  $('#diagBtn').onclick = () => send({ cmd: 'diagStart' });
 
   function buildOverlays() {
     built = true;

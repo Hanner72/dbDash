@@ -1,13 +1,13 @@
 {
   "name": "dbdash",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "dbDash (dannerbam Dash) – Dashboard für Simracer mit kostenlosen iRacing-Overlays: Relative, Standings, Inputs, Delta, Dashboard, Radar",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "build": "node build/build.js",
     "icons": "electron build/icons.js",
-    "test": "node test/irsdk-test.js && node test/joystick-test.js && node test/gaps-test.js && node test/incidents-test.js && node test/radar-test.js && node test/standings-cols-test.js && node test/i18n-test.js",
+    "test": "node test/irsdk-test.js && node test/joystick-test.js && node test/gaps-test.js && node test/incidents-test.js && node test/radar-test.js && node test/standings-cols-test.js && node test/i18n-test.js && node test/times-test.js",
     "video": "electron video/record.js",
     "screenshots": "electron video/record.js --docs"
   },

@@ -90,7 +90,7 @@ function buildState(d, s, opts) {
   let relative = [];
   const relDash = { all: [], cls: [] };
   if (meCar && meCar.inWorld) {
-    const estLap = meCar.classEst || meCar.best || meCar.last || 90;
+    const estLap = meCar.best || meCar.last || meCar.classEst || 90; // echte Rundenzeit vor iRacings Schätzung
     for (const c of cars) {
       if (!c.inWorld) continue;
       let gap;
@@ -191,8 +191,10 @@ function buildState(d, s, opts) {
     clutch: d.Clutch != null ? 1 - d.Clutch : 0,
     steer: d.SteeringWheelAngle || 0,
     steerMax: d.SteeringWheelAngleMax || 7.85,
-    delta: d.LapDeltaToBestLap || 0,
-    deltaOk: !!d.LapDeltaToBestLap_OK,
+    // Delta zur Bestzeit dieser Session – nicht LapDeltaToBestLap: das vergleicht mit der ewigen Bestzeit aus den
+    // iRacing-Lapfiles, während LapBestLapTime die Session-Bestzeit ist (beides gemischt ergibt falsche Werte)
+    delta: d.LapDeltaToSessionBestLap_OK ? d.LapDeltaToSessionBestLap || 0 : 0,
+    deltaOk: !!d.LapDeltaToSessionBestLap_OK && d.LapBestLapTime > 0,
     lastLap: d.LapLastLapTime > 0 ? d.LapLastLapTime : 0,
     bestLap: d.LapBestLapTime > 0 ? d.LapBestLapTime : 0,
     lap: d.Lap || 0,
@@ -243,12 +245,13 @@ function buildState(d, s, opts) {
 }
 
 // Abstand zwischen zwei Autos: im Rennen Zeitabstand auf der Strecke (bzw. Runden), sonst Differenz der Bestzeiten
-function gapBetween(front, back, isRace) {
+// refLap: Rundenzeit, mit der der Streckenanteil in Sekunden umgerechnet wird (deine echte Rundenzeit – wie im Relative)
+function gapBetween(front, back, isRace, refLap) {
   if (!front || !back) return null;
   if (!isRace) return front.best && back.best ? { s: back.best - front.best } : null;
   const dist = front.dist != null && back.dist != null ? front.dist - back.dist : (front.lap + front.pct) - (back.lap + back.pct);
   if (dist >= 1) return { laps: Math.floor(dist) };
-  const lapT = back.best || back.last || back.classEst || 90;
+  const lapT = refLap || back.best || back.last || back.classEst || 90;
   if (dist <= 0) return { s: Math.max(0, back.f2 - front.f2) }; // Positionen noch nicht aktualisiert
   let frac = dist;
   if (front.est > 0 && back.est > 0 && front.classEst > 0 && back.classEst > 0) {
@@ -270,7 +273,8 @@ function neighbours(list, me, isRace) {
     lastDiff: c.last && me.last ? c.last - me.last : null, // >0: der andere war in der letzten Runde langsamer
   };
   const a = list[i - 1], b = list[i + 1];
-  return { ahead: info(a, gapBetween(a, me, isRace)), behind: info(b, gapBetween(me, b, isRace)), pos: me[posKey], size: list.length };
+  const refLap = me.best || me.last || me.classEst || 0;
+  return { ahead: info(a, gapBetween(a, me, isRace, refLap)), behind: info(b, gapBetween(me, b, isRace, refLap)), pos: me[posKey], size: list.length };
 }
 
 // n Autos vor und hinter dem Spieler (Liste ist nach Abstand sortiert)
@@ -404,11 +408,13 @@ function buildDash(d, s, opts, { meCar, isRace, classList }) {
 
   const incLimit = parseInt(wi.WeekendOptions && wi.WeekendOptions.IncidentLimit, 10);
 
-  // Wahrscheinliche Rundenzeit: Bestzeit + aktuelles Delta (sonst Schätzung von iRacing)
+  // Voraussichtliche Rundenzeit = Referenzrunde + Delta zu GENAU dieser Referenzrunde:
+  // 1. Session-Bestzeit + Delta zur Session-Bestzeit, 2. letzte Runde + Delta zur letzten Runde.
+  // Kein Ersatz durch iRacings geschätzte Rundenzeit (DriverCarEstLapTime) – die liegt oft weit daneben.
   let predicted = null;
-  if (d.LapDeltaToBestLap_OK && d.LapBestLapTime > 0) predicted = d.LapBestLapTime + d.LapDeltaToBestLap;
-  else if (d.LapDeltaToOptimalLap_OK && d.LapOptimalLapTime > 0) predicted = d.LapOptimalLapTime + d.LapDeltaToOptimalLap;
-  else if (num(di.DriverCarEstLapTime)) predicted = di.DriverCarEstLapTime;
+  if (d.LapBestLapTime > 0 && d.LapDeltaToSessionBestLap_OK) predicted = d.LapBestLapTime + d.LapDeltaToSessionBestLap;
+  else if (d.LapLastLapTime > 0 && d.LapDeltaToSessionLastlLap_OK) predicted = d.LapLastLapTime + d.LapDeltaToSessionLastlLap; // „Lastl“ heißt bei iRacing wirklich so
+  if (predicted != null && !(predicted > 0)) predicted = null;
 
   // Schaden: iRacing meldet ihn als Reparaturzeit (Pflicht / optional) plus Motor-Warnungen
   const ew = d.EngineWarnings || 0;
@@ -442,8 +448,8 @@ function buildDash(d, s, opts, { meCar, isRace, classList }) {
     lapCurrent: num(d.LapCurrentLapTime),
     lastLap: d.LapLastLapTime > 0 ? d.LapLastLapTime : null,
     bestLap: d.LapBestLapTime > 0 ? d.LapBestLapTime : null,
-    delta: d.LapDeltaToBestLap_OK ? d.LapDeltaToBestLap : null,
-    deltaSession: d.LapDeltaToSessionBestLap_OK ? d.LapDeltaToSessionBestLap : null,
+    delta: d.LapDeltaToSessionBestLap_OK && d.LapBestLapTime > 0 ? d.LapDeltaToSessionBestLap : null, // zur Session-Bestzeit
+    deltaAllTime: d.LapDeltaToBestLap_OK ? d.LapDeltaToBestLap : null, // zur ewigen Bestzeit (Lapfile) – nur zur Info
     position: meCar ? meCar.pos : 0,
     classPosition: meCar ? meCar.classPos : 0,
     classSize: myClass ? myClass.cars.length : 0,

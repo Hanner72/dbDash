@@ -1,17 +1,14 @@
 {
   "_name": "Deutsch",
-
   "common.waiting": "Warte auf iRacing …",
   "common.move": "verschieben",
   "common.lapsLeft": "{n} Rnd übrig",
-
   "ov.relative": "Relative",
   "ov.standings": "Standings",
   "ov.inputs": "Inputs",
   "ov.delta": "Delta",
   "ov.dash": "Dashboard",
   "ov.radar": "Radar (Ghost)",
-
   "lap.last": "Letzte",
   "lap.best": "Beste",
   "lap.pred": "Prognose",
@@ -20,7 +17,6 @@
   "rel.pos": "Pos",
   "rel.lap": "Runde",
   "delta.title": "Delta zur Bestzeit",
-
   "col.gain": "Plätze +/−",
   "col.start": "Startplatz",
   "col.number": "Startnummer",
@@ -56,7 +52,6 @@
   "st.box": "BOX",
   "st.incEst": "geschätzt: gezählte Ausritte (iRacing zeigt fremde Incidents erst nach dem Rennen)",
   "tyre.compound": "Mischung {n}",
-
   "page.tyres": "Reifen",
   "page.engine": "Motor",
   "page.strategy": "Sprit-Strategie",
@@ -66,7 +61,6 @@
   "page.gapClass": "Abstände – Klasse",
   "page.laps": "Rundenzeiten",
   "page.damage": "Schaden",
-
   "dash.water": "Wasser",
   "dash.oil": "Öl",
   "dash.oilPress": "Öldruck",
@@ -101,7 +95,6 @@
   "dash.noneBehind": "Niemand hinter dir",
   "dash.perLapTrend": "/ Rnd",
   "dash.noData": "Keine Daten",
-
   "dmg.engine": "MOTOR",
   "dmg.required": "Pflicht-Reparatur",
   "dmg.optional": "Optionale Reparatur",
@@ -112,13 +105,11 @@
   "dmg.none": "KEIN SCHADEN",
   "dmg.noData": "KEINE DATEN",
   "dmg.repairFlag": "Reparaturflagge",
-
   "warn.water": "Wassertemperatur",
   "warn.fuelPress": "Benzindruck",
   "warn.oilPress": "Öldruck",
   "warn.oilTemp": "Öltemperatur",
   "warn.stalled": "Motor abgewürgt",
-
   "flag.black": "SCHWARZE FLAGGE",
   "flag.dq": "DISQUALIFIZIERT",
   "flag.repair": "REPARATUR",
@@ -130,7 +121,6 @@
   "flag.blue": "BLAUE FLAGGE",
   "flag.white": "LETZTE RUNDE",
   "flag.green": "GRÜN",
-
   "side.left": "Links",
   "side.right": "Rechts",
   "side.off": "Aus",
@@ -152,7 +142,6 @@
   "joy.hat34": "Hat rechts",
   "joy.hat35": "Hat runter",
   "joy.hat36": "Hat links",
-
   "tray.open": "Einstellungen öffnen",
   "tray.visible": "Overlays anzeigen",
   "tray.edit": "Overlays verschieben",
@@ -160,7 +149,6 @@
   "tray.quit": "Beenden",
   "tray.update": "Update auf {v} installieren",
   "err.port": "Port {port} ist bereits belegt. Läuft dbDash schon?",
-
   "upd.balloonTitle": "dbDash-Update verfügbar",
   "upd.balloon": "Version {v} ist da – im Einstellungsfenster mit einem Klick installieren.",
   "upd.err.check": "Update-Prüfung fehlgeschlagen",
@@ -169,7 +157,6 @@
   "upd.d.download": "Download fehlgeschlagen ({s})",
   "upd.d.incomplete": "Download unvollständig",
   "upd.d.noexe": "dbDash.exe nicht im Update gefunden",
-
   "ctl.connecting": "Verbinde …",
   "ctl.disconnected": "Getrennt",
   "ctl.connected": "iRacing verbunden",
@@ -246,5 +233,12 @@
   "ctl.updConfirm": "dbDash jetzt auf Version {v} aktualisieren und neu starten?",
   "ctl.updLoading": "<b>Update {v} wird geladen …</b> {p} %",
   "ctl.updInstalling": "<b>Update {v} wird installiert</b> – dbDash startet gleich neu …",
-  "ctl.updRetry": "Erneut prüfen"
+  "ctl.updRetry": "Erneut prüfen",
+  "ctl.diag": "Diagnose-Mitschnitt",
+  "ctl.diagSub": "Falls Zeiten oder Abstände nicht stimmen: zeichnet 60 Sekunden iRacing-Daten auf (enthält die Fahrernamen der Session). Die Datei kannst du dem Entwickler schicken.",
+  "ctl.diagStart": "Aufzeichnen",
+  "ctl.diagRunning": "Aufzeichnung läuft … noch {s} s",
+  "ctl.diagDone": "Gespeichert: {file}",
+  "ctl.diagOpen": "Ordner öffnen",
+  "ctl.diagNoData": "Keine Daten – bitte während einer Session in iRacing aufzeichnen."
 }

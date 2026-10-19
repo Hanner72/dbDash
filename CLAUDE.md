@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar, Standings-Spalten (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar, Standings-Spalten, Zeiten (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
   (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
@@ -59,6 +59,12 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
   ließen sich nicht löschen (ENOTEMPTY/EBUSY, Fehler in 2.3.0/2.4.0). Deshalb `original-fs`, je Versuch eigener Ordner
   `%TEMP%dbdash-update-<zeit>`, alte Ordner nur nebenbei aufräumen. Das Skript wartet nur auf dbDash aus dem eigenen
   Programmordner (max. 60 s). Test: zwei Updates hintereinander (siehe Versionsverlauf 2.4.1).
+- **Zeiten/Deltas**: `LapDeltaToBestLap` bezieht sich auf die EWIGE Bestzeit (iRacing-Lapfiles), `LapBestLapTime` ist die
+  Session-Bestzeit → nie mischen. Delta + Prognose: `LapBestLapTime + LapDeltaToSessionBestLap`, sonst
+  `LapLastLapTime + LapDeltaToSessionLastlLap` (Schreibweise „Lastl“ ist von iRacing), sonst keine Prognose (nicht
+  `DriverCarEstLapTime`). Relative/Abstände: Streckenanteil (CarIdxEstTime / CarClassEstLapTime) × EIGENE Rundenzeit,
+  beide gleich gerechnet. Test: `test/times-test.js`. Fehlersuche mit echten Daten: Einstellungsfenster →
+  „Diagnose-Mitschnitt“ (60 s, Datei in Dokumente, `recordDiag` in main.js).
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
   Reichweite (`radarRange`, 1–80 m) = Lücke Stoßstange zu Stoßstange (feste Länge 4,7 m, iRacing liefert keine);
   Radar erscheint nur bei Lücke ≤ Reichweite oder Spotter-Meldung, ohne Verzögerung aus; in Qualifikation aus.
@@ -115,6 +121,7 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
+2.4.2 – Prognose/Delta mit Session-Referenz statt ewiger Bestzeit, Abstände = Relative mit eigener Rundenzeit, Diagnose-Mitschnitt.
 2.4.1 – Updater-Fehler behoben (zweites Update scheiterte an app.asar-Resten), Build ohne Temp-Verschieben (tmpdir: false).
 2.4.0 – Zweisprachig (Deutsch / Englisch, automatisch nach Windows-Sprache, live umschaltbar), README.en.md.
 2.3.0 – Standings: Spalten Automarke und Reifen, Spalten frei sortierbar; automatische Updates über GitHub.
