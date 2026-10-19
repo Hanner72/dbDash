@@ -105,6 +105,7 @@
 <main>
   <div class="banner upd" id="updBanner" hidden></div>
   <div class="banner" id="demoBanner" hidden data-i18n="ctl.demoBanner">Demo-Modus ist aktiv – die Overlays zeigen ein simuliertes Rennen. Für echte Daten aus iRacing unten ausschalten.</div>
+  <div class="banner" id="accBanner" hidden></div>
   <div class="banner err" id="sdkBanner" hidden data-i18n="ctl.sdkBanner">iRacing-Daten können auf diesem System nicht gelesen werden (nur unter Windows möglich). Der Demo-Modus funktioniert trotzdem.</div>
 
   <section>
@@ -198,14 +199,30 @@
     ws.onclose = () => { $('#status').className = 'pill'; $('#status').textContent = t('ctl.disconnected'); setTimeout(connect, 1000); };
   }
 
-  let lastStatus = '';
+  let lastStatus = '', accSetupDone = false;
+  const gameName = (id) => (Object.fromEntries(cfgMsg.games || []))[id] || id;
+  // ACC: Hinweis, solange die Broadcasting-Schnittstelle (für alle Gegner) nicht verbunden ist
+  function renderAcc(st) {
+    const b = $('#accBanner'), g = st.gameInfo;
+    if (!st.connected || st.source !== 'acc' || !g || g.broadcast === 'ok') { b.hidden = true; return; }
+    b.hidden = false;
+    const k = g.broadcast + accSetupDone;
+    if (b.dataset.k === k) return;
+    b.dataset.k = k;
+    if (accSetupDone) b.innerHTML = esc(t('ctl.accRestart'));
+    else if (g.broadcast === 'off') {
+      b.innerHTML = `${esc(t('ctl.accOff'))} <button class="small" id="accGo">${esc(t('ctl.accSetup'))}</button>`;
+      $('#accGo').onclick = () => { send({ cmd: 'accSetup' }); accSetupDone = true; b.dataset.k = ''; renderAcc(st); };
+    } else b.innerHTML = esc(t(g.broadcast === 'error' ? 'ctl.accError' : 'ctl.accConnecting'));
+  }
   function renderStatus(st) {
     let cls = 'pill', txt;
     if (cfg && cfg.demo) { cls += ' demo'; txt = t('ctl.demoMode'); }
-    else if (st.connected) { cls += ' ok'; txt = t('ctl.connected'); }
+    else if (st.connected) { cls += ' ok'; txt = t('ctl.connected', { game: gameName(st.source) }); }
     else txt = t('common.waiting');
     const k = cls + txt;
     if (k !== lastStatus) { lastStatus = k; $('#status').className = cls; $('#status').textContent = txt; }
+    renderAcc(st);
   }
 
   // ---------- Tasten & Lenkradknöpfe ----------

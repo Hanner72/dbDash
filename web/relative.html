@@ -60,7 +60,7 @@
         <div class="pos">${c.classPos || ''}</div>
         <div><span class="num" style="box-shadow: inset 0 -2px 0 ${c.classColor}">${PW.esc(c.number)}</span></div>
         <div class="name ellipsis">${PW.esc(c.name)}${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
-        <div><span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${PW.esc(c.sr ? Number(c.sr).toFixed(1) : '')}</span></div>
+        <div>${c.license ? `<span class="lic" style="background:${c.licColor}">${PW.esc(c.license)} ${PW.esc(c.sr ? Number(c.sr).toFixed(1) : '')}</span>` : ''}</div>
         <div class="ir">${PW.fmtIR(c.iRating)}</div>
         <div class="gap">${gap}</div>
       </div>`;

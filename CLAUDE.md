@@ -1,6 +1,6 @@
 # dbDash (dannerbam Dash) – Projektkontext für Claude Code
 
-dbDash – „dannerbam Dash“, ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose iRacing-Overlays
+dbDash – „dannerbam Dash“, ein von Johann Danner entwickeltes Dashboard für Simracer: kostenlose Overlays für iRacing, ACC & mehr
 (ähnlich RaceLabs) als Windows-Programm. Eigenes Design, eigener Name – keine Kopie
 von RaceLabs/Lovely. Autor: Johann Danner. Kommunikation mit dem Autor auf **Deutsch** (das Programm selbst ist zweisprachig, siehe „Sprachen“); er programmiert sonst
 hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electron-Fachjargon vorauszusetzen.
@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, Joystick, Abstände, Incidents, Radar, Standings-Spalten, Zeiten (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, ACC, Joystick, Abstände, Incidents, Radar, Standings-Spalten, Zeiten (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
   (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
@@ -30,6 +30,14 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
   Jede Seite bindet `common.css` + `common.js` ein und bekommt den Zustand per WebSocket: `PW.onState((st, cfg) => …)`.
   Dieselben Seiten laufen als transparente Overlay-Fenster und als OBS-Browserquelle.
   Overlays: `relative`, `standings`, `inputs`, `delta`, `dash` (Dashboard), `radar` (Ghost); Einstellungen: `control.html`.
+- **Mehrere Spiele**: `GAMES` in main.js (iRacing, ACC) – der Reihe nach gesucht, das zuletzt gefundene zuerst. Jedes Spiel
+  liefert `{data, session, caps}` im iRacing-Format (gleiche Variablennamen), damit state.js unverändert bleibt; `caps`
+  sagt, was fehlt (iRating, license, incidents, flags, tyres, damage) → Overlays blenden das aus.
+- `src/acc.js` – ACC: Shared Memory `Local\acpmf_physics|graphics|static` (Versätze laut Kunos-Doku, UTF-16-Texte) +
+  Broadcasting-UDP (Protokoll 4, Port/Passwort aus `Dokumente\Assetto Corsa Competizione\Config\broadcasting.json`,
+  UTF-16; „Einrichten“-Knopf setzt Port 9000, Sicherung `.bak`). Prognose = ACCs iEstimatedLapTime, Seitenwarnung aus
+  Weltkoordinaten (`SIDE_SIGN` ggf. drehen). Testhilfe `DBDASH_ACC_CONFIG=<broadcasting.json>`. Test: `test/acc-test.js`.
+  **Mit echtem ACC noch ungeprüft** – Rückmeldungen/Diagnose-Mitschnitte des Autors haben Vorrang.
 - `src/irsdk.js` – liest iRacing-Shared-Memory (`Local\IRSDKMemMapFileName`) über **koffi** + kernel32.
   Wichtig: Electron verbietet `koffi.view()` → Daten werden per `RtlMoveMemory` in eigene Buffer kopiert.
   Session-YAML wird vor dem Parsen bereinigt (`sanitizeYaml`: Namen mit Sonderzeichen quoten).
@@ -121,6 +129,7 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
+2.5.0 – Mehrere Spiele: ACC (Shared Memory + Broadcasting), Spalten je Spiel ausgeblendet, Untertitel „für iRacing, ACC & mehr“.
 2.4.2 – Prognose/Delta mit Session-Referenz statt ewiger Bestzeit, Abstände = Relative mit eigener Rundenzeit, Diagnose-Mitschnitt.
 2.4.1 – Updater-Fehler behoben (zweites Update scheiterte an app.asar-Resten), Build ohne Temp-Verschieben (tmpdir: false).
 2.4.0 – Zweisprachig (Deutsch / Englisch, automatisch nach Windows-Sprache, live umschaltbar), README.en.md.

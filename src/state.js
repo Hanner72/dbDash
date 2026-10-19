@@ -229,6 +229,8 @@ function buildState(d, s, opts) {
     dash,
     radar,
     source: opts.source,
+    // was das Spiel liefert (fehlt etwas, blenden die Overlays es aus); iRacing liefert alles
+    caps: { iRating: true, license: true, incidents: true, flags: true, tyres: true, damage: true, ...(opts.caps || {}) },
     session: {
       type: sessionType,
       isRace,

@@ -6,13 +6,13 @@
 
 [Deutsch](README.md) · **English**
 
-**Free overlays for iRacing – made by a sim racer for sim racers.**
+**Free overlays for iRacing, ACC & more – made by a sim racer for sim racers.**
 
 Relative · Standings · Dashboard · Radar · Inputs · Delta – easy on your FPS and also usable as OBS browser sources.
 
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-c6ff3d?style=flat-square)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-ffb347?style=flat-square)
-![iRacing](https://img.shields.io/badge/for-iRacing-3a3f48?style=flat-square)
+![Games](https://img.shields.io/badge/for-iRacing%20%7C%20ACC-3a3f48?style=flat-square)
 ![Price](https://img.shields.io/badge/price-free-3ddc84?style=flat-square)
 
 [**⬇ Download**](../../releases/latest) · [Features](#features) · [Installation](#installation) · [Usage](#usage) · [Stream Deck](#stream-deck--simhub) · [OBS](#obs--streaming)
@@ -31,7 +31,22 @@ Relative · Standings · Dashboard · Radar · Inputs · Delta – easy on your 
 - 🎛️ **Control it from your wheel** – switch dashboard pages with a wheel button, button box, key or Stream Deck.
 - 📺 **For streamers** – every overlay is also available as an OBS browser source.
 - 🌍 **German and English** – picks your Windows language automatically, switchable at any time.
-- 🧪 **Try it right away** – demo mode shows a simulated multi-class race, no iRacing needed.
+- 🎮 **Several games** – iRacing and Assetto Corsa Competizione, more to come; dbDash detects the running game itself.
+- 🧪 **Try it right away** – demo mode shows a simulated multi-class race, no game needed.
+
+## Supported games
+
+| Game | Status | Notes |
+| --- | --- | --- |
+| **iRacing** | complete | all features incl. iRating, license, SOF, incidents, damage |
+| **Assetto Corsa Competizione** | new – feedback welcome | no iRating, license, incidents or damage display (ACC doesn't provide them); tyres: core temperature and pressure |
+| AC, LMU, Automobilista 2, RaceRoom | planned | |
+
+**Setting up ACC:** for standings, relative and radar with all opponents, dbDash needs ACC's *broadcasting interface*.
+The first time you run ACC, the settings window shows a **“Set up”** button – it enters port 9000 in
+`Documents\Assetto Corsa Competizione\Config\broadcasting.json` (the old file is kept as `.bak`). Then restart ACC
+once. Without this interface dbDash only shows your own car.
+Turn **fullscreen off** in ACC (borderless window), otherwise Windows can't draw the overlays on top.
 
 ## Features
 
@@ -114,10 +129,11 @@ All overlays hide automatically while the engine is not running (can be turned o
 1. [**Download the latest version**](../../releases/latest) and unzip it
    (e.g. to `C:\Program Files\dbDash` or your desktop).
 2. Start **`dbDash.exe`**. On first start, **demo mode** runs a simulated race so you can see everything right away.
-3. For real data: turn **demo mode off** in the settings window and start iRacing.
+3. For real data: turn **demo mode off** in the settings window and start iRacing or ACC.
 
 > [!IMPORTANT]
-> In iRacing, set *Options → Graphics* to **Borderless Window**. In exclusive fullscreen, Windows can't show
+> Run the game in a **borderless window**: in iRacing set *Options → Graphics* to **Borderless Window**, in ACC turn
+> fullscreen off. In exclusive fullscreen, Windows can't show
 > windows on top of the game.
 
 > [!NOTE]
@@ -201,7 +217,7 @@ Sizes depend on the number of rows and columns – adjust if needed.
 
 ## Good to know
 
-dbDash only shows what iRacing provides through its official interface (iRacing SDK):
+dbDash only shows what the games provide through their official interfaces. For iRacing (iRacing SDK):
 
 - **Other drivers' incidents** are kept secret by iRacing during the session. dbDash therefore counts their off-tracks
   (1x each) and shows this estimate *in italics and dimmed*. Contacts (2x / 4x) are not included.
@@ -226,7 +242,7 @@ Requirement: **Node.js 22 or newer** (LTS from [nodejs.org](https://nodejs.org))
 | Command | What it does |
 | --- | --- |
 | `npm install` | downloads all dependencies (once, about 200 MB) |
-| `npm test` | checks the iRacing reader, wheel buttons, gaps, incidents, radar, standings columns and translations |
+| `npm test` | checks the iRacing and ACC readers, wheel buttons, gaps, times, incidents, radar, standings columns and translations |
 | `npm start` | runs dbDash straight from the source code |
 | `npm run build` | builds the finished program: `dist\dbDash\dbDash.exe` plus a ZIP to share |
 | `npm run screenshots` | regenerates the images on this page (`docs/img/`) |
@@ -234,7 +250,8 @@ Requirement: **Node.js 22 or newer** (LTS from [nodejs.org](https://nodejs.org))
 | `npm run icons` | generates the program icon and Stream Deck images from the SVG templates |
 
 **Under the hood:** Electron (Chromium + Node.js). Telemetry is read directly from the shared memory of the official
-iRacing SDK (`Local\IRSDKMemMapFileName`) via koffi and the Win32 API. Source in `src/`: `main.js` (windows, web server,
+iRacing SDK (`Local\IRSDKMemMapFileName`) or from ACC's shared memory (`acpmf_*`) and the ACC broadcasting interface (UDP), via
+koffi and the Win32 API. `acc.js` translates ACC into the same data format. Source in `src/`: `main.js` (windows, web server,
 languages), `irsdk.js` (SDK reader), `state.js` (calculations), `fuel.js` (fuel), `race.js` (grid, pit stops, incidents),
 `joystick.js` (wheel buttons), `updater.js` (updates via GitHub releases), `demo.js` (simulation).
 
@@ -253,4 +270,4 @@ Details: [`LICENSE`](LICENSE). Bundled third-party components (Electron, Chromiu
 [flag-icons](https://github.com/lipis/flag-icons)) keep their own licenses – see `DRITTANBIETER-LIZENZEN.txt` in the
 finished program.
 
-<sub>dbDash is an independent project and not affiliated with iRacing.com Motorsport Simulations or RaceLabs.</sub>
+<sub>dbDash is an independent project and not affiliated with iRacing.com Motorsport Simulations, Kunos Simulazioni or RaceLabs.</sub>

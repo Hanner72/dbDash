@@ -8,6 +8,7 @@ const os = require('os');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { IRSDK } = require('./irsdk');
+const { ACC, setupBroadcasting } = require('./acc');
 const { Demo } = require('./demo');
 const { buildState } = require('./state');
 const { FuelTracker } = require('./fuel');
@@ -174,6 +175,21 @@ function saveConfig() {
 
 // ---------------- Telemetrie ----------------
 const sdk = new IRSDK();
+// Unterstützte Spiele: werden der Reihe nach gesucht, das zuletzt gefundene zuerst
+const acc = new ACC();
+const GAMES = [
+  { id: 'iracing', name: 'iRacing', read: () => sdk.read() },
+  { id: 'acc', name: 'ACC', read: () => acc.read() },
+];
+let lastGame = 'iracing';
+function readGame() {
+  const order = [...GAMES].sort((a, b) => (b.id === lastGame) - (a.id === lastGame));
+  for (const g of order) {
+    const raw = g.read();
+    if (raw) { lastGame = g.id; return { raw, source: g.id }; }
+  }
+  return { raw: null, source: 'none' };
+}
 let demo = null;
 let state = { connected: false };
 const fuelTracker = new FuelTracker();
@@ -203,14 +219,14 @@ function tick() {
     raw = demo.read();
     source = 'demo';
   } else {
-    raw = sdk.read();
-    source = 'iracing';
+    ({ raw, source } = readGame());
   }
   if (raw && raw.session && diag) recordDiag(raw);
   if (raw && raw.session) {
     try {
       if (fuelSource !== source) { fuelTracker.reset(); raceTracker.reset(); fuelSource = source; }
-      state = buildState(raw.data, raw.session, { source, relativeRows: cfg.relativeRows, standingsRows: cfg.standingsRows, radarRange: cfg.radarRange, fuel: fuelTracker, race: raceTracker, flagMap });
+      state = buildState(raw.data, raw.session, { source, caps: raw.caps, relativeRows: cfg.relativeRows, standingsRows: cfg.standingsRows, radarRange: cfg.radarRange, fuel: fuelTracker, race: raceTracker, flagMap });
+      if (source === 'acc') state.gameInfo = acc.status();
     } catch (e) {
       console.error(e);
       state = { connected: false, error: String(e.message || e) };
@@ -246,7 +262,7 @@ function recordDiag(raw) {
     for (const k in raw.data) if (DIAG_VARS.test(k)) pick[k] = raw.data[k];
     const d = state.dash || {};
     diag.samples.push({
-      t: (now - diag.start) / 1000, raw: pick,
+      t: (now - diag.start) / 1000, raw: pick, ...(state.source === 'acc' && acc.raw ? { acc: acc.raw } : {}),
       shown: { predicted: d.predicted, delta: d.delta, lastLap: d.lastLap, bestLap: d.bestLap, gaps: d.gaps,
         relative: (state.relative || []).map((c) => ({ idx: c.idx, name: c.name, gap: c.gap })) },
     });
@@ -266,7 +282,7 @@ function recordDiag(raw) {
 
 // Jedes Overlay bekommt nur die Daten, die es anzeigt, und nur so oft, wie es sie braucht.
 // Weniger Daten und seltenere Updates = weniger Neuzeichnen = mehr FPS für iRacing.
-const BASE_KEYS = ['connected', 'engineOn', 'source', 'error'];
+const BASE_KEYS = ['connected', 'engineOn', 'source', 'caps', 'gameInfo', 'error'];
 const TOPICS = {
   relative: { hz: 10, keys: ['relative', 'player', 'session'] },
   standings: { hz: 4, keys: ['classes', 'session'] },
@@ -385,6 +401,7 @@ function configMsg() {
     learning: learning ? learning.action : null,
     joystick: { available: joysticks ? joysticks.available : false, devices: joysticks ? joysticks.devices() : [] },
     status: { version: VERSION, sdkAvailable: sdk.available, platform: process.platform, port: cfg.port },
+    games: GAMES.map(({ id, name }) => [id, name]),
     update: { ...updater.info, enabled: UPDATES_ENABLED },
     diag: diagStatus(),
   };
@@ -451,6 +468,9 @@ function handleCmd(m) {
       for (const o of OVERLAYS) Object.assign(cfg.overlays[o.id], { x: o.x, y: o.y });
       for (const o of OVERLAYS) { const w = windows[o.id]; if (w && !w.isDestroyed()) w.setPosition(o.x, o.y); }
       pushConfig();
+      break;
+    case 'accSetup':
+      try { setupBroadcasting(); acc.bc.lastRegister = 0; } catch (e) { console.error('ACC einrichten:', e.message); }
       break;
     case 'diagStart':
       startDiag();
@@ -737,7 +757,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('before-quit', () => { quitting = true; saveConfigNow(); });
-app.on('will-quit', () => { globalShortcut.unregisterAll(); try { sdk.close(); } catch { } });
+app.on('will-quit', () => { globalShortcut.unregisterAll(); try { sdk.close(); } catch { } try { acc.close(); } catch { } });
 app.on('window-all-closed', (e) => { /* im Tray weiterlaufen */ });
 
 function saveConfigNow() {

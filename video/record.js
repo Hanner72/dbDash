@@ -185,7 +185,7 @@ function writeTexts() {
   }
   fs.writeFileSync(path.join(OUT, 'sprechtext.md'), speech);
   fs.writeFileSync(path.join(OUT, 'youtube-beschreibung.txt'),
-`dbDash – kostenlose Overlays für iRacing (dannerbam Dash)
+`dbDash – kostenlose Overlays für iRacing, ACC & mehr (dannerbam Dash)
 
 Relative, Standings, Inputs, Delta, ein großes Dashboard mit umschaltbaren Seiten und ein Radar – kostenlos,
 schonend für deine FPS und auch als OBS-Browserquelle nutzbar.

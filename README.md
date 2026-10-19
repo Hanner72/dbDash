@@ -6,13 +6,13 @@
 
 **Deutsch** · [English](README.en.md)
 
-**Kostenlose Overlays für iRacing – entwickelt von einem Simracer für Simracer.**
+**Kostenlose Overlays für iRacing, ACC & mehr – entwickelt von einem Simracer für Simracer.**
 
 Relative · Standings · Dashboard · Radar · Inputs · Delta – schonend für deine FPS und auch als OBS-Browserquelle.
 
 [![Lizenz: CC BY-NC-ND 4.0](https://img.shields.io/badge/Lizenz-CC%20BY--NC--ND%204.0-c6ff3d?style=flat-square)](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.de)
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-ffb347?style=flat-square)
-![iRacing](https://img.shields.io/badge/f%C3%BCr-iRacing-3a3f48?style=flat-square)
+![Spiele](https://img.shields.io/badge/f%C3%BCr-iRacing%20%7C%20ACC-3a3f48?style=flat-square)
 ![Preis](https://img.shields.io/badge/Preis-kostenlos-3ddc84?style=flat-square)
 
 [**⬇ Download**](../../releases/latest) · [Funktionen](#funktionen) · [Installation](#installation) · [Bedienung](#bedienung) · [Stream Deck](#stream-deck--simhub) · [OBS](#obs--streaming)
@@ -32,7 +32,22 @@ Relative · Standings · Dashboard · Radar · Inputs · Delta – schonend für
 - 🎛️ **Bedienung vom Lenkrad aus** – Dashboard-Seiten per Lenkradknopf, Button-Box, Taste oder Stream Deck umschalten.
 - 📺 **Für Streamer** – jedes Overlay gibt es auch als OBS-Browserquelle.
 - 🌍 **Deutsch und Englisch** – richtet sich automatisch nach der Windows-Sprache, jederzeit umschaltbar.
-- 🧪 **Sofort ausprobieren** – der Demo-Modus zeigt ein simuliertes Mehrklassen-Rennen, ganz ohne iRacing.
+- 🎮 **Mehrere Spiele** – iRacing und Assetto Corsa Competizione, weitere folgen; dbDash erkennt das laufende Spiel selbst.
+- 🧪 **Sofort ausprobieren** – der Demo-Modus zeigt ein simuliertes Mehrklassen-Rennen, ganz ohne Spiel.
+
+## Unterstützte Spiele
+
+| Spiel | Stand | Hinweise |
+| --- | --- | --- |
+| **iRacing** | vollständig | alle Funktionen, inkl. iRating, Lizenz, SOF, Incidents, Schaden |
+| **Assetto Corsa Competizione** | neu – Rückmeldungen willkommen | ohne iRating, Lizenz, Incidents und Schadensanzeige (liefert ACC nicht); Reifen: Kerntemperatur und Druck |
+| AC, LMU, Automobilista 2, RaceRoom | geplant | |
+
+**ACC einrichten:** Für Standings, Relative und Radar mit allen Gegnern braucht dbDash die *Broadcasting-Schnittstelle*
+von ACC. Beim ersten Start mit ACC erscheint im Einstellungsfenster der Knopf **„Einrichten“** – er trägt in
+`Dokumente\Assetto Corsa Competizione\Config\broadcasting.json` den Port 9000 ein (die alte Datei wird als `.bak`
+gesichert). Danach ACC einmal neu starten. Ohne diese Schnittstelle zeigt dbDash nur dein eigenes Auto.
+In ACC das **Vollbild ausschalten** (Fenster ohne Rahmen), sonst kann Windows die Overlays nicht darüber zeichnen.
 
 ## Funktionen
 
@@ -116,10 +131,11 @@ Alle Overlays blenden sich automatisch aus, solange der Motor nicht läuft (absc
    (z. B. nach `C:\Programme\dbDash` oder auf den Desktop).
 2. **`dbDash.exe`** starten. Beim ersten Start läuft der **Demo-Modus** mit einem simulierten Rennen, damit du alles
    sofort siehst.
-3. Für echte Daten: im Einstellungsfenster **Demo-Modus ausschalten** und iRacing starten.
+3. Für echte Daten: im Einstellungsfenster **Demo-Modus ausschalten** und iRacing oder ACC starten.
 
 > [!IMPORTANT]
-> iRacing unter *Options → Graphics* auf **Borderless Window** stellen. Im exklusiven Vollbild kann Windows keine
+> Das Spiel im **randlosen Fenster** laufen lassen: iRacing unter *Options → Graphics* auf **Borderless Window**,
+> in ACC das Vollbild ausschalten. Im exklusiven Vollbild kann Windows keine
 > Fenster über dem Spiel anzeigen.
 
 > [!NOTE]
@@ -204,7 +220,7 @@ Die Größen hängen von Zeilen- und Spaltenzahl ab – bei Bedarf anpassen.
 
 ## Gut zu wissen
 
-dbDash zeigt nur, was iRacing über seine offizielle Schnittstelle (iRacing SDK) liefert:
+dbDash zeigt nur, was die Spiele über ihre offiziellen Schnittstellen liefern. Bei iRacing (iRacing SDK):
 
 - **Incidents der Gegner** hält iRacing während der Session geheim. dbDash zählt deshalb ihre Ausritte neben die Strecke
   (je 1x) und zeigt diese Schätzung *kursiv und abgeblendet*. Kontakte (2x / 4x) sind darin nicht enthalten.
@@ -231,7 +247,7 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 | Befehl | Was passiert |
 | --- | --- |
 | `npm install` | lädt alle Bausteine (einmalig, ca. 200 MB) |
-| `npm test` | prüft iRacing-Leser, Lenkradknöpfe, Abstände, Incidents, Radar, Standings-Spalten und Übersetzungen |
+| `npm test` | prüft iRacing- und ACC-Leser, Lenkradknöpfe, Abstände, Zeiten, Incidents, Radar, Standings-Spalten und Übersetzungen |
 | `npm start` | startet dbDash direkt aus dem Quellcode |
 | `npm run build` | baut das fertige Programm: `dist\dbDash\dbDash.exe` plus ZIP zum Weitergeben |
 | `npm run screenshots` | erzeugt die Bilder dieser Seite neu (`docs/img/`) |
@@ -239,7 +255,8 @@ Voraussetzung: **Node.js 22 oder neuer** (LTS von [nodejs.org](https://nodejs.or
 | `npm run icons` | erzeugt Programmsymbol und Stream-Deck-Grafiken aus den SVG-Vorlagen |
 
 **Technik:** Electron (Chromium + Node.js). Die Telemetrie kommt direkt aus dem Shared Memory des offiziellen iRacing-SDK
-(`Local\IRSDKMemMapFileName`) über koffi und die Win32-API. Quellcode in `src/`: `main.js` (Fenster, Webserver, Sprachen),
+(`Local\IRSDKMemMapFileName`) bzw. aus ACCs Shared Memory (`acpmf_*`) und der ACC-Broadcasting-Schnittstelle (UDP),
+über koffi und die Win32-API. `acc.js` übersetzt ACC in dasselbe Datenformat. Quellcode in `src/`: `main.js` (Fenster, Webserver, Sprachen),
 `irsdk.js` (SDK-Leser), `state.js` (Berechnungen), `fuel.js` (Sprit), `race.js` (Startplätze, Boxenstopps, Incidents),
 `joystick.js` (Lenkradknöpfe), `updater.js` (Updates über GitHub-Releases), `demo.js` (Simulation).
 
@@ -258,4 +275,4 @@ Details: [`LICENSE`](LICENSE). Mitgelieferte Fremdkomponenten (Electron, Chromiu
 [flag-icons](https://github.com/lipis/flag-icons)) stehen unter ihren eigenen Lizenzen – siehe `DRITTANBIETER-LIZENZEN.txt`
 im fertigen Programm.
 
-<sub>dbDash ist ein unabhängiges Projekt und nicht mit iRacing.com Motorsport Simulations oder RaceLabs verbunden.</sub>
+<sub>dbDash ist ein unabhängiges Projekt und nicht mit iRacing.com Motorsport Simulations, Kunos Simulazioni oder RaceLabs verbunden.</sub>
