@@ -57,8 +57,8 @@
   "page.strategy": "Sprit-Strategie",
   "page.relAll": "Relative – Gesamt",
   "page.relClass": "Relative – Klasse",
-  "page.gapAll": "Abstände – Gesamt",
-  "page.gapClass": "Abstände – Klasse",
+  "page.gapAll": "Battle – Gesamt",
+  "page.gapClass": "Battle – Klasse",
   "page.laps": "Rundenzeiten",
   "page.damage": "Schaden",
   "dash.water": "Wasser",
@@ -93,7 +93,6 @@
   "dash.behind": "HINTER DIR",
   "dash.noneAhead": "Niemand vor dir – du führst!",
   "dash.noneBehind": "Niemand hinter dir",
-  "dash.perLapTrend": "/ Rnd",
   "dash.noData": "Keine Daten",
   "dmg.engine": "MOTOR",
   "dmg.required": "Pflicht-Reparatur",
@@ -245,5 +244,6 @@
   "ctl.accSetup": "Einrichten",
   "ctl.accRestart": "Eingerichtet – bitte ACC einmal neu starten, damit es wirkt.",
   "ctl.accConnecting": "ACC: verbinde mit der Broadcasting-Schnittstelle … (nur während einer Session)",
-  "ctl.accError": "ACC lehnt die Verbindung ab – stimmt das Passwort in broadcasting.json?"
+  "ctl.accError": "ACC lehnt die Verbindung ab – stimmt das Passwort in broadcasting.json?",
+  "dash.battleDelta": "Δ Rnd"
 }

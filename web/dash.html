@@ -175,6 +175,7 @@
   .gp .who .pp { flex: none; }
   .gp .gv { grid-row: 3 / 5; grid-column: 2; align-self: center; text-align: right; font-size: 46px; font-weight: 800; line-height: 1; }
   .gp .gv small { display: block; font-size: 14px; font-weight: 700; margin-top: 4px; }
+  .gp .gv small i { font-style: normal; }
   .gp .sub { grid-column: 1; font-size: 14px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
   .gp .sub b { color: var(--ink); font-weight: 700; }
   .gmid { display: flex; align-items: center; gap: 8px; color: var(--accent); font-weight: 800; font-size: 15px; letter-spacing: .06em; }
@@ -369,45 +370,38 @@
   const FLAG_COLORS = { yellow: ['#ffd23f', '#111'], blue: ['#2f8bff', '#fff'], white: ['#ffffff', '#111'], red: ['#ff3b3b', '#fff'], black: ['#000', '#fff'], green: ['#22c55e', '#062'], debris: ['#ffd23f', '#c00'], meatball: ['#111', '#ff8c1a'], checkered: ['#fff', '#111'] };
   let greenSince = 0;
 
-  // Verlauf der Abstände, um den Trend pro Runde zu berechnen
-  const gapHist = new Map();
-  function trend(key, idx, gap, lapT) {
-    const now = Date.now() / 1000;
-    let h = gapHist.get(key);
-    if (!h || h.idx !== idx) { h = { idx, samples: [] }; gapHist.set(key, h); } // anderer Gegner -> neu beginnen
-    h.samples.push([now, gap]);
-    const span = lapT || 90;
-    while (h.samples.length > 2 && now - h.samples[0][0] > span) h.samples.shift();
-    const [t0, g0] = h.samples[0];
-    if (now - t0 < 8) return null; // noch zu wenig Verlauf
-    return (gap - g0) / (now - t0) * span; // Änderung pro Runde
-  }
   // Vorzeichen der Abstände: vor dir „−“ (du liegst zurück), hinter dir „+“ (dein Vorsprung)
   const sign = (ahead) => (ahead ? '−' : '+');
-  function gapBlock(c, side, myLast, page) {
+  function gapBlock(c, side) {
     const title = PW.t(side === 'ahead' ? 'dash.ahead' : 'dash.behind');
     if (!c) return `<div class="gnone">${PW.t(side === 'ahead' ? 'dash.noneAhead' : 'dash.noneBehind')}</div>`;
-    let val = '–', tr = '';
-    if (c.gap && c.gap.laps) val = sign(side === 'ahead') + c.gap.laps + 'L';
-    else if (c.gap && c.gap.s != null) {
-      val = sign(side === 'ahead') + c.gap.s.toFixed(c.gap.s < 10 ? 2 : 1);
-      const t = trend(page + side, c.idx, c.gap.s, myLast || c.last);
-      if (t != null && Math.abs(t) >= 0.02) {
-        const closing = t < 0;
-        // vorne: Abstand wird kleiner = gut (grün); hinten: Abstand wird kleiner = Gefahr (rot)
-        const good = side === 'ahead' ? closing : !closing;
-        tr = `<small class="${good ? 'ok' : 'warn'}">${closing ? '▼' : '▲'} ${Math.abs(t).toFixed(2)} ${PW.t('dash.perLapTrend')}</small>`;
-      }
-    }
     const ld = c.lastDiff;
     const ldTxt = ld == null ? '' : ` <span class="${(side === 'ahead' ? ld > 0 : ld > 0) ? 'ok' : 'warn'}">(${ld > 0 ? '+' : '−'}${Math.abs(ld).toFixed(2)})</span>`;
     return `<div class="gp">
       <div class="lbl">${title}</div>
       <div class="who${c.name.length > 22 ? ' long' : ''}"><span class="cc" style="background:${c.classColor}"></span><span class="pp">P${c.pos}</span><span class="n">${PW.esc(c.number)}</span><span class="ellipsis">${PW.esc(c.name)}</span>${c.pit ? '<span class="pit">PIT</span>' : ''}</div>
-      <div class="gv">${val}${tr}</div>
+      <div class="gv"><span class="gvv ${side}"></span><small class="gvd ${side}"></small></div>
       <div class="sub">${PW.t('lap.last')} <b>${PW.fmtLap(c.last)}</b>${ldTxt}</div>
       <div class="sub">${PW.t('lap.best')} <b>${PW.fmtLap(c.best)}</b></div>
     </div>`;
+  }
+
+  // Die Abstandszahl selbst wird bei jedem Takt (30x pro Sekunde) gesetzt, der Rest des Blocks 10x pro Sekunde
+  function gapVal(c, side) {
+    if (!c || !c.gap) return '–';
+    if (c.gap.laps) return sign(side === 'ahead') + c.gap.laps + 'L';
+    return c.gap.s != null ? sign(side === 'ahead') + c.gap.s.toFixed(c.gap.s < 10 ? 2 : 1) : '–';
+  }
+  // Battle-Delta: Abstand jetzt − Abstand vor einer Runde an dieser Stelle; Pfeil = Richtung der letzten 3 s.
+  // Vorne: Abstand schrumpft = gut (grün); hinten: Abstand wächst = gut.
+  function battleVal(c, side) {
+    const b = c && c.battle;
+    if (!b) return ['', ''];
+    const good = (v) => (side === 'ahead' ? v < 0 : v > 0);
+    const arrow = b.dir ? `<i class="${good(b.dir) ? 'ok' : 'warn'}">${b.dir < 0 ? '▼' : '▲'}</i> ` : '';
+    if (b.lap == null) return [arrow, ''];
+    const v = Math.abs(b.lap) < 0.005 ? 0 : b.lap;
+    return [`${arrow}${PW.t('dash.battleDelta')} ${v > 0 ? '+' : v < 0 ? '−' : '±'}${Math.abs(v).toFixed(2)}`, v ? (good(v) ? 'ok' : 'warn') : ''];
   }
 
   let listTick = 0;
@@ -476,8 +470,15 @@
 
     // Abstände zu Vorder- und Hintermann mit Trend (wird der Abstand kleiner oder größer?)
     for (const [id, g] of [['gapAll', d.gaps && d.gaps.all], ['gapClass', d.gaps && d.gaps.cls]]) {
-      if (!listTurn || !pageEls[id].classList.contains('on')) continue;
-      PW.html($(id), g ? gapBlock(g.ahead, 'ahead', d.lastLap, id) + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind', d.lastLap, id) : `<div class="gnone">${PW.t('dash.noData')}</div>`);
+      if (!pageEls[id].classList.contains('on')) continue;
+      if (listTurn) PW.html($(id), g ? gapBlock(g.ahead, 'ahead') + `<div class="gmid">P${g.pos || '–'} / ${g.size || '–'}</div>` + gapBlock(g.behind, 'behind') : `<div class="gnone">${PW.t('dash.noData')}</div>`);
+      if (!g) continue;
+      for (const side of ['ahead', 'behind']) {
+        const el = $(id).querySelector('.gvv.' + side);
+        if (el) PW.text(el, gapVal(g[side], side));
+        const de = $(id).querySelector('.gvd.' + side);
+        if (de) { const [h, c] = battleVal(g[side], side); PW.html(de, h); PW.cls(de, 'gvd ' + side + (c ? ' ' + c : '')); }
+      }
     }
 
     // Rundenzeiten

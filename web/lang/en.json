@@ -57,8 +57,8 @@
   "page.strategy": "Fuel strategy",
   "page.relAll": "Relative – overall",
   "page.relClass": "Relative – class",
-  "page.gapAll": "Gaps – overall",
-  "page.gapClass": "Gaps – class",
+  "page.gapAll": "Battle – overall",
+  "page.gapClass": "Battle – class",
   "page.laps": "Lap times",
   "page.damage": "Damage",
   "dash.water": "Water",
@@ -93,7 +93,6 @@
   "dash.behind": "BEHIND",
   "dash.noneAhead": "Nobody ahead – you're leading!",
   "dash.noneBehind": "Nobody behind",
-  "dash.perLapTrend": "/ lap",
   "dash.noData": "No data",
   "dmg.engine": "ENGINE",
   "dmg.required": "Required repair",
@@ -245,5 +244,6 @@
   "ctl.accSetup": "Set up",
   "ctl.accRestart": "Done – please restart ACC once for it to take effect.",
   "ctl.accConnecting": "ACC: connecting to the broadcasting interface … (only during a session)",
-  "ctl.accError": "ACC rejects the connection – is the password in broadcasting.json correct?"
+  "ctl.accError": "ACC rejects the connection – is the password in broadcasting.json correct?",
+  "dash.battleDelta": "Δ lap"
 }

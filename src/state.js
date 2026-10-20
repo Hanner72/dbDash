@@ -40,6 +40,10 @@ function buildState(d, s, opts) {
   const surf = d.CarIdxTrackSurface || [];
   const tyreIdx = d.CarIdxTireCompound || [];
   const tyreNames = tyreNameMap(di);
+  // Ergebnisliste der Session: hat Zeiten auch für Autos, die gerade nicht auf der Strecke sind
+  // (CarIdxLastLapTime/BestLapTime sind dann -1 → in den Standings fehlten Zeiten)
+  const results = new Map();
+  for (const r of sess.ResultsPositions || []) if (r && r.CarIdx != null) results.set(r.CarIdx, r);
 
   // Fahrerliste
   const cars = [];
@@ -70,8 +74,8 @@ function buildState(d, s, opts) {
       pos: pos[i] || 0,
       classPos: cpos[i] || 0,
       pit: !!pit[i],
-      last: last[i] > 0 ? last[i] : 0,
-      best: best[i] > 0 ? best[i] : 0,
+      last: last[i] > 0 ? last[i] : resTime(results.get(i), 'LastTime'),
+      best: best[i] > 0 ? best[i] : resTime(results.get(i), 'FastestTime'),
       inWorld: (surf[i] != null ? surf[i] !== -1 : true) && pct[i] >= 0,
       isPlayer: i === me,
       flag: flagCode(dr.FlairName, opts.flagMap),
@@ -87,7 +91,7 @@ function buildState(d, s, opts) {
   const meCar = cars.find((c) => c.isPlayer);
 
   // ---------- Relative ----------
-  let relative = [];
+  let relative = [], relFull = [];
   const relDash = { all: [], cls: [] };
   if (meCar && meCar.inWorld) {
     const estLap = meCar.best || meCar.last || meCar.classEst || 90; // echte Rundenzeit vor iRacings Schätzung
@@ -108,6 +112,7 @@ function buildState(d, s, opts) {
       relative.push({ ...c, gap, lapState });
     }
     relative.sort((a, b) => b.gap - a.gap);
+    relFull = relative;
     // für das Dashboard: je 3 vor/hinter dir – gesamt und nur eigene Klasse
     relDash.all = around(relative, 3);
     relDash.cls = around(relative.filter((c) => c.classId === meCar.classId), 3);
@@ -205,19 +210,72 @@ function buildState(d, s, opts) {
   };
 
   const dash = buildDash(d, s, opts, { meCar, isRace, classList, cars });
-  // Abstände zu Vorder- und Hintermann (nach Position) – gesamt und in der Klasse
+  // Zeitnahme an der Strecke für genaue Abstände (gaps.js)
+  if (opts.gaps) opts.gaps.update(d.SessionTime, cars, sessionNum + '|' + (wi.SessionID || '') + '|' + (wi.SubSessionID || ''));
+  // Abstände zu Vorder- und Hintermann – gesamt und in der Klasse, bei jedem Takt neu
   if (meCar) {
     // Im laufenden Rennen zählt die LIVE-Reihenfolge nach gefahrener Distanz – iRacing aktualisiert die Positionen
     // erst an der Linie, nach einem Überholmanöver wäre der Vordermann sonst bis zum Rundenende falsch.
     // Autos, die nicht auf der Strecke sind (Garage, getrennt), sind keine direkten Gegner.
     const live = isRace && d.SessionState !== undefined ? d.SessionState >= 4 : isRace;
-    let order;
-    if (live && meCar.dist != null) order = cars.filter((c) => c.dist != null && c.inWorld).sort((a, b) => b.dist - a.dist);
-    else order = cars.filter((c) => c.pos > 0).sort((a, b) => a.pos - b.pos);
-    if (!order.includes(meCar)) order = cars.slice();
-    const clsOrder = live && meCar.dist != null ? order.filter((c) => c.classId === meCar.classId)
-      : ((classList.find((cl) => cl.cars.includes(meCar)) || {}).cars || []);
-    dash.gaps = { all: neighbours(order, meCar, isRace), cls: neighbours(clsOrder, meCar, isRace) };
+    const refLap = meCar.best || meCar.last || meCar.classEst || 0;
+    const myCls = classList.find((cl) => cl.cars.includes(meCar));
+    // Battle: Vorsprung (s, + = vor mir) der Autos bis 2 Plätze vor/hinter mir – auch Nachbarn von Nachbarn verfolgen,
+    // damit der Verlauf nach einem Überholmanöver schon da ist
+    const leads = new Map();
+    if (live && meCar.dist != null) {
+      const order = cars.filter((c) => c.dist != null && c.inWorld).sort((a, b) => b.dist - a.dist);
+      if (!order.includes(meCar)) order.push(meCar);
+      const clsOrder = order.filter((c) => c.classId === meCar.classId);
+      dash.gaps = { all: neighbours(order, meCar, true, opts.gaps, refLap), cls: neighbours(clsOrder, meCar, true, opts.gaps, refLap) };
+      if (opts.battle) {
+        for (const list of [order, clsOrder]) {
+          const i = list.indexOf(meCar);
+          for (let k = Math.max(0, i - 2); k <= Math.min(list.length - 1, i + 2); k++) {
+            const c = list[k];
+            if (k === i || leads.has(c.idx)) continue;
+            const g = k < i ? liveGap(c, meCar, true, opts.gaps, refLap) : liveGap(meCar, c, true, opts.gaps, refLap);
+            if (g && g.s != null && !g.laps) leads.set(c.idx, k < i ? g.s : -g.s);
+          }
+        }
+      }
+    } else if (!isRace && relFull.length) {
+      // Training/Qualifikation: wer auf der Strecke direkt vor / hinter mir fährt (wie im Relative)
+      const near = (list) => onTrack(list.filter((c) => c.isPlayer || c.pit === meCar.pit), meCar, opts.gaps, refLap);
+      dash.gaps = {
+        all: { ...near(relFull), pos: meCar.pos, size: cars.length },
+        cls: { ...near(relFull.filter((c) => c.classId === meCar.classId)), pos: meCar.classPos, size: myCls ? myCls.cars.length : 0 },
+      };
+      if (opts.battle) {
+        const others = relFull.filter((c) => !c.isPlayer && c.pit === meCar.pit);
+        const pick = (list) => [...list.filter((c) => c.gap > 0).slice(-2), ...list.filter((c) => c.gap <= 0).slice(0, 2)];
+        for (const c of [...pick(others), ...pick(others.filter((c) => c.classId === meCar.classId))]) {
+          if (leads.has(c.idx)) continue;
+          const m = c.gap > 0 ? measured(opts.gaps, c, meCar, refLap, c.gap) : measured(opts.gaps, meCar, c, refLap, -c.gap);
+          leads.set(c.idx, m == null ? c.gap : (c.gap > 0 ? m : -m));
+        }
+      }
+    } else {
+      // vor dem Start bzw. ohne Streckenposition: nach offizieller Position
+      let order = cars.filter((c) => c.pos > 0).sort((a, b) => a.pos - b.pos);
+      if (!order.includes(meCar)) order = cars.slice();
+      const clsOrder = (myCls && myCls.cars) || [];
+      dash.gaps = { all: neighbours(order, meCar, isRace, null, refLap), cls: neighbours(clsOrder, meCar, isRace, null, refLap) };
+    }
+    // Battle: Delta zum Abstand vor einer Runde an dieser Stelle + Richtung jetzt (gaps.js)
+    if (opts.battle && meCar.inWorld) {
+      const res = new Map();
+      for (const [idx, lead] of leads) res.set(idx, opts.battle.track(idx, lead, meCar.pct, d.SessionTime, refLap));
+      for (const g of [dash.gaps.all, dash.gaps.cls]) {
+        for (const side of ['ahead', 'behind']) {
+          const c = g[side], b = c && res.get(c.idx);
+          if (!b || !c.gap || c.gap.laps) continue;
+          // für die Anzeige: Änderung des angezeigten Abstands (vorne: − = du holst auf, hinten: + = du ziehst weg)
+          const f = side === 'ahead' ? 1 : -1;
+          c.battle = { lap: b.lap == null ? null : f * b.lap, dir: f * b.dir || 0 };
+        }
+      }
+    }
   }
   dash.relAll = relDash.all.map(slimCar);
   dash.relClass = relDash.cls.map(slimCar);
@@ -264,19 +322,59 @@ function gapBetween(front, back, isRace, refLap) {
   return { s: frac * lapT };
 }
 
-function neighbours(list, me, isRace) {
+// Zeitabstand aus der Zeitnahme (gaps.js) – nur wenn er grob zur Schätzung über den Streckenanteil passt
+function measured(tracker, front, back, refLap, estimate) {
+  if (!tracker) return null;
+  const g = tracker.gap(front, back, refLap > 0 ? refLap * 1.5 : 300);
+  if (g == null) return null;
+  if (estimate != null && Math.abs(g - estimate) > Math.max(5, estimate * 0.5)) return null;
+  return g;
+}
+
+// Abstand front → back: Schätzung über den Streckenanteil, im Rennen ersetzt durch die Zeitnahme
+function liveGap(front, back, isRace, tracker, refLap) {
+  const g = gapBetween(front, back, isRace, refLap);
+  if (g && g.s != null && isRace) { const m = measured(tracker, front, back, refLap, g.s); if (m != null) g.s = m; }
+  return g;
+}
+
+// list: Reihenfolge (Platz = Index + 1); im Rennen live nach Distanz
+function neighbours(list, me, isRace, tracker, refLap) {
   const i = list.indexOf(me);
-  const posKey = '_rank';
-  list.forEach((c, k) => { c._rank = k + 1; });
   if (i < 0) return { ahead: null, behind: null, pos: 0, size: list.length };
-  const info = (c, g) => c && {
-    idx: c.idx, name: c.name, number: c.number, classColor: c.classColor, className: c.className,
-    pos: c[posKey], last: c.last, best: c.best, pit: c.pit, gap: g,
-    lastDiff: c.last && me.last ? c.last - me.last : null, // >0: der andere war in der letzten Runde langsamer
-  };
+  const gapOf = (front, back) => liveGap(front, back, isRace, tracker, refLap);
   const a = list[i - 1], b = list[i + 1];
-  const refLap = me.best || me.last || me.classEst || 0;
-  return { ahead: info(a, gapBetween(a, me, isRace, refLap)), behind: info(b, gapBetween(me, b, isRace, refLap)), pos: me[posKey], size: list.length };
+  return { ahead: gapInfo(a, me, gapOf(a, me), i), behind: gapInfo(b, me, gapOf(me, b), i + 2), pos: i + 1, size: list.length };
+}
+
+function gapInfo(c, me, g, pos) {
+  return c ? {
+    idx: c.idx, name: c.name, number: c.number, classColor: c.classColor, className: c.className,
+    pos, last: c.last, best: c.best, pit: c.pit, gap: g,
+    lastDiff: c.last && me.last ? c.last - me.last : null, // >0: der andere war in der letzten Runde langsamer
+  } : null;
+}
+
+// Außerhalb des Rennens: nächstes Auto vor und hinter mir auf der Strecke (list = Relative mit gap in s, + = vor mir)
+function onTrack(list, me, tracker, refLap) {
+  let a = null, b = null;
+  for (const c of list) {
+    if (c.isPlayer) continue;
+    if (c.gap > 0 && (!a || c.gap < a.gap)) a = c;
+    if (c.gap <= 0 && (!b || c.gap > b.gap)) b = c;
+  }
+  const g = (front, back, est) => ({ s: measured(tracker, front, back, refLap, est) ?? est });
+  const sameCls = (c) => c.classId === me.classId;
+  // angezeigter Platz: offizielle Position (in der Klasse, wenn gleiche Klasse)
+  return {
+    ahead: a && gapInfo(a, me, g(a, me, a.gap), (sameCls(a) ? a.classPos : a.pos) || a.pos),
+    behind: b && gapInfo(b, me, g(me, b, -b.gap), (sameCls(b) ? b.classPos : b.pos) || b.pos),
+  };
+}
+
+function resTime(r, key) {
+  const v = r ? Number(r[key]) : 0;
+  return v > 0 ? v : 0;
 }
 
 // n Autos vor und hinter dem Spieler (Liste ist nach Abstand sortiert)
@@ -505,7 +603,7 @@ function buildRadar(d, s, opts, { meCar, cars, sessionType }) {
     const dist = wrap(c.pct - meCar.pct, 1) * len;
     if (Math.abs(dist) > view) continue;
     const gap = Math.max(0, Math.abs(dist) - RADAR_CAR_LEN);
-    out.cars.push({ dist: Math.round(dist * 10) / 10, gap: Math.round(gap * 10) / 10, color: c.classColor, number: c.number, sameClass: c.classId === meCar.classId });
+    out.cars.push({ idx: c.idx, dist: Math.round(dist * 10) / 10, gap: Math.round(gap * 10) / 10, color: c.classColor, number: c.number, sameClass: c.classId === meCar.classId });
   }
   out.cars.sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist));
   return out;

@@ -67,7 +67,7 @@ Links und rechts sitzen zwei Fenster mit **umschaltbaren Seiten** – für jede 
 | **Motor** | Wasser, Öl, Öl- und Benzindruck, Batterie, Drehzahl |
 | **Sprit-Strategie** | Ø-Verbrauch, Reichweite, Runden bis ins Ziel, Nachtank-Menge, nötige Stopps |
 | **Relative – Gesamt / Klasse** | je 3 Autos vor und hinter dir |
-| **Abstände – Gesamt / Klasse** | Vorder- und Hintermann mit Trend pro Runde (▲/▼, grün = gut für dich) sowie deren Rundenzeiten |
+| **Battle – Gesamt / Klasse** | Vorder- und Hintermann live (30× pro Sekunde): Zeitabstand, gemessen wie mit einer Stoppuhr an der Strecke, **Δ Rnd** = wie viel du seit der letzten Runde an genau dieser Stelle gewonnen oder verloren hast, Pfeil ▲/▼ = was gerade passiert (grün = gut für dich), dazu deren Rundenzeiten |
 | **Rundenzeiten** | Prognose für die laufende Runde, letzte und beste Runde |
 | **Schaden** | GT3 als technische Zeichnung: grün = alles gut, orange = leichter Schaden, rot = Pflicht-Reparatur; Motor-Warnungen und Reifenverschleiß |
 
@@ -77,7 +77,7 @@ Links und rechts sitzen zwei Fenster mit **umschaltbaren Seiten** – für jede 
     <td><img src="docs/img/dashboard-strategie-relative.png" alt="Dashboard mit Sprit-Strategie und Relative"></td>
   </tr>
   <tr>
-    <td align="center"><sub>Abstände mit Trend · Schaden als Blueprint</sub></td>
+    <td align="center"><sub>Battle mit Live-Delta · Schaden als Blueprint</sub></td>
     <td align="center"><sub>Sprit-Strategie · Relative</sub></td>
   </tr>
 </table>
@@ -228,7 +228,8 @@ dbDash zeigt nur, was die Spiele über ihre offiziellen Schnittstellen liefern. 
 - **Schaden:** iRacing meldet nicht, *welches* Teil beschädigt ist – nur die Reparaturzeiten. Die Auto-Grafik zeigt
   deshalb die Schadensstufe am ganzen Auto.
 - **Radar:** iRacing liefert keine seitliche Position, nur den Abstand auf der Strecke und die Spotter-Meldung
-  „Auto links / rechts“. Autos davor / dahinter stehen deshalb mittig, Autos neben dir auf der gemeldeten Seite.
+  „Auto links / rechts“. Autos neben dir erscheinen auf der gemeldeten Seite und **bleiben in ihrer Spur**, während sie
+  zurückfallen oder vorbeiziehen; andere Autos davor / dahinter stehen mittig.
 - **iRating-Prognose:** nutzt die von der Community ermittelte Formel und ist eine Schätzung (pro Klasse, nur im Rennen).
 - Werte, die ein Auto nicht hat (z. B. TC), erscheinen als „–“. Reifenwerte aktualisiert iRacing je nach Auto teils nur
   beim Boxenstopp.

@@ -8,7 +8,7 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Befehle
 - `npm install` – Abhängigkeiten (Node.js ≥ 22.12, getestet mit v24)
 - `npm start` – App aus dem Quellcode starten (Demo-Modus läuft beim ersten Start)
-- `npm test` – Tests: SDK-Parser, ACC, Joystick, Abstände, Incidents, Radar, Standings-Spalten, Zeiten (`test/*.js`, reines Node, kein Framework)
+- `npm test` – Tests: SDK-Parser, ACC, Joystick, Abstände (+ Live-Zeitnahme), Incidents, Radar, Standings-Spalten, Zeiten (`test/*.js`, reines Node, kein Framework)
 - `npm run build` – fertiges Programm: `dist\dbDash\dbDash.exe` + ZIP (`build/build.js`)
 - `npm run video` – Vorstellungsvideo aufnehmen: `video/record.js` startet dbDash mit eigener Einstellungs-Kopie
   (`DBDASH_USERDATA` = Ordner im Temp, Demo an – APPDATA umbiegen wirkt bei Electron nicht!), spielt `video/scenes.js` auf der Bühne `video/studio.html` ab → `video/out/`
@@ -51,6 +51,17 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 ## Wichtige Entscheidungen / bekannte Fallstricke
 - **Abstände Vorder-/Hintermann**: im Rennen LIVE-Reihenfolge nach Distanz (`CarIdxLap + LapDistPct`), weil iRacing
   `CarIdxPosition` erst an der Ziellinie aktualisiert. Garage/getrennte Autos zählen nicht. Test: `test/gaps-test.js`.
+- **Zeitabstand Vorder-/Hintermann** (`src/gaps.js`, GapTracker): merkt je Auto die Sessionzeit an 1000 Punkten pro Runde
+  (interpoliert); Abstand = jetzt − Zeit, zu der der Vordermann an MEINER Stelle war. Genauer als Streckenanteil ×
+  Rundenzeit (bleibt Ersatz, solange keine Messung da ist oder sie > 50 % / 5 s abweicht). Sprung/rückwärts = Verlauf
+  löschen. Training/Quali: nächstes Auto auf der Strecke (wie Relative), Rennen: Live-Reihenfolge. Dashboard setzt nur die
+  Zahl 30×/s (`.gvv`), den Block 10×/s. Test: `test/gaps-live-test.js`.
+- **Battle** (Dashboard-Seiten `gapAll`/`gapClass`, Anzeige „Battle“; IDs bleiben wegen Einstellungen): `BattleTracker`
+  (gaps.js) merkt je Gegner den Vorsprung MIT Vorzeichen (+ vor mir) an 200 Stellen/Runde → Δ Rnd = jetzt − vor einer
+  Runde an derselben Stelle (läuft über Platztausche weiter), dir = Richtung der letzten 3 s. Verfolgt werden je 2 Autos
+  vor/hinter mir. state.js rechnet für die Anzeige auf den angezeigten Abstand um (hinten: Vorzeichen gedreht).
+- **Standings-Zeiten**: Autos außerhalb der Strecke haben `CarIdxLast/BestLapTime` = -1 → Ersatz aus
+  `SessionInfo.Sessions[].ResultsPositions` (`LastTime`/`FastestTime`).
 - **Incidents der Gegner**: iRacing liefert sie während der Session nicht (Session-Info = 0) → `race.js` zählt
   Ausritte (`CarIdxTrackSurface` 0 = OffTrack, je 1x, innerhalb 2 s nur einmal), Anzeige als Schätzung (`incEst`).
   Echte Werte > 0 aus der Session-Info haben Vorrang. Test: `test/incidents-test.js`.
@@ -76,7 +87,8 @@ hauptsächlich PHP/HTML/MySQL – Erklärungen daher praxisnah, ohne Node/Electr
 - Radar: iRacing liefert keine seitliche Position, nur Streckenabstand + `CarLeftRight` (Spotter).
   Reichweite (`radarRange`, 1–80 m) = Lücke Stoßstange zu Stoßstange (feste Länge 4,7 m, iRacing liefert keine);
   Radar erscheint nur bei Lücke ≤ Reichweite oder Spotter-Meldung, ohne Verzögerung aus; in Qualifikation aus.
-  Test: `test/radar-test.js`.
+  Seitenspur: radar.html merkt sich je Auto (`idx`) die vom Spotter gemeldete Seite (`laneMem`) und behält sie beim
+  Zurückfallen/Vorbeiziehen bis 25 m; überlappt es ohne Meldung > 0,5 s → Mitte. Test: `test/radar-test.js`.
 - Schaden: nur über `PitRepairLeft` / `PitOptRepairLeft` (Reparaturzeiten), Motor-Warnungen, Reifenverschleiß.
 - Overlays werden ausgeblendet, wenn der Motor aus ist (RPM ≤ 300 oder EngineWarnings 0x08), mit 1,5 s Verzögerung.
 - Statische Dateien: `no-store`, außer `flags/` und `assets/` (sonst laden Flaggen nicht, da 30×/s neu gerendert wird).
@@ -129,6 +141,7 @@ erzeugt). Name „dbDash“ (ausgeschrieben „dannerbam Dash“, früher „Tri
 grün #c6ff3d, mittlerer hellorange #ffb347, grün 37 %. Exe heißt `dbDash.exe`.
 
 ## Versionsstand
+2.5.1 – Battle-Seite (vorher Abstände): Zeitabstand live (Zeitnahme, 30 Hz, auch im Training) + Δ zur letzten Runde, Radar-Seitenspur, Standings-Zeiten aus Session-Ergebnissen.
 2.5.0 – Mehrere Spiele: ACC (Shared Memory + Broadcasting), Spalten je Spiel ausgeblendet, Untertitel „für iRacing, ACC & mehr“.
 2.4.2 – Prognose/Delta mit Session-Referenz statt ewiger Bestzeit, Abstände = Relative mit eigener Rundenzeit, Diagnose-Mitschnitt.
 2.4.1 – Updater-Fehler behoben (zweites Update scheiterte an app.asar-Resten), Build ohne Temp-Verschieben (tmpdir: false).

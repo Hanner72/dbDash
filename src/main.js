@@ -13,6 +13,7 @@ const { Demo } = require('./demo');
 const { buildState } = require('./state');
 const { FuelTracker } = require('./fuel');
 const { RaceTracker } = require('./race');
+const { GapTracker, BattleTracker } = require('./gaps');
 const { Joysticks } = require('./joystick');
 const { Updater } = require('./updater');
 
@@ -194,6 +195,8 @@ let demo = null;
 let state = { connected: false };
 const fuelTracker = new FuelTracker();
 const raceTracker = new RaceTracker();
+const gapTracker = new GapTracker();
+const battleTracker = new BattleTracker();
 let flagMap = {};
 try { flagMap = JSON.parse(fs.readFileSync(path.join(WEB, 'flags', 'names.json'), 'utf8')); } catch (e) { console.error('Flaggen:', e.message); }
 let fuelSource = null;
@@ -224,8 +227,8 @@ function tick() {
   if (raw && raw.session && diag) recordDiag(raw);
   if (raw && raw.session) {
     try {
-      if (fuelSource !== source) { fuelTracker.reset(); raceTracker.reset(); fuelSource = source; }
-      state = buildState(raw.data, raw.session, { source, caps: raw.caps, relativeRows: cfg.relativeRows, standingsRows: cfg.standingsRows, radarRange: cfg.radarRange, fuel: fuelTracker, race: raceTracker, flagMap });
+      if (fuelSource !== source) { fuelTracker.reset(); raceTracker.reset(); gapTracker.reset(); battleTracker.reset(); fuelSource = source; }
+      state = buildState(raw.data, raw.session, { source, caps: raw.caps, relativeRows: cfg.relativeRows, standingsRows: cfg.standingsRows, radarRange: cfg.radarRange, fuel: fuelTracker, race: raceTracker, gaps: gapTracker, battle: battleTracker, flagMap });
       if (source === 'acc') state.gameInfo = acc.status();
     } catch (e) {
       console.error(e);
@@ -242,7 +245,7 @@ function tick() {
 const DIAG_SECONDS = 60;
 let diag = null;       // { start, last, samples, session }
 let diagResult = null; // { file } oder { error }
-const DIAG_VARS = /^(Lap|Session|Player|IsOnTrack|OnPitRoad|CarIdx)/;
+const DIAG_VARS = /^(Lap|Session|Player|IsOnTrack|OnPitRoad|CarIdx|CarLeftRight)/;
 function diagStatus() {
   return diag ? { running: true, left: Math.max(0, Math.ceil(DIAG_SECONDS - (Date.now() - diag.start) / 1000)) } : { running: false, ...(diagResult || {}) };
 }

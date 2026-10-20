@@ -66,7 +66,7 @@ Left and right are two panels with **switchable pages** – for each page choose
 | **Engine** | water, oil, oil and fuel pressure, battery, RPM |
 | **Fuel strategy** | average usage, range, laps to go, fuel to the finish, stops needed |
 | **Relative – overall / class** | 3 cars ahead of and behind you |
-| **Gaps – overall / class** | car ahead and behind with trend per lap (▲/▼, green = good for you) and their lap times |
+| **Battle – overall / class** | car ahead and behind live (30× per second): time gap measured like a stopwatch at the track, **Δ lap** = how much you gained or lost since the last lap at exactly this spot, arrow ▲/▼ = what is happening right now (green = good for you), plus their lap times |
 | **Lap times** | prediction for the current lap, last and best lap |
 | **Damage** | GT3 as a technical drawing: green = all good, orange = light damage, red = required repair; engine warnings and tyre wear |
 
@@ -76,7 +76,7 @@ Left and right are two panels with **switchable pages** – for each page choose
     <td><img src="docs/img/dashboard-strategie-relative.png" alt="Dashboard with fuel strategy and relative"></td>
   </tr>
   <tr>
-    <td align="center"><sub>Gaps with trend · damage as a blueprint</sub></td>
+    <td align="center"><sub>Battle with live delta · damage as a blueprint</sub></td>
     <td align="center"><sub>Fuel strategy · relative</sub></td>
   </tr>
 </table>
@@ -225,7 +225,8 @@ dbDash only shows what the games provide through their official interfaces. For 
 - **Damage:** iRacing doesn't report *which* part is damaged – only the repair times. The car graphic therefore shows the
   damage level for the whole car.
 - **Radar:** iRacing provides no lateral position, only the distance on track and the spotter's “car left / right”.
-  Cars ahead / behind are shown in the middle, cars next to you on the side the spotter reports.
+  Cars next to you appear on the side the spotter reports and **stay in their lane** while they drop back or pass;
+  other cars ahead / behind are shown in the middle.
 - **iRating prediction:** uses the formula worked out by the community and is an estimate (per class, races only).
 - Values a car doesn't have (e.g. TC) show as “–”. Depending on the car, iRacing only updates tyre values at pit stops.
 

@@ -21,6 +21,7 @@ assert.strictEqual(r.cars.length, 2, 'nur Autos im sichtbaren Bereich');
 const byDist = Object.fromEntries(r.cars.map((c) => [Math.sign(c.dist), c]));
 assert.strictEqual(byDist[1].gap, 1.3);
 assert.strictEqual(byDist[-1].gap, 3.3);
+assert.strictEqual(byDist[1].idx, 1, 'Auto-Index für die Seitenspur im Radar');
 // Einblenden nur, wenn eine Lücke <= Reichweite ist: bei 2 m nur Auto 1, bei 1 m keines
 assert.strictEqual(r.cars.filter((c) => c.gap <= 2).length, 1);
 assert.strictEqual(buildState(D, session('Race'), { radarRange: 1 }).radar.cars.filter((c) => c.gap <= 1).length, 0);

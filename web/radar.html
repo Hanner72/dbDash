@@ -27,6 +27,14 @@
   // iRacing CarLeftRight: 0 aus, 1 frei, 2 links, 3 rechts, 4 links+rechts, 5 zwei links, 6 zwei rechts
   const SIDES = { 2: ['L'], 3: ['R'], 4: ['L', 'R'], 5: ['L', 'L2'], 6: ['R', 'R2'] };
   const LANE_X = { L: -1, R: 1, L2: -1.9, R2: 1.9, C: 0 };
+  // Seitenspur je Auto merken: iRacing liefert keine seitliche Position, nur die Spotter-Meldung (CarLeftRight).
+  // Ein Auto, das neben dir war, bleibt in seiner Spur, während es zurückfällt oder davonzieht – so sieht man,
+  // auf welcher Seite es fährt. Vergessen wird die Spur erst weiter weg (FORGET) oder wenn es überlappt, der
+  // Spotter diese Seite aber nicht (mehr) meldet (dann fährt es in Wahrheit direkt vor/hinter dir).
+  const NEAR = 10;     // m: so weit darf ein vom Spotter gemeldetes Auto laut Streckenposition weg sein (ungenau)
+  const FORGET = 25;   // m: weiter weg → zurück zur Mitte
+  const laneMem = new Map(); // idx → { lane, x (angezeigt), seen (Zeit der letzten Spotter-Bestätigung) }
+  let lastFrame = 0;
 
   // GT3 von oben als technische Zeichnung – dieselben Linien wie die Schadensgrafik im Dashboard
   // (Zeichenfläche dort: x 32–124, y 6–218)
@@ -41,8 +49,9 @@
 
   // color = Linienfarbe, alpha = Deckkraft (weiter entfernt = blasser), cls = Klassenfarbe (Dachluke)
   // off = Versatz der Fahrzeugmitte in Pixeln nach vorne
-  function drawCar(lane, off, len, color, alpha, cls) {
-    const x = CX + LANE_X[lane] * LANE - CAR_W / 2;
+  // lx = seitliche Lage in Spurbreiten (0 = deine Spur, −1 links, +1 rechts)
+  function drawCar(lx, off, len, color, alpha, cls) {
+    const x = CX + lx * LANE - CAR_W / 2;
     const y = CY - off - len / 2;
     const m = new DOMMatrix().translate(x, y).scale(CAR_W / 92, len / 212).translate(-32, -6);
     const body = bp(BP.body, m);
@@ -117,26 +126,53 @@
     if (sides.some((s) => s[0] === 'L')) sideGlow(true);
     if (sides.some((s) => s[0] === 'R')) sideGlow(false);
 
-    // Autos neben dir den Seiten zuordnen, die iRacing meldet (nächste zuerst)
+    // Autos neben dir den Seiten zuordnen, die der Spotter meldet: zuerst Autos, die schon auf dieser Seite
+    // gemerkt sind, dann die nächsten (die Streckenposition ist auf wenige Meter ungenau)
+    const now = performance.now(), dt = Math.min(0.2, (now - lastFrame) / 1000); lastFrame = now;
     const cars = r.cars.slice();
-    const overlapping = cars.filter((c) => Math.abs(c.dist) < OVERLAP);
-    const placed = new Map();
-    sides.forEach((lane, i) => { if (overlapping[i]) placed.set(overlapping[i], lane); });
-    // Spotter meldet ein Auto, das wir über die Distanz nicht finden -> trotzdem anzeigen
-    sides.forEach((lane, i) => { if (!overlapping[i]) cars.push({ dist: 0, color: '#ff5a5a', ghostOnly: true, lane }); });
+    const ids = new Set(cars.map((c) => c.idx));
+    for (const k of laneMem.keys()) if (!ids.has(k)) laneMem.delete(k);
+    const near = cars.filter((c) => Math.abs(c.dist) < NEAR).sort((a, b) => Math.abs(a.dist) - Math.abs(b.dist));
+    const confirmed = new Set();
+    const sideOf = (lane) => Math.sign(LANE_X[lane]);
+    for (const lane of sides) {
+      const free = near.filter((c) => !confirmed.has(c));
+      const m = (c) => laneMem.get(c.idx);
+      const c = free.find((x) => m(x) && m(x).lane === lane) || free.find((x) => m(x) && sideOf(m(x).lane) === sideOf(lane))
+        || free.find((x) => !m(x) || m(x).lane === 'C') || free[0];
+      if (!c) { cars.push({ dist: 0, color: '#ff5a5a', ghostOnly: true, lane }); continue; } // gemeldet, aber nicht gefunden
+      const mem = laneMem.get(c.idx) || { x: 0 };
+      laneMem.set(c.idx, { ...mem, lane, seen: now });
+      confirmed.add(c);
+    }
+    const reported = new Set(sides.map(sideOf));
+    for (const c of cars) {
+      if (c.ghostOnly) { c.x = LANE_X[c.lane]; continue; }
+      let mem = laneMem.get(c.idx);
+      if (!mem) { mem = { lane: 'C', x: 0, seen: 0 }; laneMem.set(c.idx, mem); }
+      if (!confirmed.has(c) && mem.lane !== 'C') {
+        const ad = Math.abs(c.dist);
+        // überlappt, aber Spotter meldet diese Seite seit 0,5 s nicht → fährt direkt vor/hinter dir
+        if (ad > FORGET || (ad < OVERLAP * 0.6 && !reported.has(sideOf(mem.lane)) && now - mem.seen > 500)) mem.lane = 'C';
+      }
+      mem.x += (LANE_X[mem.lane] - mem.x) * Math.min(1, dt * 8); // weich gleiten
+      c.x = mem.x;
+    }
 
     for (const c of cars) {
-      const lane = c.lane || placed.get(c) || 'C';
       const ad = Math.abs(c.dist);
+      const beside = c.ghostOnly || confirmed.has(c);
       // rot = neben dir, orange = nah dran, sonst hell – je weiter weg, desto blasser
       let color = '#cfd8e6', alpha = 0.45 + 0.5 * Math.max(0, 1 - ad / view);
-      if (lane !== 'C' || ad < OVERLAP) { color = '#ff4d4d'; alpha = 1; }
+      if (beside || (ad < OVERLAP && Math.abs(c.x) < 0.5)) { color = '#ff4d4d'; alpha = 1; }
       else if (c.gap != null ? c.gap < 7 : ad < 12) { color = '#ffb02e'; alpha = 1; }
-      drawCar(lane, pos(c), len, color, alpha, c.ghostOnly ? null : c.color);
+      // vom Spotter gemeldet = überlappt sicher → auch so zeichnen, selbst wenn die Streckenposition etwas abweicht
+      const off = beside && ad > carLen * 0.8 ? Math.sign(c.dist) * len * 0.8 : pos(c);
+      drawCar(c.x, off, len, color, alpha, c.ghostOnly ? null : c.color);
     }
 
     // Eigenes Auto
-    drawCar('C', 0, len, '#3ddc84', 1, null);
+    drawCar(0, 0, len, '#3ddc84', 1, null);
 
     // Lücke zum nächsten Auto davor / dahinter
     const ahead = r.cars.filter((c) => c.dist >= OVERLAP).sort((a, b) => a.dist - b.dist)[0];
